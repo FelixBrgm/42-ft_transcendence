@@ -15,7 +15,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 			match socket.read(&mut buf).await {
 				Ok(_) => {
 					// Send "PONG" response
-					if let Err(e) = socket.write_all(b"PONG").await {
+					if let Err(e) = socket.write_all(b"PONG\n").await {
 						eprintln!("Failed to send response: {}", e);
 					}
 				}
