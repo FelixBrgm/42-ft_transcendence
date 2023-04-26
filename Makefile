@@ -1,4 +1,4 @@
-NAME=server
+NAME=development
 IMAGE_NAME=$(NAME)_image
 CONTAINER_NAME=$(NAME)_container
 
@@ -8,10 +8,10 @@ build:
 	docker build -t $(IMAGE_NAME) .
 
 run: build
-	docker run -p 7878:7878 --rm -d -v $(shell pwd)/server:/usr/src/server --name $(CONTAINER_NAME) $(IMAGE_NAME)
+	docker run -p 4242:4242 --rm -d -v $(shell pwd)/$(NAME):/usr/src/$(NAME) --name $(CONTAINER_NAME) $(IMAGE_NAME)
 
 dev: fclean build
-	docker run -p 7878:7878 --rm -it -v $(shell pwd)/server:/usr/src/server --name $(CONTAINER_NAME) $(IMAGE_NAME) bash
+	docker run -p 4242:4242 --rm -it -v $(shell pwd)/$(NAME):/usr/src/$(NAME) --name $(CONTAINER_NAME) $(IMAGE_NAME) bash
 
 stop:
 	-docker kill $(CONTAINER_NAME)
@@ -23,7 +23,7 @@ clean: stop
 fclean: clean
 	-docker rmi $(IMAGE_NAME)
 
-re: fclean run
+re: fclean dev
 
 #SHIT
 

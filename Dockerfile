@@ -1,19 +1,18 @@
 FROM rust:latest
 
+EXPOSE 4242
+
 # Update package list and install netcat
 RUN apt-get update && \
     apt-get install -y netcat && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ENV CARGO_TARGET_DIR=/target
 
-ENV CARGO_HOME=/usr/src/server/target/dep
+ENV CARGO_HOME=/usr/src/development/server/target/dependencies
 
-WORKDIR /usr/src/server
+WORKDIR /usr/src/development
 
-VOLUME [ "/usr/src/server" ]
+VOLUME [ "/usr/src/development" ]
 
-EXPOSE 7878
-
-CMD ["cargo", "run"]
+CMD ["tail", "-f", "/dev/null"]
