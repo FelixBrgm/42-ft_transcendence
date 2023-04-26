@@ -3,7 +3,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-	let listener = TcpListener::bind("0.0.0.0:7878").await?;
+	let listener = TcpListener::bind("0.0.0.0:4242").await?;
 	
 	loop {
 		let (mut socket, _) = listener.accept().await?;
