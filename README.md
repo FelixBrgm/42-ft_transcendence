@@ -32,7 +32,7 @@ cd ft_transendence
 and run:
 
 ```
-make dev
+make
 ```
 This will start the development container inside the repository.
 
