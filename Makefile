@@ -1,17 +1,16 @@
+# Variables
 NAME=development
 IMAGE_NAME=$(NAME)_image
 CONTAINER_NAME=$(NAME)_container
 
+# Development container
 all: run
 
 build:
 	docker build -t $(IMAGE_NAME) .
 
 run: build
-	docker run -p 4242:4242 --rm -d -v $(shell pwd)/$(NAME):/usr/src/$(NAME) --name $(CONTAINER_NAME) $(IMAGE_NAME)
-
-dev: fclean build
-	docker run -p 4242:4242 --rm -it -v $(shell pwd)/$(NAME):/usr/src/$(NAME) --name $(CONTAINER_NAME) $(IMAGE_NAME) bash
+	docker run -p 4242:4242 --rm -d -v $(shell pwd)/$(NAME):/usr/src/$(NAME) --name $(CONTAINER_NAME) $(IMAGE_NAME) tail -f /dev/null
 
 stop:
 	-docker kill $(CONTAINER_NAME)
@@ -23,11 +22,12 @@ clean: stop
 fclean: clean
 	-docker rmi $(IMAGE_NAME)
 
-re: fclean dev
+re: fclean all
 
-#SHIT
 
+# Utils 
 exec:
 	docker exec -it $(CONTAINER_NAME) /bin/bash
 
-.PHONY: all build run dev stop clean fclean re
+
+.PHONY: all build run stop clean fclean re exec
