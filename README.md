@@ -72,9 +72,8 @@ git pull
 # Push your changes
 git add .
 git commit -m "Your commit message"
-git push
-
-
+git pus
+```
 ### TODO
 - automated tests
 - 42api answer
