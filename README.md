@@ -75,3 +75,8 @@ git commit -m "Your commit message"
 git push
 
 
+### TODO
+- automated tests
+- 42api answer
+- load balancer
+
