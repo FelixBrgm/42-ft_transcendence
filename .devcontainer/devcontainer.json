@@ -1,13 +1,13 @@
 {
-    "name": "Rust and Vue.js",
-    "dockerFile": "../Dockerfile",
-    "forwardPorts": [4242, 4242],
-    "settings": {
-      "terminal.integrated.shell.linux": "/bin/bash"
-    },
-    "extensions": [
-      "rust-lang.rust",
-      "octref.vetur"
-    ],
-  }
-  
+	"name": "Rust and Vue.js",
+	"dockerFile": "../Dockerfile",
+	"forwardPorts": [4242, 4242],
+	"settings": {
+	"terminal.integrated.shell.linux": "/bin/bash"
+	},
+	"extensions": [
+	  "rust-lang.rust",
+	  "octref.vetur"
+	],
+	"workspaceFolder": "/workspace/development"
+}
