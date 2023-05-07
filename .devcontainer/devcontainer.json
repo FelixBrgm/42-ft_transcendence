@@ -6,7 +6,7 @@
 	"terminal.integrated.shell.linux": "/bin/bash"
 	},
 	"extensions": [
-	  "rust-lang.rust",
+	  "rust-lang.org",
 	  "octref.vetur"
 	],
 	"workspaceFolder": "/workspaces/42-ft_transendence/development" // change 42-ft_transendence to name of repo when copied
