@@ -9,5 +9,5 @@
 	  "rust-lang.rust",
 	  "octref.vetur"
 	],
-	"workspaceFolder": "/workspaces/42-ft_transendence/development"
+	"workspaceFolder": "/workspaces/42-ft_transendence/development" // change 42-ft_transendence to name of repo when copied
 }
