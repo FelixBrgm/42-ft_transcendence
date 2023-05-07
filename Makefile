@@ -10,7 +10,7 @@ build:
 	docker build -t $(IMAGE_NAME) .
 
 run: build
-	docker run -p 4242:4242 --rm -d -v $(shell pwd)/$(NAME):/usr/src/$(NAME) --name $(CONTAINER_NAME) $(IMAGE_NAME) tail -f /dev/null
+	docker run --rm -d -v $(shell pwd)/$(NAME):/usr/src/$(NAME) --name $(CONTAINER_NAME) $(IMAGE_NAME) tail -f /dev/null
 
 stop:
 	-docker kill $(CONTAINER_NAME)
