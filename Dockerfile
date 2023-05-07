@@ -4,8 +4,6 @@ FROM node:14
 # Install Vue CLI
 RUN npm install -g @vue/cli
 
-RUN cd client && npm i && cd ..
-
 # Install Rust
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
