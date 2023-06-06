@@ -1,6 +1,14 @@
 # Base image
-FROM node:14
+FROM ubuntu:22.04
 
+# Install necessary dependencies for Node.js and Rust
+RUN apt-get update && \
+    apt-get install -y curl && \
+    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+    apt-get install -y nodejs && \
+    apt-get install -y build-essential && \
+    apt-get install -y netcat && \
+    rm -rf /var/lib/apt/lists/*
 # Install Vue CLI
 RUN npm install -g @vue/cli
 

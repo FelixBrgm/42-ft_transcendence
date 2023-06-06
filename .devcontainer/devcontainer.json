@@ -1,9 +1,14 @@
 {
-	"name": "Rust and Vue.js",
+	"name": "ft_transcendence",
 	"dockerFile": "../Dockerfile",
 	"forwardPorts": [4242, 4242],
 	"settings": {
-	"terminal.integrated.shell.linux": "/bin/bash"
+	"terminal.integrated.shell.linux": "/bin/bash",
+	"rust-analyzer.trace.extension": true,
+	"rust-analyzer.enable": true
+	},
+	"remoteExtensionKind": {
+		"workspace": true
 	},
 	"extensions": [
 		"matklad.rust-analyzer",
