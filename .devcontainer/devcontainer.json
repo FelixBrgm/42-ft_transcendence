@@ -3,15 +3,13 @@
 	"dockerFile": "../Dockerfile",
 	"forwardPorts": [4242, 4242],
 	"settings": {
-	"terminal.integrated.shell.linux": "/bin/bash",
-	"rust-analyzer.trace.extension": true,
-	"rust-analyzer.enable": true
-	},
-	"remoteExtensionKind": {
-		"workspace": true
+		"terminal.integrated.shell.linux": "/bin/bash",
+		"workbench.iconTheme": "material-icon-theme",
+		"rust-analyzer.trace.extension": true,
+		"rust-analyzer.enable": true
 	},
 	"extensions": [
-		"matklad.rust-analyzer",
+		"rust-lang.rust-analyzer",
 		"octref.vetur",
 		"PKief.material-icon-theme"
 	],
