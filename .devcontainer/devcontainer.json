@@ -4,9 +4,7 @@
 	"forwardPorts": [4242, 4242],
 	"settings": {
 		"terminal.integrated.shell.linux": "/bin/bash",
-		"workbench.iconTheme": "material-icon-theme",
-		"rust-analyzer.trace.extension": true,
-		"rust-analyzer.enable": true
+		"workbench.iconTheme": "PKief.material-icon-theme"
 	},
 	"extensions": [
 		"rust-lang.rust-analyzer",

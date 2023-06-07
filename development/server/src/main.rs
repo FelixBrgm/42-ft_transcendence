@@ -27,7 +27,4 @@
 
 fn main() {
 	let test: String = String::from("HELO");
-	let slice: &str = s[..];
-
-	s.slice
 }
