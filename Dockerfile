@@ -24,6 +24,8 @@ RUN apt-get update && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
+# Set the PS1 environment variable in the container's bashrc
+RUN echo 'export PS1="\W> "' >> ~/.bashrc
 
 # So that libraries are persistant between container starts
 ENV CARGO_HOME=/usr/src/development/server/target/dependencies
