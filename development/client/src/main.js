@@ -4,7 +4,7 @@ import axios from 'axios';
 
 createApp(App).mount('#app')
 
-	axios.get('http://127:8000/api/hello').then((response) => {
+	axios.get('http://127.0.0.1:8081/hey').then((response) => {
 		console.log(response.data);
 	}).catch((error) => {
 		console.error(error);
