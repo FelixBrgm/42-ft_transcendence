@@ -12,7 +12,5 @@ codegen-units = 16
 codegen-units = 16
 
 [dependencies]
-actix-web = "4.0"
-actix-cors = "0.5"
-
+actix-web = "4"
 
