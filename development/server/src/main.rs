@@ -1,30 +1,18 @@
-// use tokio::net::TcpListener;
-// use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 
-// #[tokio::main]
-// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-// 	let listener = TcpListener::bind("0.0.0.0:4242").await?;
-	
-// 	loop {
-// 		let (mut socket, _) = listener.accept().await?;
+// Define your API endpoint handler
+#[get("/api/hello")]
+async fn hello() -> impl Responder {
+    HttpResponse::Ok().body("Hello from Rust API!")
+}
 
-// 		tokio::spawn(async move {
-// 			let mut buf = [0; 1024];
-
-// 			// Read incoming data
-// 			match socket.read(&mut buf).await {
-// 				Ok(_) => {
-// 					// Send "PONG" response
-// 					if let Err(e) = socket.write_all(b"PONG\n").await {
-// 						eprintln!("Failed to send response: {}", e);
-// 					}
-// 				}
-// 				Err(e) => eprintln!("Failed to read from socket: {}", e),
-// 			}
-// 		});
-// 	}
-// }
-
-fn main() {
-	let test: String = String::from("HELO");
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    // Start the Actix web server
+    HttpServer::new(|| {
+        App::new().service(hello)
+    })
+    .bind("127.0.0.1:8000")? // Specify the IP address and port
+    .run()
+    .await
 }
