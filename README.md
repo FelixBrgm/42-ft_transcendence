@@ -11,7 +11,6 @@ Before starting, make sure you have the following installed:
 - [Git](https://git-scm.com/downloads)
 - [Docker](https://www.docker.com/products/docker-desktop)
 - [Visual Studio Code](https://code.visualstudio.com/)
-- [Docker](https://www.docker.com/products/docker-desktop/)
 
 
 ## Step 1: Clone the Repository
@@ -19,41 +18,19 @@ Before starting, make sure you have the following installed:
 First, clone the repository to your local machine:
 
 ```sh
-git clone git@github.com:FelixBrgm/42-ft_transendence.git ft_transendence
+git clone git@github.com:FelixBrgm/42-ft_transendence.git
 
 ```
 
-## Step 2: Start the Dev Container
-With Docker installed, navigate to the project directory in your terminal:
-
-```
-cd ft_transendence
-```
-and run:
-
-```
-make
-```
-This will start the development container inside the repository.
+## Step 2: Start the Docker
+Start docker!
 
 
 ## Step 3: Configure Visual Studio Code
 
 1. Open the project folder in VSCode.
 2. Install the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
-3. Follow the instructions to attach the VSCode session to the development container.
-
-## Recommended Extensions
-
-For a smoother development experience, we recommend installing the following extensions:
-
-### Vue.js
-- [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur)
-- [Vue VSCode Snippets](https://marketplace.visualstudio.com/items?itemName=sdras.vue-vscode-snippets)
-
-### Rust
-- [Rust (rls)](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust)
-- [Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=matklad.rust-analyzer)
+3. Follow the instructions to "reopen" the folder in a container.
 
 ## Exposed Ports
 
