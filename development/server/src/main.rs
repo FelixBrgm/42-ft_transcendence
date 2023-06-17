@@ -1,28 +1,17 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use mini_redis::{client, Result};
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Open a connection to the mini-redis address.
+    let mut client = client::connect("127.0.0.1:6379").await?;
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
+    // Set the key "hello" with value "world"
+    client.set("hello", "world".into()).await?;
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
+    // Get key "hello"
+    let result = client.get("hello").await?;
 
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
-    })
-    .bind(("127.0.0.1", 8081))?
-    .run()
-    .await
+    println!("got value from the server; result={:?}", result);
+
+    Ok(())
 }

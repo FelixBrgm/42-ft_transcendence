@@ -24,6 +24,8 @@ RUN apt-get update && \
 	apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
+RUN cargo install mini-redis
+
 # Set the PS1 environment variable in the container's bashrc
 RUN echo 'export PS1="\W> "' >> ~/.bashrc
 
