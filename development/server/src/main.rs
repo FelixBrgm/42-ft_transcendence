@@ -1,8 +1,13 @@
+use std::sync::Arc;
+
 use tokio::{
-    io::AsyncReadExt,
+    io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
     net::TcpStream,
-    sync::mpsc::{self, Receiver, Sender},
+    sync::{
+        mpsc::{self, Receiver, Sender},
+        Mutex,
+    },
 };
 
 // // type Chat = Arc<Mutex<[String]>>;
@@ -47,37 +52,59 @@ use tokio::{
 //     }
 // }
 
-async fn bridge(mut socket: TcpStream, sender: Sender<char>) {
-    loop {
-        tokio::select! {
-            let mut buf: [u8; 512] = [0; 512];
-    
-            let read_bytes: usize = socket.read(&mut buf).await.unwrap();
-            if read_bytes != 0 {
-                for i in 0..read_bytes {
-                    let c: char = char::from(buf[read_bytes -1 -i]);
-                    if c == 'u' || c == 'd' || c == 'n' {
-                        sender.send(c).await.unwrap();
-                        break;
+async fn bridge(
+    mut socket: TcpStream,
+    client_sender: Sender<char>,
+    mut server_reciever: Receiver<String>,
+) {
+    let mut socket = Arc::new(Mutex::new(socket));
+    let mut buf: [u8; 512] = [0; 512];
+    {
+        let socket = socket.clone();
+
+        tokio::spawn(async move {
+            loop {
+                let mut socket = socket.lock().await;
+                let read_result = socket.read(&mut buf).await;
+                match read_result {
+                    Ok(read_bytes) if read_bytes > 0 => {
+                        for i in 0..read_bytes {
+                            let c: char = char::from(buf[read_bytes - 1 - i]);
+                            if c == 'u' || c == 'd' || c == 'n' {
+                                client_sender.send(c).await.unwrap();
+                                break;
+                            }
+                        }
                     }
+                    _ => {} // Connection closed or error occurred
                 }
+                buf = [0; 512];
             }
-            message = receiver.recv() => {
+        });
+    }
+    {
+        tokio::spawn(async move {
+            loop {
+                let message = server_reciever.try_recv();
                 match message {
-                    Some(c) => {
-                        let _ = socket.write(&[c as u8]).await;
+                    Ok(c) => {
+                        let mut socket = socket.lock().await;
+                        let _ = socket.write(c.as_bytes()).await;
                     }
-                    None => break, // Channel closed
+                    Err(_) => {} // Channel closed
                 }
             }
-        }
+        });
     }
 }
 
-async fn runtime(mut reciever: Receiver<char>) {
+async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<String>) {
+    server_sender.send("PONG:\n".to_string()).await.unwrap();
     loop {
-        match reciever.try_recv() {
-            Ok(message) => println!("Received: {}", message),
+        match client_reviever.try_recv() {
+            Ok(message) => {
+                println!("Received: {}", message);
+            }
             Err(_) => {}
         }
     }
@@ -86,19 +113,20 @@ async fn runtime(mut reciever: Receiver<char>) {
 async fn game() {
     let listener = TcpListener::bind("127.0.0.1:4242").await.unwrap();
 
-    let (sender, mut reciever) = mpsc::channel::<char>(1);
+    let (client_sender, client_reciever) = mpsc::channel::<char>(1);
+    let (server_sender, server_reciever) = mpsc::channel::<String>(10);
 
-    let (mut socket, _) = listener.accept().await.unwrap();
+    let (socket, _) = listener.accept().await.unwrap();
 
     tokio::spawn(async {
-        bridge(socket, sender).await;
+        bridge(socket, client_sender, server_reciever).await;
     });
 
     let runtime_handle = tokio::spawn(async {
-        runtime(reciever).await;
+        runtime(client_reciever, server_sender).await;
     });
 
-    runtime_handle.await;
+    let _ = runtime_handle.await;
 }
 
 #[tokio::main]
