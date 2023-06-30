@@ -1,4 +1,8 @@
+use core::time;
 use std::sync::Arc;
+use std::thread;
+use std::time::Duration;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -10,47 +14,15 @@ use tokio::{
     },
 };
 
-// // type Chat = Arc<Mutex<[String]>>;
-// type Clients = Arc<Mutex<Vec<TcpStream>>>;
-
-// async fn process(socket: TcpStream, clients: Clients, i: i32) {
-//     loop {
-//         let mut buf: [u8; 512] = [0; 512];
-
-//         let mut clients: std::sync::MutexGuard<'_, Vec<TcpStream>> = clients.lock().unwrap();
-//         let read_bytes: usize = clients[read(&mut buf).await.unwrap();
-//         if read_bytes != 0 {
-//             println!("{}", String::from_utf8_lossy(&buf));
-//             for client in clients.iter_mut() {
-//                 client.write("Message: ".as_bytes()).await.unwrap();
-//                 client.write(&buf).await.unwrap();
-//             }
-//         }
-//     }
-// }
-
-// #[tokio::main]
-// async fn main() {
-//     // let chat: Chat = Arc::new(Mutex::new([]));
-//     let clients: Clients = Arc::new(Mutex::new(Vec::new()));
-
-//     let listener = TcpListener::bind("127.0.0.1:4242").await.unwrap();
-
-//     let i = 0;
-
-//     loop {
-// let (mut socket, _) = listener.accept().await.unwrap();
-
-// // let chat = chat.clone();
-// let clients = clients.clone();
-// let mut value = clients.lock().unwrap();
-// value.push(socket);
-
-// tokio::spawn(async move {
-//     process(socket, clients, i).await;
-// });
-//     }
-// }
+// Utils
+fn get_ms() -> u128 {
+    let now = SystemTime::now();
+    let duration = now
+        .duration_since(UNIX_EPOCH)
+        .expect("Failed to calculate duration");
+    let milliseconds = duration.as_secs() as u128 * 1000 + u128::from(duration.subsec_millis());
+    milliseconds
+}
 
 async fn bridge(
     mut socket: TcpStream,
@@ -90,6 +62,7 @@ async fn bridge(
                     Ok(c) => {
                         let mut socket = socket.lock().await;
                         let _ = socket.write(c.as_bytes()).await;
+                        let _ = socket.flush().await;
                     }
                     Err(_) => {} // Channel closed
                 }
@@ -99,14 +72,48 @@ async fn bridge(
 }
 
 async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<String>) {
-    server_sender.send("PONG:\n".to_string()).await.unwrap();
+    let MIN_TIME_PER_TICK_MS: i32 = 500;
+    let LENGTH_PER_MS: i32 = 1;
+    let mut position: i32 = 500;
+
+    let mut last_tick_time = get_ms();
+    let mut status: char = 'n';
+
+    server_sender.send(position.to_string()).await.unwrap();
+
     loop {
-        match client_reviever.try_recv() {
-            Ok(message) => {
-                println!("Received: {}", message);
-            }
-            Err(_) => {}
+        let time_since_last_tick = (get_ms() - last_tick_time) as i32;
+
+        println!("tslt: {}", time_since_last_tick);
+
+        if time_since_last_tick < MIN_TIME_PER_TICK_MS {
+            continue;
         }
+        last_tick_time += time_since_last_tick as u128;
+
+        println!("POSITION: {} | {}", position, get_ms());
+
+        match client_reviever.try_recv() {
+            Ok(_status) => {
+                println!("GOT: {}", _status);
+                status = _status;
+            }
+            _ => {}
+        }
+
+        if status == 'u' {
+            position += LENGTH_PER_MS * time_since_last_tick;
+            if position > 1000 {
+                position = 1000;
+            }
+        } else if status == 'd' {
+            position -= LENGTH_PER_MS * time_since_last_tick;
+            if position < 0 {
+                position = 0;
+            }
+        }
+
+        server_sender.send(position.to_string()).await.unwrap();
     }
 }
 
@@ -133,27 +140,3 @@ async fn game() {
 async fn main() {
     game().await;
 }
-// async fn main() {
-//     // Create a channel
-//     let (sender, mut receiver) = mpsc::channel::<char>(1);
-
-//     // Spawn a task that sends messages
-//     let send_task = task::spawn(async move {
-//         for i in 0..5 {
-//             let message = format!("Message {}", i);
-//             sender.send(message).await.unwrap();
-//             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-//         }
-//     });
-
-//     // Spawn a task that receives messages
-//     let receive_task = task::spawn(async move {
-//         while let Some(message) = receiver.recv().await {
-//             println!("Received: {}", message);
-//         }
-//     });
-
-//     // Await both tasks
-//     send_task.await.unwrap();
-//     receive_task.await.unwrap();
-// }
