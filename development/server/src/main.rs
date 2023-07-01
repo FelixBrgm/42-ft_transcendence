@@ -25,18 +25,18 @@ fn get_ms() -> u128 {
 }
 
 async fn bridge(
-    mut socket: TcpStream,
+    socket: TcpStream,
     client_sender: Sender<char>,
     mut server_reciever: Receiver<String>,
 ) {
-    let mut socket = Arc::new(Mutex::new(socket));
+    let socket = Arc::new(Mutex::new(socket));
     let mut buf: [u8; 512] = [0; 512];
     {
         let socket = socket.clone();
 
         tokio::spawn(async move {
             loop {
-                let mut socket = socket.lock().await;
+                let socket = socket.lock().await;
                 let read_result = socket.try_read(&mut buf);
                 match read_result {
                     Ok(read_bytes) if read_bytes > 0 => {
@@ -73,49 +73,45 @@ async fn bridge(
 }
 
 async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<String>) {
-    // let MIN_TIME_PER_TICK_MS: i32 = 500;
-    // let LENGTH_PER_MS: i32 = 1;
-    // let mut position: i32 = 500;
+    let MIN_TIME_PER_TICK_MS: i32 = 50;
+    let LENGTH_PER_MS: i32 = 1;
+    let mut position: i32 = 500;
 
-    // let mut last_tick_time = get_ms();
-    // let mut status: char = 'n';
+    let mut last_tick_time = get_ms();
+    let mut status: char = 'n';
 
     loop {
-        server_sender.send("TESTMESSAGE".to_string()).await.unwrap();
-        println!("SENT MESSAGE");
-        std::thread::sleep(Duration::from_secs(1));
-        // let time_since_last_tick = (get_ms() - last_tick_time) as i32;
+        let time_since_last_tick = (get_ms() - last_tick_time) as i32;
 
-        // println!("tslt: {}", time_since_last_tick);
+        if time_since_last_tick < MIN_TIME_PER_TICK_MS {
+            std::thread::sleep(Duration::from_millis((MIN_TIME_PER_TICK_MS / 10) as u64));
+            continue;
+        }
+        last_tick_time += time_since_last_tick as u128;
 
-        // if time_since_last_tick < MIN_TIME_PER_TICK_MS {
-        //     continue;
-        // }
-        // last_tick_time += time_since_last_tick as u128;
+        println!("POSITION: {} | {}", position, get_ms());
 
-        // println!("POSITION: {} | {}", position, get_ms());
+        match client_reviever.try_recv() {
+            Ok(_status) => {
+                println!("GOT: {}", _status);
+                status = _status;
+            }
+            _ => {}
+        }
 
-        // match client_reviever.try_recv() {
-        //     Ok(_status) => {
-        //         println!("GOT: {}", _status);
-        //         status = _status;
-        //     }
-        //     _ => {}
-        // }
+        if status == 'u' {
+            position += LENGTH_PER_MS * time_since_last_tick;
+            if position > 1000 {
+                position = 1000;
+            }
+        } else if status == 'd' {
+            position -= LENGTH_PER_MS * time_since_last_tick;
+            if position < 0 {
+                position = 0;
+            }
+        }
 
-        // if status == 'u' {
-        //     position += LENGTH_PER_MS * time_since_last_tick;
-        //     if position > 1000 {
-        //         position = 1000;
-        //     }
-        // } else if status == 'd' {
-        //     position -= LENGTH_PER_MS * time_since_last_tick;
-        //     if position < 0 {
-        //         position = 0;
-        //     }
-        // }
-
-        // server_sender.send(position.to_string()).await.unwrap();
+        server_sender.send(position.to_string()).await.unwrap();
     }
 }
 
