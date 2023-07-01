@@ -73,24 +73,30 @@ async fn bridge(
 }
 
 async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<String>) {
-    let MIN_TIME_PER_TICK_MS: i32 = 50;
-    let LENGTH_PER_MS: i32 = 1;
-    let mut position: i32 = 500;
+    let min_time_per_tick_ms: u128 = 5;
+    let length_per_ms: u128 = 1;
+    let mut position: u128 = 500;
 
-    let mut last_tick_time = get_ms();
+    let mut last_tick_time: u128 = get_ms();
     let mut status: char = 'n';
 
     loop {
-        let time_since_last_tick = (get_ms() - last_tick_time) as i32;
-
-        if time_since_last_tick < MIN_TIME_PER_TICK_MS {
-            std::thread::sleep(Duration::from_millis((MIN_TIME_PER_TICK_MS / 10) as u64));
+		
+        if get_ms() <= last_tick_time {
             continue;
         }
-        last_tick_time += time_since_last_tick as u128;
+        let time_since_last_tick = get_ms() - last_tick_time - 1;
+        if time_since_last_tick < min_time_per_tick_ms {
+            std::thread::sleep(Duration::from_millis(
+                ((min_time_per_tick_ms / 10) + 1) as u64,
+            ));
+            continue;
+        }
 
-        println!("POSITION: {} | {}", position, get_ms());
 
+        last_tick_time += time_since_last_tick;
+
+        // Get inputs of players
         match client_reviever.try_recv() {
             Ok(_status) => {
                 println!("GOT: {}", _status);
@@ -99,18 +105,22 @@ async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<Stri
             _ => {}
         }
 
+        // Calculate game_state
+        let length_traveled = length_per_ms * time_since_last_tick;
         if status == 'u' {
-            position += LENGTH_PER_MS * time_since_last_tick;
+            position += length_per_ms * time_since_last_tick;
             if position > 1000 {
                 position = 1000;
             }
         } else if status == 'd' {
-            position -= LENGTH_PER_MS * time_since_last_tick;
-            if position < 0 {
+            if position < length_traveled {
                 position = 0;
+            } else {
+                position -= length_per_ms * time_since_last_tick;
             }
         }
 
+        // Send back game state
         server_sender.send(position.to_string()).await.unwrap();
     }
 }
