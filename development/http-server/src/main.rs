@@ -49,7 +49,14 @@ async fn create_table(pool: &DataBasePool, name: &str) -> Result<(), Box<dyn std
 	.execute(&create_string, &[])
 	.await?;
 
-	// Release the connection back to the pool
+	connection
+	.execute(
+		"INSERT INTO others(name, age) VALUES ($1, $2)",
+		&[&"Bastt", &420],
+	)
+	.await?;
+
+	println!("set up table!");
 	drop(connection);
 
 	Ok(())
@@ -64,13 +71,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 	create_table(&pool, "clients").await?;
 	create_table(&pool, "others").await?;
 
-	let	connection: DataBaseConnection = pool.get().await?;
-
-    // Spawn a task to process the connection in the background
-    tokio::spawn(async move {
-		let _ = connection;
-    });
+    // // Spawn a task to process the connection in the background
+    // tokio::spawn(async move {
+	// 	let _ = connection;
+    // });
 	
+	let connection: DataBaseConnection = pool.get().await?;
+
+    // Check if the table contains the expected values
+    let rows = connection.query("SELECT * FROM others", &[]).await?;
+    for row in rows {
+        let id: i32 = row.get("id");
+        let name: &str = row.get("name");
+        let age: i32 = row.get("age");
+        println!("id: {}, name: {}, age: {}", id, name, age);
+    }
+
+
     println!("Connected to the database and acquired a connection");
 
     Ok(())
