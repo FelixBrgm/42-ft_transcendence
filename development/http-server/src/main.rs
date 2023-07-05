@@ -1,11 +1,14 @@
 
 use std::env;
-use tokio_postgres::{Config, NoTls, Client, Connection, Socket};
-use tokio_postgres::tls::NoTlsStream;
+use bb8::Pool;
+use bb8_postgres::tokio_postgres::NoTls;
+use bb8_postgres::PostgresConnectionManager;
 
-type DataBaseConnection = (Client, Connection<Socket, NoTlsStream>);
+type DataBasePool = Pool<PostgresConnectionManager<NoTls>>;
+type DataBaseConnection<'a> = bb8::PooledConnection<'a, PostgresConnectionManager<NoTls>>;
 
-async fn connect() -> Result<DataBaseConnection, Box<dyn std::error::Error>>
+// Connect to database && create Pool
+async fn create_pool() -> Result<DataBasePool, Box<dyn std::error::Error>>
 {
 	// Retrieve environment variables for connection details
 	let host = env::var("POSTGRES_HOST").expect("POSTGRES_HOST not set");
@@ -14,33 +17,40 @@ async fn connect() -> Result<DataBaseConnection, Box<dyn std::error::Error>>
 	let password = env::var("POSTGRES_PASSWORD").expect("POSTGRES_PASSWORD not set");
 	let dbname = env::var("POSTGRES_DB").expect("POSTGRES_DB not set");
 
-	// Create a new database configuration
-	let mut config = Config::new();
-	config.host(&host);
-	config.port(port.parse::<u16>().expect("Invalid POSTGRES_PORT"));
-	config.user(&user);
-	config.password(&password);
-	config.dbname(&dbname);
+	// Create a connection string
+    let connection_string = format!(
+        "postgres://{}:{}@{}:{}/{}",
+        user, password, host, port, dbname
+    );
 
-	// Establish a connection to the database
-	let connection:DataBaseConnection  = config.connect(NoTls).await?;
-	Ok(connection)
+	// Create a connection manager
+    let manager = PostgresConnectionManager::new_from_stringlike(connection_string, NoTls)?;
+	
+	// Create a connection pool
+    let pool:DataBasePool = bb8::Pool::builder()
+        .build(manager)
+        .await?;
+
+    Ok(pool)
 }
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>>
 {
-  
-	let (client, connection) = connect().await?;
+	// get_pool
+	let	pool: DataBasePool = create_pool().await?;
+
+    // Acquire a connection from the pool
+    let	connection: DataBaseConnection = pool.get().await?;
 
     // Spawn a task to process the connection in the background
     tokio::spawn(async move {
-        if let Err(e) = connection.await {
-            eprintln!("connection error: {}", e);
-        }
+        let _ = connection;
     });
 
-	println!("works:)");
+    println!("Connected to the database and acquired a connection");
 
     Ok(())
 }
+
