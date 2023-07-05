@@ -1,8 +1,0 @@
-/workspaces/42-ft_transcendence/development/http-server/target/debug/deps/ppv_lite86-ec5d9dd86d3eb175.rmeta: /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/lib.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/soft.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/types.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/generic.rs
-
-/workspaces/42-ft_transcendence/development/http-server/target/debug/deps/ppv_lite86-ec5d9dd86d3eb175.d: /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/lib.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/soft.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/types.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/generic.rs
-
-/usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/lib.rs:
-/usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/soft.rs:
-/usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/types.rs:
-/usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/ppv-lite86-0.2.17/src/generic.rs:
