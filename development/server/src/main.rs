@@ -1,4 +1,5 @@
 use core::time;
+use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -14,6 +15,7 @@ use tokio::{
 };
 use tokio_tungstenite::WebSocketStream;
 use tungstenite::protocol::{Role, WebSocketConfig};
+use tungstenite::Message;
 
 // Utils
 fn get_ms() -> u128 {
@@ -25,58 +27,42 @@ fn get_ms() -> u128 {
     milliseconds
 }
 
-async fn bridge<'a>(
-    socket: &'a mut TcpStream,
+async fn bridge(
+    socket: WebSocketStream<TcpStream>,
     client_sender: Sender<char>,
     mut server_reciever: Receiver<String>,
 ) {
-    let socket = Arc::new(Mutex::new(socket));
-    let mut buf: [u8; 512] = [0; 512];
+    let (mut write, read) = socket.split();
     {
-        let socket = socket.clone();
-
         tokio::spawn(async move {
-            loop {
-                let socket = socket.lock().await;
-                let read_result = socket.try_read(&mut buf);
-                match read_result {
-                    Ok(read_bytes) if read_bytes > 0 => {
-                        for i in 0..read_bytes {
-                            let c: char = char::from(buf[read_bytes - 1 - i]);
-                            if c == 'u' || c == 'd' || c == 'n' {
-                                client_sender.send(c).await.unwrap();
-                                break;
-                            }
-                        }
-                    }
-                    _ => {} // Connection closed or error occurred
+            read.for_each(|message| async {
+                let message = message.unwrap().into_data();
+                let c: char = char::from(message[message.len() - 1]);
+                if c == 'u' || c == 'd' || c == 'n' {
+                    client_sender.send(c).await.unwrap();
                 }
-                buf = [0; 512];
-            }
+            })
+            .await;
         });
     }
-    let send_handle = {
+    {
         tokio::spawn(async move {
             loop {
                 let message = server_reciever.try_recv();
                 match message {
-                    Ok(mut c) => {
-                        c.push('\n');
-                        let mut socket = socket.lock().await;
-                        let _ = socket.write(c.as_bytes()).await;
-                        let _ = socket.flush().await;
+                    Ok(msg) => {
+                        println!("Sending: {}", &msg);
+                        write.send(Message::Text(msg + "\n")).await.unwrap();
                     }
                     Err(_) => {} // Channel closed
                 }
             }
         });
     }
-
-
 }
 
 async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<String>) {
-    let min_time_per_tick_ms: u128 = 5;
+    let min_time_per_tick_ms: u128 = 50;
     let length_per_ms: u128 = 1;
     let mut position: u128 = 500;
 
@@ -134,13 +120,10 @@ async fn game() {
 
     let (socket, _) = listener.accept().await.unwrap();
 
-    // let ws = WebSocketStream::from_raw_socket(socket, Role::Client, None).await;
+    let socket = tokio_tungstenite::accept_async(socket).await.unwrap();
+    println!("Accepted Client");
 
-    let mut ws = tokio_tungstenite::accept_async(socket).await.unwrap();
-
-    let socket = ws.get_mut();
-
-    let bridge_handle = tokio::spawn(async move {
+    let bridge_handle = tokio::spawn(async {
         bridge(socket, client_sender, server_reciever).await;
     });
 
