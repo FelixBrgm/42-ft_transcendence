@@ -32,29 +32,35 @@ async fn bridge(
     client_sender: Sender<char>,
     mut server_reciever: Receiver<String>,
 ) {
-    let (mut write, read) = socket.split();
+    let (mut write, mut read) = socket.split();
     {
         tokio::spawn(async move {
-            read.for_each(|message| async {
-                let message = message.unwrap().into_data();
-                let c: char = char::from(message[message.len() - 1]);
-                if c == 'u' || c == 'd' || c == 'n' {
-                    client_sender.send(c).await.unwrap();
-                }
-            })
-            .await;
+            loop {
+                let res = read.next().await.unwrap();
+                match res {
+                    Ok(msg) => {
+                        let mut msg = msg.into_text().unwrap();
+                        println!("Recieved: {}", &msg);
+                        let c = msg.pop().unwrap();
+                        if c == 'u' || c == 'd' || c == 'n' {
+                            client_sender.send(c).await.unwrap();
+                        }
+                    }
+                    _ => {}
+                };
+            }
         });
     }
     {
         tokio::spawn(async move {
             loop {
-                let message = server_reciever.try_recv();
+                let message = server_reciever.recv().await;
                 match message {
-                    Ok(msg) => {
+                    Some(msg) => {
                         println!("Sending: {}", &msg);
                         write.send(Message::Text(msg + "\n")).await.unwrap();
                     }
-                    Err(_) => {} // Channel closed
+                    None => {} // Channel closed
                 }
             }
         });
@@ -62,12 +68,14 @@ async fn bridge(
 }
 
 async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<String>) {
-    let min_time_per_tick_ms: u128 = 50;
+    let min_time_per_tick_ms: u128 = 5;
     let length_per_ms: u128 = 1;
     let mut position: u128 = 500;
 
     let mut last_tick_time: u128 = get_ms();
     let mut status: char = 'n';
+
+    let mut last_state = position;
 
     loop {
         if get_ms() <= last_tick_time {
@@ -86,7 +94,6 @@ async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<Stri
         // Get inputs of players
         match client_reviever.try_recv() {
             Ok(_status) => {
-                println!("GOT: {}", _status);
                 status = _status;
             }
             _ => {}
@@ -96,8 +103,8 @@ async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<Stri
         let length_traveled = length_per_ms * time_since_last_tick;
         if status == 'u' {
             position += length_per_ms * time_since_last_tick;
-            if position > 1000 {
-                position = 1000;
+            if position > 10000 {
+                position = 10000;
             }
         } else if status == 'd' {
             if position < length_traveled {
@@ -107,8 +114,10 @@ async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<Stri
             }
         }
 
-        // Send back game state
-        server_sender.send(position.to_string()).await.unwrap();
+        if last_state != position {
+            last_state = position;
+            server_sender.send(position.to_string()).await.unwrap();
+        }
     }
 }
 
@@ -116,7 +125,7 @@ async fn game() {
     let listener = TcpListener::bind("127.0.0.1:4242").await.unwrap();
 
     let (client_sender, client_reciever) = mpsc::channel::<char>(1);
-    let (server_sender, server_reciever) = mpsc::channel::<String>(10);
+    let (server_sender, server_reciever) = mpsc::channel::<String>(1);
 
     let (socket, _) = listener.accept().await.unwrap();
 

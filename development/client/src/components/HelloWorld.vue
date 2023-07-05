@@ -33,13 +33,16 @@ export default {
     },
     handleKeyPress(event) {
       if (event.key === "ArrowUp") {
+        console.log("PRESSED u");
         this.sendMessage("u");
       } else if (event.key === "ArrowDown") {
+        console.log("PRESSED d");
         this.sendMessage("d");
       }
     },
     handleKeyRelease(event) {
       if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        console.log("PRESSED n");
         this.sendMessage("n");
       }
     },
