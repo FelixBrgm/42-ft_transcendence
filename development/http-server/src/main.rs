@@ -1,8 +1,12 @@
-use std::env;
-use tokio_postgres::{Config, NoTls};
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+use std::env;
+use tokio_postgres::{Config, NoTls, Client, Connection, Socket};
+use tokio_postgres::tls::NoTlsStream;
+
+type DataBaseConnection = (Client, Connection<Socket, NoTlsStream>);
+
+async fn connect() -> Result<DataBaseConnection, Box<dyn std::error::Error>>
+{
 	// Retrieve environment variables for connection details
 	let host = env::var("POSTGRES_HOST").expect("POSTGRES_HOST not set");
 	let port = env::var("POSTGRES_PORT").expect("POSTGRES_PORT not set");
@@ -19,17 +23,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 	config.dbname(&dbname);
 
 	// Establish a connection to the database
-	let (client, connection) = config.connect(NoTls).await?;
+	let connection:DataBaseConnection  = config.connect(NoTls).await?;
+	Ok(connection)
+}
 
-	// Spawn a task to process the connection in the background
-	tokio::spawn(async move {
-		if let Err(e) = connection.await {
-			eprintln!("connection error: {}", e);
-		}
-	});
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>>
+{
+  
+	let (client, connection) = connect().await?;
 
-	// Use the `client` to interact with the database
-	// ...
+    // Spawn a task to process the connection in the background
+    tokio::spawn(async move {
+        if let Err(e) = connection.await {
+            eprintln!("connection error: {}", e);
+        }
+    });
 
 	println!("works:)");
 
