@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio = { version = "1", features = ["full"] }
+bb8 = "0.8"
+bb8-postgres = "0.8"
 tokio-postgres = "0.7"
+tokio = { version = "1", features = ["full"] }
 
