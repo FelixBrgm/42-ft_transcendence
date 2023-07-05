@@ -1,9 +1,9 @@
 use core::time;
+use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
-
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
@@ -13,6 +13,9 @@ use tokio::{
         Mutex,
     },
 };
+use tokio_tungstenite::WebSocketStream;
+use tungstenite::protocol::{Role, WebSocketConfig};
+use tungstenite::Message;
 
 // Utils
 fn get_ms() -> u128 {
@@ -25,47 +28,39 @@ fn get_ms() -> u128 {
 }
 
 async fn bridge(
-    socket: TcpStream,
+    socket: WebSocketStream<TcpStream>,
     client_sender: Sender<char>,
     mut server_reciever: Receiver<String>,
 ) {
-    let socket = Arc::new(Mutex::new(socket));
-    let mut buf: [u8; 512] = [0; 512];
+    let (mut write, mut read) = socket.split();
     {
-        let socket = socket.clone();
-
         tokio::spawn(async move {
             loop {
-                let socket = socket.lock().await;
-                let read_result = socket.try_read(&mut buf);
-                match read_result {
-                    Ok(read_bytes) if read_bytes > 0 => {
-                        for i in 0..read_bytes {
-                            let c: char = char::from(buf[read_bytes - 1 - i]);
-                            if c == 'u' || c == 'd' || c == 'n' {
-                                client_sender.send(c).await.unwrap();
-                                break;
-                            }
+                let res = read.next().await.unwrap();
+                match res {
+                    Ok(msg) => {
+                        let mut msg = msg.into_text().unwrap();
+                        println!("Recieved: {}", &msg);
+                        let c = msg.pop().unwrap();
+                        if c == 'u' || c == 'd' || c == 'n' {
+                            client_sender.send(c).await.unwrap();
                         }
                     }
-                    _ => {} // Connection closed or error occurred
-                }
-                buf = [0; 512];
+                    _ => {}
+                };
             }
         });
     }
     {
         tokio::spawn(async move {
             loop {
-                let message = server_reciever.try_recv();
+                let message = server_reciever.recv().await;
                 match message {
-                    Ok(mut c) => {
-                        c.push('\n');
-                        let mut socket = socket.lock().await;
-                        let _ = socket.write(c.as_bytes()).await;
-                        let _ = socket.flush().await;
+                    Some(msg) => {
+                        println!("Sending: {}", &msg);
+                        write.send(Message::Text(msg + "\n")).await.unwrap();
                     }
-                    Err(_) => {} // Channel closed
+                    None => {} // Channel closed
                 }
             }
         });
@@ -80,8 +75,9 @@ async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<Stri
     let mut last_tick_time: u128 = get_ms();
     let mut status: char = 'n';
 
+    let mut last_state = position;
+
     loop {
-		
         if get_ms() <= last_tick_time {
             continue;
         }
@@ -93,13 +89,11 @@ async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<Stri
             continue;
         }
 
-
         last_tick_time += time_since_last_tick;
 
         // Get inputs of players
         match client_reviever.try_recv() {
             Ok(_status) => {
-                println!("GOT: {}", _status);
                 status = _status;
             }
             _ => {}
@@ -109,8 +103,8 @@ async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<Stri
         let length_traveled = length_per_ms * time_since_last_tick;
         if status == 'u' {
             position += length_per_ms * time_since_last_tick;
-            if position > 1000 {
-                position = 1000;
+            if position > 10000 {
+                position = 10000;
             }
         } else if status == 'd' {
             if position < length_traveled {
@@ -120,8 +114,10 @@ async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<Stri
             }
         }
 
-        // Send back game state
-        server_sender.send(position.to_string()).await.unwrap();
+        if last_state != position {
+            last_state = position;
+            server_sender.send(position.to_string()).await.unwrap();
+        }
     }
 }
 
@@ -129,11 +125,14 @@ async fn game() {
     let listener = TcpListener::bind("127.0.0.1:4242").await.unwrap();
 
     let (client_sender, client_reciever) = mpsc::channel::<char>(1);
-    let (server_sender, server_reciever) = mpsc::channel::<String>(10);
+    let (server_sender, server_reciever) = mpsc::channel::<String>(1);
 
     let (socket, _) = listener.accept().await.unwrap();
 
-    tokio::spawn(async {
+    let socket = tokio_tungstenite::accept_async(socket).await.unwrap();
+    println!("Accepted Client");
+
+    let bridge_handle = tokio::spawn(async {
         bridge(socket, client_sender, server_reciever).await;
     });
 
@@ -141,6 +140,7 @@ async fn game() {
         runtime(client_reciever, server_sender).await;
     });
 
+    let _ = bridge_handle.await;
     let _ = runtime_handle.await;
 }
 
