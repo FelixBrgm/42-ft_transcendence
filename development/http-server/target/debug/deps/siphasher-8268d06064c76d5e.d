@@ -1,0 +1,9 @@
+/workspaces/42-ft_transcendence/development/http-server/target/debug/deps/siphasher-8268d06064c76d5e.rmeta: /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/lib.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/sip.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/sip128.rs
+
+/workspaces/42-ft_transcendence/development/http-server/target/debug/deps/libsiphasher-8268d06064c76d5e.rlib: /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/lib.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/sip.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/sip128.rs
+
+/workspaces/42-ft_transcendence/development/http-server/target/debug/deps/siphasher-8268d06064c76d5e.d: /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/lib.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/sip.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/sip128.rs
+
+/usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/lib.rs:
+/usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/sip.rs:
+/usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/siphasher-0.3.10/src/sip128.rs:

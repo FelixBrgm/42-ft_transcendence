@@ -1,0 +1,8 @@
+/workspaces/42-ft_transcendence/development/http-server/target/debug/deps/lock_api-50f968ee90a34275.rmeta: /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/lib.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/mutex.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/remutex.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/rwlock.rs
+
+/workspaces/42-ft_transcendence/development/http-server/target/debug/deps/lock_api-50f968ee90a34275.d: /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/lib.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/mutex.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/remutex.rs /usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/rwlock.rs
+
+/usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/lib.rs:
+/usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/mutex.rs:
+/usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/remutex.rs:
+/usr/src/development/server/target/dependencies/registry/src/index.crates.io-6f17d22bba15001f/lock_api-0.4.10/src/rwlock.rs:
