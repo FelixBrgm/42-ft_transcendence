@@ -3,7 +3,6 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
-
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpListener,
@@ -13,6 +12,8 @@ use tokio::{
         Mutex,
     },
 };
+use tokio_tungstenite::WebSocketStream;
+use tungstenite::protocol::{Role, WebSocketConfig};
 
 // Utils
 fn get_ms() -> u128 {
@@ -24,8 +25,8 @@ fn get_ms() -> u128 {
     milliseconds
 }
 
-async fn bridge(
-    socket: TcpStream,
+async fn bridge<'a>(
+    socket: &'a mut TcpStream,
     client_sender: Sender<char>,
     mut server_reciever: Receiver<String>,
 ) {
@@ -54,7 +55,7 @@ async fn bridge(
             }
         });
     }
-    {
+    let send_handle = {
         tokio::spawn(async move {
             loop {
                 let message = server_reciever.try_recv();
@@ -70,6 +71,8 @@ async fn bridge(
             }
         });
     }
+
+
 }
 
 async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<String>) {
@@ -81,7 +84,6 @@ async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<Stri
     let mut status: char = 'n';
 
     loop {
-		
         if get_ms() <= last_tick_time {
             continue;
         }
@@ -92,7 +94,6 @@ async fn runtime(mut client_reviever: Receiver<char>, server_sender: Sender<Stri
             ));
             continue;
         }
-
 
         last_tick_time += time_since_last_tick;
 
@@ -133,7 +134,13 @@ async fn game() {
 
     let (socket, _) = listener.accept().await.unwrap();
 
-    tokio::spawn(async {
+    // let ws = WebSocketStream::from_raw_socket(socket, Role::Client, None).await;
+
+    let mut ws = tokio_tungstenite::accept_async(socket).await.unwrap();
+
+    let socket = ws.get_mut();
+
+    let bridge_handle = tokio::spawn(async move {
         bridge(socket, client_sender, server_reciever).await;
     });
 
@@ -141,6 +148,7 @@ async fn game() {
         runtime(client_reciever, server_sender).await;
     });
 
+    let _ = bridge_handle.await;
     let _ = runtime_handle.await;
 }
 

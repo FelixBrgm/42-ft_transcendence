@@ -13,3 +13,5 @@ codegen-units = 16
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
+tokio-tungstenite = "0.19.0"
+tungstenite = "0.19.0"
