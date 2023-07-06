@@ -3,7 +3,6 @@ use std::env;
 use bb8::Pool;
 use bb8_postgres::tokio_postgres::NoTls;
 use bb8_postgres::PostgresConnectionManager;
-// use tokio_postgres::connect;
 
 type DataBasePool = Pool<PostgresConnectionManager<NoTls>>;
 type DataBaseConnection<'a> = bb8::PooledConnection<'a, PostgresConnectionManager<NoTls>>;
@@ -16,6 +15,10 @@ trait SqlString{
 	fn types(&self) -> String{
 		String::new()
 	}
+
+	fn elems(&self) -> Vec<String> {
+		Vec::new()
+	}
 }
 
 #[derive(Debug)]
@@ -25,12 +28,16 @@ struct User{
 }
 
 impl SqlString for User{
-	fn values(&self) -> String{
+	fn values(&self) -> String {
 		format!("(name, age) VALUES (\'{}\', {})", self.name, self.age)
 	}
 
-	fn types(&self) -> String{
+	fn types(&self) -> String {
 		format!("(id SERIAL PRIMARY KEY, name TEXT NOT NULL, age int NOT NULL)")
+	}
+
+	fn elems(&self) -> Vec<String> {
+		vec!("id".to_string(), "name".to_string(), "age".to_string())
 	}
 }
 
@@ -38,6 +45,7 @@ impl SqlString for User{
 struct Table<'a>{
 	name: String,
 	pool: &'a DataBasePool,
+	elems: Vec<String>,
 }
 
 impl Table<'_>
@@ -55,7 +63,7 @@ impl Table<'_>
 
 		println!("CREATE: {}", name);
 
-        Ok(Table { name: name.to_string(), pool })
+        Ok(Table { name: name.to_string(), pool, elems: content.elems()})
     }
 
 	async fn insert(&self, addition: &impl SqlString) -> Result<(), Box<dyn std::error::Error>>{
@@ -66,19 +74,47 @@ impl Table<'_>
 			self.name, addition.values()
 		);
 
-		println!("INSERT: {}", insert_command);
+		println!("INSERT: {} {}", self.name, addition.values());
 
 		connection.execute(&insert_command, &[]).await?;
 
 		Ok(())
 	}
 
+	async fn retrieve_data(&self) -> Result<Vec<User>, Box<dyn std::error::Error>> {
+		let connection: DataBaseConnection = self.pool.get().await?;
+
+		let select_command = format!("SELECT * FROM {}", self.name);
+
+		let rows = connection
+			.query(&select_command, &[])
+			.await?;
+
+		let mut data = Vec::new();
+
+		for row in rows {
+			let name: String = row.try_get("name")?;
+			let age: i32 = row.try_get("age")?;
+
+			let user = User { name, age };
+			data.push(user);
+		}
+
+		println!("DATA: {:?}", data);
+
+		Ok(data)
+	}
+
 	async fn display(&self) -> Result<(), Box<dyn std::error::Error>> {
 		let connection: DataBaseConnection = self.pool.get().await?;
 
+		let select_command = format!("SELECT * FROM {}", self.name);
+
 		let rows = connection
-			.query("SELECT * FROM {self.name}`", &[])
+			.query(&select_command, &[])
 			.await?;
+
+		println!("did select table");
 
 		for row in rows{
 			
@@ -123,6 +159,7 @@ async fn display_table(pool: &DataBasePool, table: &str) -> Result<(), Box<dyn s
         .query("SELECT * FROM another", &[])
         .await?;
 
+
     for row in rows {
         let id: i32 = row.get("id");
         let name: String = row.get("name");
@@ -147,8 +184,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 	let users = Table::new("another", &anna, &pool).await?;
 	
 	users.insert(&anna).await?;
-	
-	users.display();
+
+	users.retrieve_data().await?;
+	// users.display().await?;
 	
 	// display_table(&pool, "testing").await?;
 	
