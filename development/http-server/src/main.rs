@@ -8,9 +8,88 @@ use bb8_postgres::PostgresConnectionManager;
 type DataBasePool = Pool<PostgresConnectionManager<NoTls>>;
 type DataBaseConnection<'a> = bb8::PooledConnection<'a, PostgresConnectionManager<NoTls>>;
 
-// Connect to database && create Pool
-async fn create_pool() -> Result<DataBasePool, Box<dyn std::error::Error>>
+trait SqlString{
+	fn values(&self) -> String{
+		String::new()
+	}
+
+	fn types(&self) -> String{
+		String::new()
+	}
+}
+
+#[derive(Debug)]
+struct User{
+	name: String,
+	age: i32,
+}
+
+impl SqlString for User{
+	fn values(&self) -> String{
+		format!("(name, age) VALUES (\'{}\', {})", self.name, self.age)
+	}
+
+	fn types(&self) -> String{
+		format!("(id SERIAL PRIMARY KEY, name TEXT NOT NULL, age int NOT NULL)")
+	}
+}
+
+#[derive(Debug)]
+struct Table<'a>{
+	name: String,
+	pool: &'a DataBasePool,
+}
+
+impl Table<'_>
 {
+	async fn new<'a>(name: &str, content: &impl SqlString, pool: &'a DataBasePool) -> Result<Table<'a>, Box<dyn std::error::Error>>{
+		let	connection: DataBaseConnection = pool.get().await?;
+
+		// Create a connection string
+		let create_string = format!(
+			"CREATE TABLE IF NOT EXISTS {} {}",
+			name, content.types()
+		);
+
+		connection.execute(&create_string, &[]).await?;
+
+		println!("CREATE: {}", name);
+
+        Ok(Table { name: name.to_string(), pool })
+    }
+
+	async fn insert(&self, addition: &impl SqlString) -> Result<(), Box<dyn std::error::Error>>{
+		let connection: DataBaseConnection = self.pool.get().await?;
+
+		let insert_command = format!(
+			"INSERT INTO {}{}",
+			self.name, addition.values()
+		);
+
+		println!("INSERT: {}", insert_command);
+
+		connection.execute(&insert_command, &[]).await?;
+
+		Ok(())
+	}
+
+	async fn display(&self) -> Result<(), Box<dyn std::error::Error>> {
+		let connection: DataBaseConnection = self.pool.get().await?;
+
+		let rows = connection
+			.query("SELECT * FROM {self.name}`", &[])
+			.await?;
+
+		for row in rows{
+			
+		}
+	
+		Ok(())
+	}
+}
+
+// Connect to database && create Pool
+async fn create_pool() -> Result<DataBasePool, Box<dyn std::error::Error>> {
 	// Retrieve environment variables for connection details
 	let host = env::var("POSTGRES_HOST").expect("POSTGRES_HOST not set");
 	let port = env::var("POSTGRES_PORT").expect("POSTGRES_PORT not set");
@@ -32,34 +111,26 @@ async fn create_pool() -> Result<DataBasePool, Box<dyn std::error::Error>>
         .build(manager)
         .await?;
 
+	println!("CREATED POOL");
+
     Ok(pool)
 }
 
-async fn create_table(pool: &DataBasePool, name: &str) -> Result<(), Box<dyn std::error::Error>>
-{
-	let	connection: DataBaseConnection = pool.get().await?;
+async fn display_table(pool: &DataBasePool, table: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let connection: DataBaseConnection = pool.get().await?;
 
-	// Create a connection string
-    let create_string = format!(
-        "CREATE TABLE IF NOT EXISTS {} (id SERIAL PRIMARY KEY, name TEXT NOT NULL, age INT NOT NULL)",
-        name
-    );
+    let rows = connection
+        .query("SELECT * FROM another", &[])
+        .await?;
 
-	connection
-	.execute(&create_string, &[])
-	.await?;
+    for row in rows {
+        let id: i32 = row.get("id");
+        let name: String = row.get("name");
+        let age: i32 = row.get("age");
+        println!("id: {}, name: {}, age: {}", id, name, age);
+    }
 
-	connection
-	.execute(
-		"INSERT INTO others(name, age) VALUES ($1, $2)",
-		&[&"Bastt", &420],
-	)
-	.await?;
-
-	println!("set up table!");
-	drop(connection);
-
-	Ok(())
+    Ok(())
 }
 
 #[tokio::main]
@@ -68,27 +139,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 	// get_pool
 	let	pool: DataBasePool = create_pool().await?;
 
-	create_table(&pool, "clients").await?;
-	create_table(&pool, "others").await?;
-
+	let anna = User{
+		name: "santa".to_string(),
+		age:10000,
+	};
+	
+	let users = Table::new("another", &anna, &pool).await?;
+	
+	users.insert(&anna).await?;
+	
+	users.display();
+	
+	// display_table(&pool, "testing").await?;
+	
     // // Spawn a task to process the connection in the background
+	// let	connection: DataBaseConnection = pool.get().await?;
     // tokio::spawn(async move {
 	// 	let _ = connection;
-    // });
-	
-	let connection: DataBaseConnection = pool.get().await?;
-
-    // Check if the table contains the expected values
-    let rows = connection.query("SELECT * FROM others", &[]).await?;
-    for row in rows {
-        let id: i32 = row.get("id");
-        let name: &str = row.get("name");
-        let age: i32 = row.get("age");
-        println!("id: {}, name: {}, age: {}", id, name, age);
-    }
-
-
-    println!("Connected to the database and acquired a connection");
+    // }).await?;
 
     Ok(())
 }
