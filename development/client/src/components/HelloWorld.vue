@@ -1,5 +1,9 @@
 <template>
-  <div></div>
+  <div>
+    <ul>
+      <li v-for="message in messages" :key="message">{{ message }}</li>
+    </ul>
+  </div>
 </template>
 
 <script>
@@ -7,6 +11,7 @@ export default {
   data() {
     return {
       socket: null,
+      messages: [],
     };
   },
   methods: {
@@ -24,6 +29,11 @@ export default {
 
       this.socket.onerror = (error) => {
         console.error("WebSocket error:", error);
+      };
+
+      this.socket.onmessage = (event) => {
+        const message = event.data;
+        this.messages.push(message);
       };
     },
     sendMessage(message) {
