@@ -7,64 +7,65 @@ use bb8_postgres::PostgresConnectionManager;
 type DataBasePool = Pool<PostgresConnectionManager<NoTls>>;
 type DataBaseConnection<'a> = bb8::PooledConnection<'a, PostgresConnectionManager<NoTls>>;
 
-trait SqlString{
+trait SqlString {
+	fn types() -> String{
+		String::new()
+	}
+
 	fn values(&self) -> String{
 		String::new()
 	}
-
-	fn types(&self) -> String{
-		String::new()
-	}
-
-	fn elems(&self) -> Vec<String> {
-		Vec::new()
-	}
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct User{
 	name: String,
 	age: i32,
 }
 
 impl SqlString for User{
-	fn values(&self) -> String {
-		format!("(name, age) VALUES (\'{}\', {})", self.name, self.age)
-	}
-
-	fn types(&self) -> String {
+	fn types() -> String {
 		format!("(id SERIAL PRIMARY KEY, name TEXT NOT NULL, age int NOT NULL)")
 	}
 
-	fn elems(&self) -> Vec<String> {
-		vec!("id".to_string(), "name".to_string(), "age".to_string())
+	fn values(&self) -> String {
+		format!("(name, age) VALUES (\'{}\', {})", self.name, self.age)
 	}
 }
 
 #[derive(Debug)]
-struct Table<'a>{
+struct Table<'a, T>
+where
+	T: SqlString,
+{
 	name: String,
 	pool: &'a DataBasePool,
-	elems: Vec<String>,
+	_type: std::marker::PhantomData<T>,
 }
 
-impl Table<'_>
+impl<'a, T> Table<'a, T>
+where
+	T: SqlString,
 {
-	async fn new<'a>(name: &str, content: &impl SqlString, pool: &'a DataBasePool) -> Result<Table<'a>, Box<dyn std::error::Error>>{
+	async fn new<'b>(name: &str, pool: &'b DataBasePool) -> Result<Table<'b, T>, Box<dyn std::error::Error>>{
 		let	connection: DataBaseConnection = pool.get().await?;
 
 		// Create a connection string
 		let create_string = format!(
 			"CREATE TABLE IF NOT EXISTS {} {}",
-			name, content.types()
+			name, T::types()
 		);
 
 		connection.execute(&create_string, &[]).await?;
 
-		println!("CREATE: {}", name);
+		println!("CREATED: {}", name);
 
-        Ok(Table { name: name.to_string(), pool, elems: content.elems()})
-    }
+		Ok(Table {
+			    name: name.to_string(),
+			    pool,
+			    _type: std::marker::PhantomData,
+			})
+	}
 
 	async fn insert(&self, addition: &impl SqlString) -> Result<(), Box<dyn std::error::Error>>{
 		let connection: DataBaseConnection = self.pool.get().await?;
@@ -74,14 +75,14 @@ impl Table<'_>
 			self.name, addition.values()
 		);
 
-		println!("INSERT: {} {}", self.name, addition.values());
+		println!("INSERTED: {} {}", self.name, addition.values());
 
 		connection.execute(&insert_command, &[]).await?;
 
 		Ok(())
 	}
 
-	async fn retrieve_data(&self) -> Result<Vec<User>, Box<dyn std::error::Error>> {
+	async fn retrieve(&self) -> Result<Vec<User>, Box<dyn std::error::Error>> {
 		let connection: DataBaseConnection = self.pool.get().await?;
 
 		let select_command = format!("SELECT * FROM {}", self.name);
@@ -105,23 +106,6 @@ impl Table<'_>
 		Ok(data)
 	}
 
-	async fn display(&self) -> Result<(), Box<dyn std::error::Error>> {
-		let connection: DataBaseConnection = self.pool.get().await?;
-
-		let select_command = format!("SELECT * FROM {}", self.name);
-
-		let rows = connection
-			.query(&select_command, &[])
-			.await?;
-
-		println!("did select table");
-
-		for row in rows{
-			
-		}
-	
-		Ok(())
-	}
 }
 
 // Connect to database && create Pool
@@ -176,16 +160,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 	// get_pool
 	let	pool: DataBasePool = create_pool().await?;
 
+	let users:Table<User> = Table::new("another", &pool).await?;
+
 	let anna = User{
-		name: "santa".to_string(),
-		age:10000,
+		name: "anna".to_string(),
+		age: 90,
 	};
-	
-	let users = Table::new("another", &anna, &pool).await?;
 	
 	users.insert(&anna).await?;
 
-	users.retrieve_data().await?;
+	users.retrieve().await?;
+	
 	// users.display().await?;
 	
 	// display_table(&pool, "testing").await?;
