@@ -3,8 +3,8 @@ use tokio::net::TcpListener;
 mod bridge;
 mod game;
 
-use self::game::Game;
-use self::game::Player;
+use self::game::*;
+
 use bridge::bridge;
 
 pub(crate) async fn queue() {
@@ -30,6 +30,7 @@ pub(crate) async fn queue() {
             tokio::spawn(async move {
                 println!("Game start!");
                 game.start().await;
+                println!("Game ended!");
             });
         }
     }

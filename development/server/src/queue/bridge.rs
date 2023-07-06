@@ -11,7 +11,7 @@ pub(crate) fn bridge(
 ) -> (Sender<String>, Receiver<String>, Receiver<()>) {
     let (mscp_to_socket_sender, mut mscp_to_socket_receiver) = mpsc::channel::<String>(1);
     let (socket_to_mscp_sender, socket_to_mscp_receiver) = mpsc::channel::<String>(1);
-    let (disconnect_sender, mut disconnect_receiver) = mpsc::channel::<()>(1);
+    let (disconnect_sender, disconnect_receiver) = mpsc::channel::<()>(1);
 
     let (mut write, mut read) = socket.split();
 
@@ -27,7 +27,7 @@ pub(crate) fn bridge(
                 }
                 None => {
                     let _ = disconnect_sender.send(()).await;
-                    return;
+                    break;
                 } // Socket_to_mpsc_sender is dropped here that causes the channel to return None at the receiver
             }
         }
@@ -40,7 +40,7 @@ pub(crate) fn bridge(
                 }
                 None => {
                     let _ = write.close().await;
-                    return;
+                    break;
                 }
             }
         }
