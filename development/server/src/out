@@ -1,3 +1,51 @@
+mod queue;
+use self::queue::queue;
+
+#[tokio::main]
+async fn main() {
+    queue().await;
+}
+use futures_util::{SinkExt, StreamExt};
+use tokio::{
+    net::TcpStream,
+    sync::mpsc::{self, Receiver, Sender},
+};
+use tokio_tungstenite::WebSocketStream;
+use tungstenite::Message;
+
+pub(crate) fn bridge(socket: WebSocketStream<TcpStream>) -> (Sender<String>, Receiver<String>) {
+    let (mscp_to_socket_sender, mut mscp_to_socket_receiver) = mpsc::channel::<String>(1);
+    let (socket_to_mscp_sender, socket_to_mscp_receiver) = mpsc::channel::<String>(1);
+
+    let (mut write, mut read) = socket.split();
+
+    tokio::spawn(async move {
+        loop {
+            match read.next().await {
+                Some(msg) => {
+                    if let Ok(msg) = msg {
+                        if let Ok(msg) = msg.into_text() {
+                            let _ = socket_to_mscp_sender.send(msg).await;
+                        };
+                    }
+                }
+                None => return, // Socket_to_mpsc_sender is dropped here that causes the channel to return None at the receiver
+            }
+        }
+    });
+    tokio::spawn(async move {
+        loop {
+            match mscp_to_socket_receiver.recv().await {
+                Some(msg) => {
+                    let _ = write.send(Message::Text(msg + "\n")).await;
+                }
+                None => return,
+            }
+        }
+    });
+
+    return (mscp_to_socket_sender, socket_to_mscp_receiver);
+}
 use core::time;
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -175,4 +223,37 @@ fn get_ms() -> u128 {
         .expect("Failed to calculate duration");
     let milliseconds = duration.as_secs() as u128 * 1000 + u128::from(duration.subsec_millis());
     milliseconds
+}
+use tokio::net::TcpListener;
+
+mod bridge;
+mod game;
+
+use self::game::Game;
+use self::game::Player;
+use bridge::bridge;
+
+pub(crate) async fn queue() {
+    let listener = TcpListener::bind("127.0.0.1:4242").await.unwrap();
+
+    let mut queue: Vec<Player> = Vec::<Player>::new();
+
+    loop {
+        let (socket, _) = listener.accept().await.unwrap();
+        let socket = tokio_tungstenite::accept_async(socket).await.unwrap();
+
+        let (sender, receiver) = bridge(socket);
+
+        queue.push(Player::new(sender, receiver));
+
+        if queue.len() >= 2 {
+            let p1 = queue.remove(0);
+            let p2 = queue.remove(0);
+            let game = Game::new([p1, p2]);
+
+            tokio::spawn(async move {
+                game.start().await;
+            });
+        }
+    }
 }

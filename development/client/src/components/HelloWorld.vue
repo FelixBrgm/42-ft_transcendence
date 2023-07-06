@@ -1,7 +1,7 @@
 <template>
   <div>
     <ul>
-      <li v-for="message in messages" :key="message">{{ message }}</li>
+      <li v-for="message in reversedMessages" :key="message">{{ message }}</li>
     </ul>
   </div>
 </template>
@@ -13,6 +13,11 @@ export default {
       socket: null,
       messages: [],
     };
+  },
+  computed: {
+    reversedMessages() {
+      return this.messages.slice().reverse();
+    },
   },
   methods: {
     connectWebSocket() {
@@ -33,7 +38,8 @@ export default {
 
       this.socket.onmessage = (event) => {
         const message = event.data;
-        this.messages.push(message);
+        console.log(message);
+        // this.messages.push(message);
       };
     },
     sendMessage(message) {
