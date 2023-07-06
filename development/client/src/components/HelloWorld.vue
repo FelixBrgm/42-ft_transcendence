@@ -39,7 +39,13 @@ export default {
       this.socket.onmessage = (event) => {
         const message = event.data;
         console.log(message);
-        // this.messages.push(message);
+        if (message.substring(0,3) == "POS") {
+          const p1 = parseInt(message.substring(3, 8), 10);
+          const p2 = parseInt(message.substring(8, 13), 10);
+          const x = parseInt(message.substring(13, 18), 10);
+          const y = parseInt(message.substring(18, 23), 10);
+          console.log("P1: " + p1 + "| P2: " + p2 + " | Ball x: " + x + " | y: " + y);
+        }
       };
     },
     sendMessage(message) {
@@ -49,16 +55,13 @@ export default {
     },
     handleKeyPress(event) {
       if (event.key === "ArrowUp") {
-        console.log("PRESSED u");
         this.sendMessage("u");
       } else if (event.key === "ArrowDown") {
-        console.log("PRESSED d");
         this.sendMessage("d");
       }
     },
     handleKeyRelease(event) {
       if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-        console.log("PRESSED n");
         this.sendMessage("n");
       }
     },
