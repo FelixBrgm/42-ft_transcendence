@@ -1,111 +1,103 @@
 
+use bb8_postgres::PostgresConnectionManager;
+use bb8_postgres::tokio_postgres::NoTls;
+use serde::{Serialize, Deserialize};
+use serde::de::DeserializeOwned;
+use std::marker::PhantomData;
 use std::env;
 use bb8::Pool;
-use bb8_postgres::tokio_postgres::NoTls;
-use bb8_postgres::PostgresConnectionManager;
 
 type DataBasePool = Pool<PostgresConnectionManager<NoTls>>;
 type DataBaseConnection<'a> = bb8::PooledConnection<'a, PostgresConnectionManager<NoTls>>;
 
-trait SqlString {
-	fn types() -> String{
-		String::new()
-	}
 
-	fn values(&self) -> String{
-		String::new()
-	}
-}
+// TO DO:
+/*
+	https:server -> ActixWeb to asynchronously recieve and send data
 
-#[derive(Debug, Default)]
+	postgres ->
+	> debug function to see content of db			X Done
+	> retrieve function to specific data			
+	> make it secure
+
+	> storing one DataBaseConnection from the pool in each table right now
+	==> should there be more connections for each websocket, or a different approach
+	==> also i could store mutible structs in one table using more columns, but this needs to be implemented
+
+*/ 
+
+// just a example struct
+#[derive(Serialize, Deserialize, Debug)]
 struct User{
 	name: String,
 	age: i32,
 }
 
-impl SqlString for User{
-	fn types() -> String {
-		format!("(id SERIAL PRIMARY KEY, name TEXT NOT NULL, age int NOT NULL)")
-	}
-
-	fn values(&self) -> String {
-		format!("(name, age) VALUES (\'{}\', {})", self.name, self.age)
-	}
-}
-
 #[derive(Debug)]
 struct Table<'a, T>
 where
-	T: SqlString,
+	T: Serialize  + DeserializeOwned,
 {
 	name: String,
-	pool: &'a DataBasePool,
-	_type: std::marker::PhantomData<T>,
+	connection: DataBaseConnection<'a>,
+	_type: PhantomData<T>,
 }
 
 impl<'a, T> Table<'a, T>
 where
-	T: SqlString,
+	T: Serialize  + DeserializeOwned,
 {
-	async fn new<'b>(name: &str, pool: &'b DataBasePool) -> Result<Table<'b, T>, Box<dyn std::error::Error>>{
-		let	connection: DataBaseConnection = pool.get().await?;
+	async fn new(name: &str, pool: &'a DataBasePool) -> Result<Table<'a, T>, Box<dyn std::error::Error>> {
+		let table = Table {
+			name: name.to_string(),
+			connection: pool.get().await?,
+			_type: std::marker::PhantomData,
+		};
 
-		// Create a connection string
-		let create_string = format!(
-			"CREATE TABLE IF NOT EXISTS {} {}",
-			name, T::types()
-		);
-
-		connection.execute(&create_string, &[]).await?;
-
-		println!("CREATED: {}", name);
-
-		Ok(Table {
-			    name: name.to_string(),
-			    pool,
-			    _type: std::marker::PhantomData,
-			})
+		let create_string = format!("CREATE TABLE IF NOT EXISTS \"{}\" (data TEXT NOT NULL)",name);
+		table.connection.execute(&create_string, &[]).await?;
+		Ok(table)
 	}
 
-	async fn insert(&self, addition: &impl SqlString) -> Result<(), Box<dyn std::error::Error>>{
-		let connection: DataBaseConnection = self.pool.get().await?;
+	async fn insert(&self, data: &T) -> Result<(), Box<dyn std::error::Error>> {
+		let insert_command = format!("INSERT INTO \"{}\"(data) VALUES ($1)", self.name);
+		let serialized = serde_json::to_string(&data)?;
+		self.connection.execute(&insert_command, &[&serialized]).await?;
 
-		let insert_command = format!(
-			"INSERT INTO {}{}",
-			self.name, addition.values()
-		);
-
-		println!("INSERTED: {} {}", self.name, addition.values());
-
-		connection.execute(&insert_command, &[]).await?;
+		println!("INSERTED {} INTO {}", serialized, self.name);
 
 		Ok(())
 	}
 
-	async fn retrieve(&self) -> Result<Vec<User>, Box<dyn std::error::Error>> {
-		let connection: DataBaseConnection = self.pool.get().await?;
-
+	async fn get_table(&self) -> Result<Vec<T>, Box<dyn std::error::Error>> {
 		let select_command = format!("SELECT * FROM {}", self.name);
+		let rows = self.connection.query(&select_command, &[]).await?;
 
-		let rows = connection
-			.query(&select_command, &[])
-			.await?;
-
-		let mut data = Vec::new();
+		let mut table: Vec<T> = Vec::new();
 
 		for row in rows {
-			let name: String = row.try_get("name")?;
-			let age: i32 = row.try_get("age")?;
-
-			let user = User { name, age };
-			data.push(user);
+			let data: String = row.try_get("data")?;
+			let deserialized: T = serde_json::from_str(&data)?;
+			table.push(deserialized);
 		}
 
-		println!("DATA: {:?}", data);
-
-		Ok(data)
+		Ok(table)
 	}
 
+	async fn display(&self) {
+		let select_command = format!("SELECT * FROM {}", self.name);
+		let rows = self.connection.query(&select_command, &[]).await.unwrap();
+
+		println!("/--------------------------\\");
+		println!("|         {}", self.name);
+		println!("\\--------------------------/");
+
+		for row in rows {
+			let data: String = row.try_get("data").unwrap();
+			println!("|> {}", data);
+		}
+		println!("\\--------------------------/");
+	}
 }
 
 // Connect to database && create Pool
@@ -131,27 +123,7 @@ async fn create_pool() -> Result<DataBasePool, Box<dyn std::error::Error>> {
         .build(manager)
         .await?;
 
-	println!("CREATED POOL");
-
     Ok(pool)
-}
-
-async fn display_table(pool: &DataBasePool, table: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let connection: DataBaseConnection = pool.get().await?;
-
-    let rows = connection
-        .query("SELECT * FROM another", &[])
-        .await?;
-
-
-    for row in rows {
-        let id: i32 = row.get("id");
-        let name: String = row.get("name");
-        let age: i32 = row.get("age");
-        println!("id: {}, name: {}, age: {}", id, name, age);
-    }
-
-    Ok(())
 }
 
 #[tokio::main]
@@ -163,17 +135,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>
 	let users:Table<User> = Table::new("another", &pool).await?;
 
 	let anna = User{
-		name: "anna".to_string(),
-		age: 90,
+		name: "".to_string(),
+		age: 1,
 	};
 	
 	users.insert(&anna).await?;
+	users.display().await;
 
-	users.retrieve().await?;
-	
-	// users.display().await?;
-	
-	// display_table(&pool, "testing").await?;
+	// let content = users.get_table().await?;
+	// println!("TABLE: {:?}", content);
 	
     // // Spawn a task to process the connection in the background
 	// let	connection: DataBaseConnection = pool.get().await?;
