@@ -54,6 +54,10 @@ impl Game {
 
     async fn tick(&mut self) {
         let length_traveled: u16 = (self.time_since_last_tick * self.config.length_per_ms) as u16;
+        // println!(
+        //     "%{}|{}",
+        //     self.time_since_last_tick, self.config.min_time_per_tick_ms
+        // );
 
         for player in self.players.iter_mut() {
             player.render(length_traveled, &self.config);
@@ -81,7 +85,7 @@ impl Game {
         loop {
             // This is so that it always takes 1ms steps minimum
             if get_ms() <= self.last_tick_time {
-                std::thread::sleep(Duration::from_millis(1));
+                tokio::time::sleep(Duration::from_millis(1)).await;
                 continue;
             }
 
@@ -92,9 +96,9 @@ impl Game {
                 break;
             }
 
-            std::thread::sleep(Duration::from_millis(
-                ((self.config.min_time_per_tick_ms / 3) + 1) as u64,
-            ));
+            tokio::time::sleep(Duration::from_millis(
+                ((self.config.min_time_per_tick_ms / 2) + 1) as u64,
+            )).await;
         }
     }
 }

@@ -55,6 +55,7 @@ export default {
     },
     handleKeyPress(event) {
       if (event.key === "ArrowUp") {
+        console.log("UP");
         this.sendMessage("u");
       } else if (event.key === "ArrowDown") {
         this.sendMessage("d");

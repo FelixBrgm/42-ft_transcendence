@@ -77,6 +77,7 @@ pub struct Game {
     config: GameConfig,
     last_tick_time: u128,
     time_since_last_tick: u128,
+    finished: bool,
 }
 
 impl Game {
@@ -85,63 +86,41 @@ impl Game {
         let config = GameConfig::new();
         let last_tick_time = get_ms();
         let time_since_last_tick = 0;
+        let finished = false;
         Game {
             players,
             ball,
             config,
             last_tick_time,
             time_since_last_tick,
+            finished,
         }
     }
 
     pub async fn start(mut self) {
-        loop {
+        while !self.finished {
             self.wait_till_next_tick().await;
-            if self.has_player_disconnected() {
-                return;
-            }
+
             self.tick().await;
+
+            for player in self.players.iter_mut() {
+                if player.is_disconnected() {
+                    self.finished = true;
+                    return;
+                }
+            }
         }
+        self.send_msg_to_players("END".to_owned()).await;
     }
 
     async fn tick(&mut self) {
-        // Get last input
-        for i in 0..2 {
-            if let Ok(last_input) = self.players[i].receiver.try_recv() {
-                if let Some(c) = last_input.chars().last() {
-                    self.players[i].last_input = c;
-                }
-            }
-        }
-
-        self.update_player_position();
-
-        self.send_pos().await;
-    }
-    // Pos
-    fn update_player_position(&mut self) {
         let length_traveled: u16 = (self.time_since_last_tick * self.config.length_per_ms) as u16;
 
-        for i in 0..2 {
-            let player = &mut self.players[i];
-
-            match player.last_input {
-                'd' => {
-                    if player.position > length_traveled {
-                        player.position -= length_traveled;
-                    } else {
-                        player.position = 0;
-                    }
-                }
-                'u' => {
-                    player.position += length_traveled;
-                    if player.position > self.config.length - self.config.paddle_length {
-                        player.position = self.config.length - self.config.paddle_length;
-                    }
-                }
-                _ => {}
-            }
+        for player in self.players.iter_mut() {
+            player.render(length_traveled, &self.config);
         }
+
+        self.send_pos().await;
     }
 
     // Utils
@@ -154,8 +133,8 @@ impl Game {
     }
 
     async fn send_msg_to_players(&mut self, msg: String) {
-        for i in 0..2 {
-            let _ = self.players[i].sender.send(msg.to_owned()).await;
+        for player in self.players.iter_mut() {
+            let _ = player.sender.send(msg.to_owned()).await;
         }
     }
 
@@ -178,15 +157,6 @@ impl Game {
                 ((self.config.min_time_per_tick_ms / 3) + 1) as u64,
             ));
         }
-    }
-
-    fn has_player_disconnected(&mut self) -> bool {
-        for i in 0..2 {
-            if self.players[i].is_disconnected() {
-                return true;
-            }
-        }
-        return false;
     }
 }
 pub struct GameConfig {
@@ -225,9 +195,11 @@ impl Ball {
 }
 use tokio::sync::mpsc::{Receiver, Sender};
 
+use super::GameConfig;
+
 pub struct Player {
     pub sender: Sender<String>,
-    pub receiver: Receiver<String>,
+    receiver: Receiver<String>,
     disconnect: Receiver<()>,
     pub position: u16,
     pub last_input: char,
@@ -254,6 +226,33 @@ impl Player {
             return true;
         }
         return false;
+    }
+
+    pub fn render(&mut self, length_traveled: u16, config: &GameConfig) {
+        // Get last_input
+        if let Ok(last_input) = self.receiver.try_recv() {
+            if let Some(c) = last_input.chars().last() {
+                self.last_input = c;
+            }
+        }
+
+        // Render new position
+        match self.last_input {
+            'd' => {
+                if self.position > length_traveled {
+                    self.position -= length_traveled;
+                } else {
+                    self.position = 0;
+                }
+            }
+            'u' => {
+                self.position += length_traveled;
+                if self.position > config.length - config.paddle_length {
+                    self.position = config.length - config.paddle_length;
+                }
+            }
+            _ => {}
+        }
     }
 }
 use std::time::{SystemTime, UNIX_EPOCH};
