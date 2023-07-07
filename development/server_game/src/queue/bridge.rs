@@ -37,6 +37,7 @@ pub(crate) fn bridge(
             match mscp_to_socket_receiver.recv().await {
                 Some(msg) => {
                     let _ = write.send(Message::Text(msg + "\n")).await;
+                    let _ = write.flush().await;
                 }
                 None => {
                     let _ = write.close().await;

@@ -7,7 +7,7 @@ pub struct GameConfig {
 }
 impl GameConfig {
     pub fn new() -> Self {
-        let min_time_per_tick_ms: u128 = 50;
+        let min_time_per_tick_ms: u128 = 100;
         let length_per_ms: u128 = 1;
         let ball_speed_div: u16 = 2;
         let length: u16 = 10000;
