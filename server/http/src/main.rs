@@ -1,3 +1,5 @@
+use actix_rt;
+use actix_web::{web, App, HttpServer, Responder};
 use bb8::Pool;
 use bb8_postgres::tokio_postgres::NoTls;
 use bb8_postgres::PostgresConnectionManager;
@@ -24,6 +26,8 @@ type DataBaseConnection<'a> = bb8::PooledConnection<'a, PostgresConnectionManage
 
 */
 
+// -------------------------------------------------------------------------------------------
+
 // just a example struct
 #[derive(Serialize, Deserialize, Debug)]
 struct User {
@@ -34,21 +38,19 @@ struct User {
 #[derive(Debug)]
 struct Table<'a, T>
 where
-    T: Serialize + DeserializeOwned,
+T: Serialize + DeserializeOwned,
 {
-    name: String,
+	name: String,
     connection: DataBaseConnection<'a>,
     _type: PhantomData<T>,
 }
 
+#[allow(dead_code)]
 impl<'a, T> Table<'a, T>
 where
     T: Serialize + DeserializeOwned,
 {
-    async fn new(
-        name: &str,
-        pool: &'a DataBasePool,
-    ) -> Result<Table<'a, T>, Box<dyn std::error::Error>> {
+    async fn new(name: &str, pool: &'a DataBasePool,) -> Result<Table<'a, T>, Box<dyn std::error::Error>> {
         let table = Table {
             name: name.to_string(),
             connection: pool.get().await?,
@@ -106,6 +108,8 @@ where
     }
 }
 
+// -------------------------------------------------------------------------------------------
+
 // Connect to database && create Pool
 async fn create_pool() -> Result<DataBasePool, Box<dyn std::error::Error>> {
     // Retrieve environment variables for connection details
@@ -131,20 +135,46 @@ async fn create_pool() -> Result<DataBasePool, Box<dyn std::error::Error>> {
     Ok(pool)
 }
 
-#[tokio::main]
+// -------------------------------------------------------------------------------------------
+async fn index() -> impl Responder {
+    "Hello world!"
+}
+
+#[actix_rt::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // get_pool
+
+    // Create DB Pool
     let pool: DataBasePool = create_pool().await?;
 
-    let users: Table<User> = Table::new("another", &pool).await?;
+    // Create the Actix Web server
+    let server = HttpServer::new(move || {
+        App::new()
+            .data(pool.clone()) // Pass the database pool as shared state to Actix Web
+			.service( 
+				web::scope("/app")
+			// ...so this handles requests for `GET /app/index.html`
+			.route("/index.html", web::get().to(index)),
+			)
+    })
+    .bind("127.0.0.1:8082")?; // Bind the server to a specific address and port
 
-    let anna = User {
-        name: "".to_string(),
-        age: 1,
-    };
+    // Start the server after creating 
+    actix_web::rt::System::new("http-server").block_on(async {
+        let _ = server.run().await;
+    });
 
-    users.insert(&anna).await?;
-    users.display().await;
+    Ok(())
+}
+
+    // let users: Table<User> = Table::new("another", &pool).await?;
+
+    // let anna = User {
+    //     name: "".to_string(),
+    //     age: 1,
+    // };
+
+    // users.insert(&anna).await?;
+    // users.display().await;
 
     // let content = users.get_table().await?;
     // println!("TABLE: {:?}", content);
@@ -154,6 +184,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // tokio::spawn(async move {
     // 	let _ = connection;
     // }).await?;
-
-    Ok(())
-}
