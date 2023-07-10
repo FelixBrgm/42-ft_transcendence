@@ -25,6 +25,8 @@ async fn main() ->  Result<(), Box<dyn std::error::Error>> {
 
 	let pool: DbPool = create_db_pool()?;
 
+	let connection = pool.get().expect("Failed to get connection from pool");
+
 
 	Ok(())
 
