@@ -1,33 +1,27 @@
-use std::path::Path;
-use dotenvy::dotenv;
+#[macro_use]
+extern crate diesel;
+
+mod schema;
+mod models;
+mod ops;
+mod db;
+
+use crate::db::setup_database;
+use crate::ops::client_ops::create_client;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
-use diesel::pg::PgConnection;
-use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 
-type DbPool = Pool<ConnectionManager<PgConnection>>;
 
-fn create_db_pool() -> Result<DbPool, Box<dyn std::error::Error>> {
-
-	// retrieve the database url
-    dotenvy::from_path(Path::new("../../database/.env"))?;
-    dotenv().ok();
-    let database_url =  dotenvy::var("POSTGRES_URL")?;
-
-    // Create a connection manager
-    let manager = ConnectionManager::<PgConnection>::new(database_url);
-
-    // Create a connection pool
-	Ok(Pool::builder().build(manager)?)
-}
+use crate::db::get_connection;
 
 #[actix_web::main]
 async fn main() ->  Result<(), Box<dyn std::error::Error>> {
 
-	let pool: DbPool = create_db_pool()?;
+	setup_database()?;
 
-	let connection = pool.get().expect("Failed to get connection from pool");
-
+	create_client("peter");
+	create_client("peter");
+	create_client("peter");
+	create_client("peter");
 
 	Ok(())
-
 }

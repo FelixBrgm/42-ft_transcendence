@@ -1,0 +1,38 @@
+use std::path::Path;
+use dotenvy::dotenv;
+use lazy_static::lazy_static;
+use diesel::pg::PgConnection;
+use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
+use diesel_migrations::run_pending_migrations;
+
+pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+
+fn create_db_pool() -> Result<DbPool, Box<dyn std::error::Error>> {
+
+	// Retrieve the database url
+    let _ = dotenvy::from_path(Path::new("../../database/.env"));
+    dotenv().ok();
+    let database_url =  dotenvy::var("POSTGRES_URL")?;
+
+    // Create a connection manager
+    let manager = ConnectionManager::<PgConnection>::new(database_url);
+
+    // Create a connection pool
+	Ok(Pool::builder().build(manager)?)
+}
+
+// once the lazy static is required it is initiolized
+lazy_static! {
+    static ref POOL: DbPool = create_db_pool().expect("Failed to create database pool");
+}
+
+pub fn get_connection() -> Result<PooledConnection<ConnectionManager<PgConnection>>, Box<dyn std::error::Error>> {
+	Ok(POOL.get()?)
+}
+
+pub fn setup_database() -> Result<(), Box<dyn std::error::Error>>
+{
+	let connection = get_connection()?;
+	run_pending_migrations(&connection)?;
+	Ok(())
+}
