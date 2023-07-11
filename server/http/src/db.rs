@@ -26,13 +26,13 @@ lazy_static! {
     static ref POOL: DbPool = create_db_pool().expect("Failed to create database pool");
 }
 
-pub fn get_connection() -> Result<PooledConnection<ConnectionManager<PgConnection>>, Box<dyn std::error::Error>> {
-	Ok(POOL.get()?)
+pub fn get_connection() -> PooledConnection<ConnectionManager<PgConnection>> {
+	POOL.get().expect("Failed to get connection")
 }
 
 pub fn setup_database() -> Result<(), Box<dyn std::error::Error>>
 {
-	let connection = get_connection()?;
+	let connection = get_connection();
 	run_pending_migrations(&connection)?;
 	Ok(())
 }

@@ -16,7 +16,9 @@ async fn main() ->  Result<(), Box<dyn std::error::Error>> {
 
 	setup_database()?;
 
-	client_ops::insert_client("fritz");
-	client_ops::show_clients();
+	client_ops::insert("fritz");
+	client_ops::show();
+	println!("find client: {:?}", client_ops::find("fritzi"));
+	client_ops::remove("daddy");
 	Ok(())
 }

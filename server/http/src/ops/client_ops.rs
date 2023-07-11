@@ -1,50 +1,65 @@
 use crate::models::{NewClient, Client};
+use crate::schema::clients::dsl::*;
 use crate::db::get_connection;
 use diesel::prelude::*;
 
-pub fn insert_client(name: &str) {
-	println!("creating client... {:?}", name);
-	use crate::schema::clients::dsl::*;
+// all of these just get a new connection rn
+
+pub fn insert(name: &str) {
+	println!("inserting client... {:?}", name);
+	let connection = get_connection();
+
 	let new_client = NewClient {
 		title: name,
 		is_online: true,
 	};
-
-	let connection = get_connection();
-	match connection {
-		Ok(con) => {
-			diesel::insert_into(clients)
-				.values(&new_client)
-				.execute(&con)
-				.expect("Error saving new Client");
-		},
-		Err(_) => {println!("failed to get connection")},
-	};
+	
+	diesel::insert_into(clients)
+		.values(&new_client)
+		.execute(&connection)
+		.expect("Error saving new Client");
 }
 
-pub fn find_client(name: &str) -> Option<Client>
+pub fn remove(name: &str) -> usize {
+	println!("removing client... {:?}", name);
+	let connection = get_connection();
+
+	diesel::delete(clients.filter(title.eq(name)))
+	.execute(&connection)
+	.expect("Failed to delete CLient {name}")
+}
+
+
+pub fn find(name: &str) -> Option<Client>
 {
-	println!("searching client... {:?}", name);
-	None
+	println!("searching for client... {:?}", name);
+	let connection = get_connection();
+
+	clients
+	.filter(title.eq(name))
+	.first::<Client>(&connection)
+	.ok()
 }
 
-// pub fn remove_user()
-
-pub fn show_clients() {
-	println!("showing clients...");
-	use crate::schema::clients::dsl::*;
-
+pub fn exists(name: &str) -> bool
+{
 	let connection = get_connection();
-	match connection {
-		Ok(con) => {
-			let results = clients
-			.load::<Client>(&con)
-			.expect("error loading clients");
+	
+	clients
+	.filter(title.eq(name))
+	.first::<Client>(&connection)
+	.is_ok()
+}
 
-			for client in results{
-				println!("{:?}", client);
-			}
-		},
-		Err(_) => {println!("failed to get connection")},
-	};
+pub fn show() {
+	println!("showing clients...");
+	let connection = get_connection();
+
+	let results = clients
+	.load::<Client>(&connection)
+	.unwrap_or(vec![]);
+
+	for client in results{
+		println!("{:?}", client);
+	}
 }
