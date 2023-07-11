@@ -29,9 +29,16 @@ pub fn remove(name: &str) -> usize {
 	.expect("Failed to delete CLient {name}")
 }
 
+pub fn exists(name: &str) -> bool {
+	let connection = get_connection();
+	
+	clients
+	.filter(title.eq(name))
+	.first::<Client>(&connection)
+	.is_ok()
+}
 
-pub fn find(name: &str) -> Option<Client>
-{
+pub fn search(name: &str) -> Option<Client {
 	println!("searching for client... {:?}", name);
 	let connection = get_connection();
 
@@ -39,16 +46,6 @@ pub fn find(name: &str) -> Option<Client>
 	.filter(title.eq(name))
 	.first::<Client>(&connection)
 	.ok()
-}
-
-pub fn exists(name: &str) -> bool
-{
-	let connection = get_connection();
-	
-	clients
-	.filter(title.eq(name))
-	.first::<Client>(&connection)
-	.is_ok()
 }
 
 pub fn show() {
