@@ -6,19 +6,42 @@ mod models;
 mod ops;
 mod db;
 
-use crate::db::setup_database;
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use diesel_migrations::run_pending_migrations;
+use crate::db::get_connection;
 use crate::ops::client_ops;
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+
+// GET handler
+#[get("/")]
+async fn index() -> impl Responder {
+    HttpResponse::Ok().body("Hello, GET request!")
+}
+
+// POST handler
+#[post("/")]
+async fn post_data(data: web::Json<String>) -> impl Responder {
+    // Process the data received in the POST request
+    // Replace YourStruct with your actual struct for handling the data
+
+    HttpResponse::Ok().body("Hello, POST request!")
+}
 
 
 #[actix_web::main]
-async fn main() ->  Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
-	setup_database()?;
+    let connection = get_connection();
+    run_pending_migrations(&connection)?;
+    println!("Database connection established");
 
-	client_ops::insert("fritz");
-	client_ops::show();
-	println!("find client: {:?}", client_ops::find("fritzi"));
-	client_ops::remove("daddy");
-	Ok(())
+    HttpServer::new(move || {
+        App::new()
+		.service(index)
+		.service(post_data)
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await?;
+
+    Ok(())
 }

@@ -30,9 +30,3 @@ pub fn get_connection() -> PooledConnection<ConnectionManager<PgConnection>> {
 	POOL.get().expect("Failed to get connection")
 }
 
-pub fn setup_database() -> Result<(), Box<dyn std::error::Error>>
-{
-	let connection = get_connection();
-	run_pending_migrations(&connection)?;
-	Ok(())
-}
