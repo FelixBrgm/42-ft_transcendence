@@ -7,21 +7,16 @@ mod ops;
 mod db;
 
 use crate::db::setup_database;
-use crate::ops::client_ops::create_client;
+use crate::ops::client_ops;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 
-
-use crate::db::get_connection;
 
 #[actix_web::main]
 async fn main() ->  Result<(), Box<dyn std::error::Error>> {
 
 	setup_database()?;
 
-	create_client("peter");
-	create_client("peter");
-	create_client("peter");
-	create_client("peter");
-
+	client_ops::insert_client("fritz");
+	client_ops::show_clients();
 	Ok(())
 }
