@@ -3,7 +3,6 @@ use dotenvy::dotenv;
 use lazy_static::lazy_static;
 use diesel::pg::PgConnection;
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
-use diesel_migrations::run_pending_migrations;
 
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
 

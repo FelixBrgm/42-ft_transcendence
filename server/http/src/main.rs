@@ -1,31 +1,13 @@
 #[macro_use]
 extern crate diesel;
 
-mod schema;
-mod models;
-mod ops;
+mod handler;
 mod db;
 
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpServer};
 use diesel_migrations::run_pending_migrations;
 use crate::db::get_connection;
-use crate::ops::client_ops;
-
-// GET handler
-#[get("/")]
-async fn index() -> impl Responder {
-    HttpResponse::Ok().body("Hello, GET request!")
-}
-
-// POST handler
-#[post("/")]
-async fn post_data(data: web::Json<String>) -> impl Responder {
-    // Process the data received in the POST request
-    // Replace YourStruct with your actual struct for handling the data
-
-    HttpResponse::Ok().body("Hello, POST request!")
-}
-
+use crate::handler::handle_request;
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -36,8 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     HttpServer::new(move || {
         App::new()
-		.service(index)
-		.service(post_data)
+		.default_service(web::route().to(handle_request))
     })
     .bind("127.0.0.1:8080")?
     .run()
