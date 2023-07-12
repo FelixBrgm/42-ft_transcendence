@@ -18,6 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     HttpServer::new(move || {
         App::new()
+		.route("/{param1}/{param2}", web::get().to(handler::get_request))
 		.default_service(web::route().to(handle_request))
     })
     .bind("127.0.0.1:8080")?

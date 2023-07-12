@@ -1,5 +1,6 @@
 use crate::schema::clients;
 
+// ----------- test CLIENT STRUCT -----------------
 #[derive (Insertable)]
 #[table_name = "clients"]
 pub struct NewClient<'a> {
@@ -13,4 +14,6 @@ pub struct Client {
 	pub title: String,
 	pub is_online: bool,
 }
+
+// ----------- other  -----------------
 

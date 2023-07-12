@@ -38,7 +38,7 @@ pub fn exists(name: &str) -> bool {
 	.is_ok()
 }
 
-pub fn search(name: &str) -> Option<Client> {
+pub fn search(name: &str) -> Option<Client {
 	println!("searching for client... {:?}", name);
 	let connection = get_connection();
 
