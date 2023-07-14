@@ -1,6 +1,6 @@
 {
 	"name": "ft_transcendence",
-	"dockerFile": "../Dockerfile",
+	"dockerFile": "./Dockerfile",
 	"forwardPorts": [4242, 4242],
 	"settings": {
 		"terminal.integrated.shell.linux": "/bin/bash",
@@ -10,5 +10,5 @@
 		"octref.vetur",
 		"PKief.material-icon-theme"
 	],
-	"workspaceFolder": "/workspaces/42-ft_transcendence/development" // change 42-ft_transendence to name of repo when copied
+	"workspaceFolder": "/workspaces/42-ft_transcendence/source" // change 42-ft_transendence to name of repo when copied
 }
