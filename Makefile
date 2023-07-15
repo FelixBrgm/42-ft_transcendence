@@ -8,10 +8,15 @@ $(NAME):
 postgres:
 	cd database && docker-compose up -d
 
-dev:
+dev_build:
 	docker build -t dev ./.devcontainer/
-	docker run -it --name dev dev
+dev_run:
+	docker run -v ./source:/usr/src -d --name dev dev
+	docker exec  -it dev /bin/bash
 
+dev_stop:
+	docker stop dev
+	docker rm dev
 
 http:
 	set -a; . ./database/.env; set +a && cd source/server/http && cargo run
