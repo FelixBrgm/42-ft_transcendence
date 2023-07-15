@@ -4,7 +4,7 @@ import App from './App.vue'
 createApp(App).mount('#app')
 
 const address = 'ws://localhost:4242';
-const numConnections = 1;
+const numConnections = 0;
 
 for (let i = 0; i < numConnections; i++) {
   const client = new WebSocket(address);
