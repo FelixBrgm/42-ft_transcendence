@@ -30,12 +30,16 @@ RUN cargo install mini-redis
 RUN echo 'export PS1="\W> "' >> ~/.bashrc
 
 # So that libraries are persistant between container starts
-ENV CARGO_HOME=/usr/src/development/server/target/dependencies
+# ENV CARGO_HOME=/usr/src/server/target/dependencies
+
+# Expose Ports
+EXPOSE 4242
+EXPOSE 8080
 
 # Setting working directory
-WORKDIR /usr/src/development
+WORKDIR /usr/src
 
 # Mounting the volume to the docker container
-VOLUME [ "/usr/src/development" ]
+VOLUME [ "/usr/src" ]
 
 CMD ["tail", "-f", "/dev/null"]
