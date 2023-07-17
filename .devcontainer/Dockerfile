@@ -8,7 +8,9 @@ RUN apt-get update && \
     apt-get install -y nodejs && \
     apt-get install -y build-essential && \
     apt-get install -y netcat && \
+	apt-get install -y libpq-dev && \
     rm -rf /var/lib/apt/lists/*
+
 # Install Vue CLI
 RUN npm install -g @vue/cli
 
@@ -23,6 +25,9 @@ RUN apt-get update && \
     apt-get install -y netcat && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Install diesel_cli for PostgreSQL
+RUN cargo install diesel_cli --no-default-features --features "postgres"
 
 RUN cargo install mini-redis
 

@@ -1,0 +1,18 @@
+brew install libpq
+export RUSTFLAGS='-L/opt/homebrew/opt/libpq/lib'
+cargo install diesel_cli --no-default-features --features postgres
+
+# for migrations
+| are run in chronological order |
+diesel setup -> makes migrations dir
+diesel migration generate <name>
+diesel migration run
+diesel migration redo <name>
+
+// CONNECTION TO POSTGRES_CONTAINER:
+docker exec -it postgres_db bash
+psql -U theOperator -d postgres_db
+-> then using SQL commands
+
+
+
