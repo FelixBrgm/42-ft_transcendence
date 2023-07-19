@@ -8,64 +8,8 @@
 mod db;
 
 use db::wrapper::Database;
-use actix_web::{web, App, HttpServer};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 
-// testing
-use crate::db::models::NewClient;
-
-#[actix_web::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-
-	let db = setup_database();
-
-	db.show_clients();
-
-	// let new_client = NewClient {
-    //     title: "Peter",
-    //     is_online: true,
-    // };
-
-	// match db.add_client(&new_client) {
-    //     Ok(_) => println!("Client inserted successfully!"),
-    //     Err(e) => eprintln!("Failed to insert client: {}", e),
-    // }
-
-	// match db.get_client_id(21) {
-	// 	Ok(client) => println!("Client found {:?}", client),
-    //     Err(e) => eprintln!("Client not found :("),
-	// }
-	
-	// // let found = db.get_client_name(new_client.title);
-	// // match found {
-	// // 	Ok(mut client) => {
-	// // 		println!("Client found {:?}", client);
-	// // 		client.title = "emet".to_string();
-	// // 		match db.set_client(&client)
-	// // 		{
-	// // 			Ok(_) => println!("should have updated client"),
-	// // 			Err(e) => eprintln!("failed to update {}", e),
-	// // 		}
-	// // 	},
-    // //     Err(e) => eprintln!("CLient not found"),
-    // // }
-
-	// // let found = db.get_client_name("emet");
-	// // match found {
-	// // 	Ok(client) => println!("2 Client found {:?}", client),
-    // //     Err(e) => eprintln!("CLient not found"),
-    // // }
-
-    // HttpServer::new(move || {
-    //     App::new()
-	// 	.route("/{param1}/{param2}", web::get().to(handler::get_request))
-	// 	.default_service(web::route().to(handle_request))
-    // })
-    // .bind("127.0.0.1:8080")?
-    // .run()
-    // .await?;
-
-    Ok(())
-}
 
 fn setup_database() -> Database
 {
@@ -79,4 +23,28 @@ fn setup_database() -> Database
     println!("Database connection established");
 
 	db
+}
+
+// Define a handler function for a specific route
+async fn hello() -> impl Responder {
+    HttpResponse::Ok().body("Hello, Actix Web!")
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+
+	let db = setup_database();
+
+	db.show_clients();
+
+	println!("unes");
+
+       // Start the Actix Web server
+	HttpServer::new(|| {
+			App::new()
+			.route("/", web::get().to(hello))
+    })
+    .bind("127.0.0.1:8080")? // Bind the server to localhost on port 8080
+    .run()
+    .await
 }
