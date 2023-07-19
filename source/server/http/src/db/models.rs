@@ -1,8 +1,9 @@
 use crate::db::schema::*;
+use diesel::{Queryable, Insertable, AsChangeset};
 
 // ----------- test CLIENT STRUCT -----------------
 #[derive (Insertable)]
-#[table_name = "clients"]
+#[diesel(table_name = clients)]
 pub struct NewClient<'a> {
 	pub title: &'a str,
 	pub is_online: bool,
