@@ -1,4 +1,4 @@
-use crate::schema::clients;
+use crate::db::schema::*;
 
 // ----------- test CLIENT STRUCT -----------------
 #[derive (Insertable)]
