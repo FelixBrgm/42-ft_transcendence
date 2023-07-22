@@ -16,13 +16,14 @@ pub fn init(cfg: &mut web::ServiceConfig)
 // a struct that implements the responder trait
 // or Result with Ok(Responder trais) && Err(response error)
 
-async fn client( db: web::Data<Database>) -> web::Json<String> {
+async fn client(identity: Option<Identity>, db: web::Data<Database>) -> impl Responder {
 	
+	match identity {
+		Some(user) => {println!("user is {:?}", user.id())},
+		None => println!("no identity attached"),
+	};
+
 	web::Json("hello world".to_string())
-	// match db.get_client_name("herbert"){
-	// 	Ok(client) => {println!("the get client is: {:?}", client)},
-	// 	Err(_) => {println!("couldn't retrieve client")},
-	// }
-	// HttpResponse::Ok()
+
 }
 
