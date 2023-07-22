@@ -5,7 +5,10 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.0.0"
+actix-identity = "0.5.2"
+actix-session = "0.7.2"
 diesel = { version = "2.0", features = ["postgres", "r2d2", "chrono"] }
 diesel_migrations = "2.0"
 dotenvy = "0.15"
 anyhow = "1.0.72"
+env_logger = "0.10.0"

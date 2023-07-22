@@ -77,7 +77,7 @@ impl Database
     /// ===============================================================
 
 	pub fn show_clients(&self) -> Result<()> {
-		println!("showing clients...");
+		println!("Showing clients...");
 	
 		let results = clients
 		.load::<Client>(&mut self.pool.get()?)
@@ -90,18 +90,3 @@ impl Database
 		Ok(())
 	}
 }
-
-// fn create_db_pool() -> Result<DbPool, Box<dyn std::error::Error>> {
-
-
-// }
-
-// // once the lazy static is required it is initiolized
-// lazy_static! {
-//     static ref POOL: DbPool = create_db_pool().expect("Failed to create database pool");
-// }
-
-// pub fn get_connection() -> PooledConnection<ConnectionManager<PgConnection>> {
-// 	POOL.get().expect("Failed to get connection")
-// }
-
