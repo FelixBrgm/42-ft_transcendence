@@ -7,6 +7,7 @@ edition = "2021"
 actix-web = "4.0.0"
 actix-identity = "0.5.2"
 actix-session = "0.7.2"
+actix-cors = "0.6.4"
 diesel = { version = "2.0", features = ["postgres", "r2d2", "chrono"] }
 diesel_migrations = "2.0"
 dotenvy = "0.15"
