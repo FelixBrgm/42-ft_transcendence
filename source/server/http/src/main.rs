@@ -13,44 +13,34 @@ use actix_web::{web, App, HttpResponse, HttpServer, HttpRequest, Responder};
 use actix_web::middleware::Logger;
 use actix_web::{cookie::Key};
 use actix_identity::IdentityMiddleware;
+use actix_cors::Cors;
 
 use oauth2::basic::BasicClient;
 use oauth2::reqwest::http_client;
 use oauth2::url::Url;
-use oauth2::StandardTokenResponse;
-
-fn setup_database() -> Database
-{
-	dotenvy::from_filename("usr/src/.env").ok();
-	// retrieve the POSTGRES_URL
-	let database_url = dotenvy::var("DATABASE_URL").expect("DATABASE_URL not set in .env");
-	// create new Database
-	let db = Database::new(&database_url);
-
-    println!("Database connection established");
-
-	db
-}
+use oauth2::{ClientId, ClientSecret, AuthUrl, TokenUrl, RedirectUrl, StandardTokenResponse};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-	std::env::set_var("RUST_LOG", "debug");
-	std::env::set_var("RUST_BACKTRACE", "1");
-	env_logger::init();
+	// std::env::set_var("RUST_LOG", "debug");
+	// std::env::set_var("RUST_BACKTRACE", "1");
+	// env_logger::init();
 
-	let db = setup_database();
+	let database_url = dotenvy::var("DATABASE_URL").expect("DATABASE_URL not set in .env");
+	let db = Database::new(&database_url);
+    println!("Database connection established!");
 
+	let auth_client = setup_oauth_client();
+	println!("Authentication established!");
+	
     // Start the Actix Web server
 	HttpServer::new( move || {
-
+		
 			// cookie::key
-			// auth client
-			let auth_client = authorize_client();
-			println!("new client authorized");
 			// cors
 			App::new()
 			.app_data(web::Data::new(db.clone()))
-			.app_data(web::Data::new(auth_client))
+			.app_data(web::Data::new(auth_client.clone()))
 			.wrap(IdentityMiddleware::default())
 			.wrap(Logger::default())
 			.service(
@@ -63,39 +53,28 @@ async fn main() -> std::io::Result<()> {
 				.configure(api::client::init)
 			)
 	})
-    .bind("127.0.0.1:8080") // Bind the server to localhost on port 8080
+    .bind("127.0.0.1:8080")
 	.expect("Failed to bind to port 8080")
     .run()
     .await
 }
 
-// i want to add a rickroll with external_resource in app
+fn setup_oauth_client() -> BasicClient {
 
+	let env_client_id = dotenvy::var("CLIENT_ID").expect("REDIRACT_URI not set.");
+	let env_client_secret = dotenvy::var("CLIENT_SECRET").expect("REDIRACT_URI not set.");
 
-fn authorize_client() -> oauth2::basic::BasicClient {
+	let client_id = ClientId::new(env_client_id);
+    let client_secret = ClientSecret::new(env_client_secret);
+    let auth_url = AuthUrl::new("https://api.intra.42.fr/oauth/authorize".to_string()).expect("Invalid authorization endpoint URL");
+    let token_url = TokenUrl::new("https://api.intra.42.fr/oauth/token".to_string()).expect("Invalid token endpoint URL");
+    let redirect_uri = RedirectUrl::new(dotenvy::var("REDIRECT_URI").expect("REDIRACT_URI not set.")).expect("Invalid redirect URL");
 
-	   oauth2::basic::BasicClient::new(
-        oauth2::ClientId::new(
-			dotenvy::var("CLIENT_ID").expect("CLIENT_ID is not set."),
-        ),
-        Some(oauth2::ClientSecret::new(
-            dotenvy::var("CLIENT_SECRET").expect("CLIENT_SECRET is not set."),
-        )),
-        oauth2::AuthUrl::new(
-			dotenvy::var("AUTHORIZATION_ENDPOINT").expect("AUTHORIZATION_ENDPOINT not set.")
-		)
-        .expect("Invalid authorization endpoint URL (AUTH_URL)"),
-        Some(
-            oauth2::TokenUrl::new(
-				dotenvy::var("TOKEN_ENDPOINT").expect("TOKEN_ENDPOINT not set.")
-			)
-            .expect("Invalid token endpoint URL (TOKEN_URL)"),
-        ),
+    BasicClient::new(
+        client_id,
+        Some(client_secret),
+        auth_url,
+        Some(token_url),
     )
-    .set_redirect_uri(
-        oauth2::RedirectUrl::new(
-			dotenvy::var("REDIRECT_URI").expect("REDIRACT_URL not set.")
-        )
-        .expect("Invalid redirect URL"),
-    )
+    .set_redirect_uri(redirect_uri) // The 42API doesn't support token revocation.
 }
