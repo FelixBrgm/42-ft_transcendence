@@ -11,7 +11,7 @@ mod api;
 use db::wrapper::Database;
 use actix_web::{web, App, HttpResponse, HttpServer, HttpRequest, Responder};
 use actix_web::middleware::Logger;
-use actix_web::{cookie::Key};
+use actix_web::{http::header ,cookie::Key};
 use actix_identity::IdentityMiddleware;
 use actix_cors::Cors;
 
@@ -37,12 +37,19 @@ async fn main() -> std::io::Result<()> {
 	HttpServer::new( move || {
 		
 			// cookie::key
-			// cors
+			
+			let cors = Cors::default()
+			.allow_any_origin()
+			.allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+			.allowed_headers(vec![header::CONTENT_TYPE, header::AUTHORIZATION, header::ACCEPT])
+			.supports_credentials();
+	
 			App::new()
 			.app_data(web::Data::new(db.clone()))
 			.app_data(web::Data::new(auth_client.clone()))
-			.wrap(IdentityMiddleware::default())
+			.wrap(cors)
 			.wrap(Logger::default())
+			.wrap(IdentityMiddleware::default())
 			.service(
 				web::resource("/health")
 				.route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!")})),
@@ -59,12 +66,24 @@ async fn main() -> std::io::Result<()> {
     .await
 }
 
-fn setup_oauth_client() -> BasicClient {
-	let client_id = ClientId::new(dotenvy::var("CLIENT_ID").expect("REDIRACT_URI not set."));
-    let client_secret = ClientSecret::new(dotenvy::var("CLIENT_SECRET").expect("REDIRACT_URI not set."));
-    let auth_url = AuthUrl::new("https://api.intra.42.fr/oauth/authorize".to_string()).expect("Invalid authorization endpoint URL");
-    let token_url = TokenUrl::new("https://api.intra.42.fr/oauth/token".to_string()).expect("Invalid token endpoint URL");
-    let redirect_uri = RedirectUrl::new(dotenvy::var("REDIRECT_URI").expect("REDIRACT_URI not set.")).expect("Invalid redirect URL");
+fn setup_oauth_client() -> BasicClient
+{
+	let client_id = 
+		ClientId::new(dotenvy::var("CLIENT_ID")
+		.expect("REDIRACT_URI not set."));
+    let client_secret = 
+		ClientSecret::new(dotenvy::var("CLIENT_SECRET")
+		.expect("REDIRACT_URI not set."));
+    let auth_url = 
+		AuthUrl::new("https://api.intra.42.fr/oauth/authorize".to_string())
+		.expect("Invalid authorization endpoint URL");
+    let token_url = 
+		TokenUrl::new("https://api.intra.42.fr/oauth/token".to_string())
+		.expect("Invalid token endpoint URL");
+    let redirect_uri = 
+		RedirectUrl::new(dotenvy::var("REDIRECT_URI").
+		expect("REDIRACT_URI not set."))
+		.expect("Invalid redirect URL");
 
     BasicClient::new(
         client_id,

@@ -44,7 +44,7 @@ async fn login(client: web::Data<BasicClient>, session: Session) -> impl Respond
 #[derive(Debug, Deserialize)]
 pub struct AuthRequest{
 	code: Option<String>,
-	state: String,
+	state: Option<String>,
 	error: Option<String>,
     error_description: Option<String>,
 }
@@ -74,9 +74,10 @@ async fn callback(
         return HttpResponse::Unauthorized().body(reason);
     }
 
-	if let None = query.code{
+	if query.code.is_none() || query.state.is_none() {
 		return HttpResponse::InternalServerError().body("Unexpected callback state.");
 	}
+
 
 	// // Token exchange using authorization code
 	// if let Some(code) = &query.code {
