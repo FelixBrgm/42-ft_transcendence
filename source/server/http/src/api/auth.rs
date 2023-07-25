@@ -28,8 +28,9 @@ async fn login(
 	// If user is already logged in redirect to frontend
 	if id.is_some() {
 		return Ok(HttpResponse::Found().body("you're already logged in."));
-		// return Ok(HttpResponse::SeeOther()
-		// .insert_header((LOCATION, "/"));
+		// return Ok(HttpResponse::Found()
+		// .insert_header((LOCATION, "/"))
+		// .finish());
 	}
 	// proof key for code exchange
 	let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -73,8 +74,9 @@ async fn callback(
 	// If user is already logged in redirect to frontend
 	if id.is_some() {
 		return Ok(HttpResponse::Found().body("you're already logged in."));
-		// return Ok(HttpResponse::SeeOther()
-		// .insert_header((LOCATION, "/"));
+		// return Ok(HttpResponse::Found()
+		// .insert_header((LOCATION, "/"))
+		// .finish());
 	}
 
 	// Check if authentication failed
@@ -134,7 +136,8 @@ async fn callback(
 
 
     // // Handle the case where neither error nor code is present (unexpected state)		
-	Ok(HttpResponse::SeeOther()
+	Ok(HttpResponse::Found()
    .insert_header((LOCATION, "/"))
+   .finish())
 
 }
