@@ -11,11 +11,11 @@ mod api;
 use db::wrapper::Database;
 use actix_web::{web, App, HttpResponse, HttpServer, HttpRequest, Responder};
 use actix_web::middleware::Logger;
-use actix_web::{http::header ,cookie::Key};
+use actix_web::{http::header, cookie};
 use actix_identity::IdentityMiddleware;
 use actix_session::{Session, SessionMiddleware, storage::CookieSessionStore};
 use actix_cors::Cors;
-use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+// use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
 use oauth2::basic::BasicClient;
 use oauth2::reqwest::http_client;
@@ -25,8 +25,8 @@ use oauth2::{ClientId, ClientSecret, AuthUrl, TokenUrl, RedirectUrl, StandardTok
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 	// std::env::set_var("RUST_LOG", "debug");
-	std::env::set_var("RUST_BACKTRACE", "1");
-	env_logger::init();
+	// std::env::set_var("RUST_BACKTRACE", "1");
+	// env_logger::init();
 
 	let database_url = dotenvy::var("DATABASE_URL").expect("DATABASE_URL not set in .env");
 	let db = Database::new(&database_url);
@@ -35,18 +35,19 @@ async fn main() -> std::io::Result<()> {
 	let auth_client = setup_oauth_client();
 	println!("Authentication established!");
 	
-	let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
-    builder
-        .set_private_key_file("key.pem", SslFiletype::PEM)
-        .expect("it failed here");
-    builder.set_certificate_chain_file("cert.pem").expect("this failed");
+	// cookie::key
+	let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
+    let secret_key = cookie::Key::from(env_key.as_bytes());
 
-	let secret_key = Key::generate();
+	// let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+    // builder
+    //     .set_private_key_file("key.pem", SslFiletype::PEM)
+    //     .expect("it failed here");
+    // builder.set_certificate_chain_file("cert.pem").expect("this failed");
 
     // Start the Actix Web server
 	HttpServer::new( move || {
 		
-			// cookie::key
 			
 			let cors = Cors::default()
 			.allow_any_origin()
@@ -75,7 +76,8 @@ async fn main() -> std::io::Result<()> {
 				.configure(api::client::init)
 			)
 	})
-    .bind_openssl("127.0.0.1:8080", builder)
+    // .bind_openssl("127.0.0.1:8080", builder)
+	.bind("127.0.0.1:8080")
 	.expect("Failed to bind to port 8080")
     .run()
     .await
@@ -106,7 +108,7 @@ fn setup_oauth_client() -> BasicClient
         auth_url,
         Some(token_url),
     )
-    .set_redirect_uri(redirect_uri) // The 42API doesn't support token revocation.
+    .set_redirect_uri(redirect_uri)
 }
 
 // curl -X GET http://127.0.0.1:8080/health
