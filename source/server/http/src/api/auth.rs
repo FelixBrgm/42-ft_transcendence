@@ -1,6 +1,7 @@
 use crate::db::wrapper::Database;
+use actix_web::http::header::LOCATION;
 use oauth2::basic::BasicClient;
-use oauth2::{AuthorizationCode, CsrfToken, Scope, PkceCodeChallenge};
+use oauth2::{AuthorizationCode, CsrfToken, Scope, PkceCodeChallenge, PkceCodeVerifier};
 use actix_web::{web, HttpResponse, HttpRequest, Responder, http, get};
 use actix_identity::Identity;
 use actix_session::Session;
@@ -18,13 +19,21 @@ pub fn init(cfg: &mut web::ServiceConfig)
 }
 
 // Login route: Initiates the OAuth2 flow by redirecting the user to the authorization endpoint
-async fn login(client: web::Data<BasicClient>, session: Session) -> Result<HttpResponse, ApiError> {
+async fn login(
+	client: web::Data<BasicClient>,
+	session: Session,
+	id: Option<Identity>)
+	-> Result<HttpResponse, ApiError> {
 
 	// If user is already logged in redirect to frontend
-
+	if id.is_some() {
+		return Ok(HttpResponse::Found().body("you're already logged in."));
+		// return Ok(HttpResponse::SeeOther()
+		// .insert_header((LOCATION, "/"));
+	}
 	// proof key for code exchange
 	let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
-	
+
 	// Create the authorization URL and redirect the user to it
 	let (auth_url, csrf_token) = &client
 	.authorize_url(CsrfToken::new_random)
@@ -53,13 +62,20 @@ pub struct AuthRequest{
 // Your application then exchanges this authorization code for an access token by making a secure, server-to-server request to the OAuth provider's token endpoint.
 // Along with the authorization code, you'll also need to provide the client ID, client secret, redirect URI, and the grant_type=authorization_code.
 async fn callback(
-	req: HttpRequest,
+	// req: HttpRequest,
     client: web::Data<BasicClient>,
 	query: web::Query<AuthRequest>,
-    session: Session,) -> Result<HttpResponse, ApiError>
+    session: Session,
+	id: Option<Identity>)
+	-> Result<HttpResponse, ApiError>
 {
 
 	// If user is already logged in redirect to frontend
+	if id.is_some() {
+		return Ok(HttpResponse::Found().body("you're already logged in."));
+		// return Ok(HttpResponse::SeeOther()
+		// .insert_header((LOCATION, "/"));
+	}
 
 	// Check if authentication failed
 	if let Some(err) = &query.error {
@@ -88,24 +104,37 @@ async fn callback(
 		 return Err(ApiError::BadRequest("Invalid state".to_string()));
 	 }
 
-	// // Token exchange using authorization code
-	// if let Some(code) = &query.code {
-    //     let code = AuthorizationCode::new(code.to_string());
+	// Retrieve the pkceVerifier from the session
+	let Some(pkce_verifier) = session.get::<PkceCodeVerifier>("pkce_verifier")? else {
+		return Err(ApiError::InternalServerError);
+	};
 
-    //     match client.exchange_code(code).request_async(async_http_client).await {
-    //         Ok(token) => {
-    //             // Use the token to make API requests on behalf of the user
-    //             // For example, you can store the token and use it later to access the 42API
-    //             // Here, we are just displaying a success message with the token value
-    //             return HttpResponse::Ok().body(format!("Token: {}", token.access_token().secret()));
-    //         }
-    //         Err(e) => {
-    //             return HttpResponse::InternalServerError().body(format!("Token exchange failed: {}", e));
-    //         }
-    //     }
-    // }
+	let token = &client
+	.exchange_code(code)
+	.set_pkce_verifier(pkce_verifier)
+	.request_async(oauth2::reqwest::async_http_client)
+	.await;
 
-    // // Handle the case where neither error nor code is present (unexpected state)
-   Ok(HttpResponse::Ok().body(" Successfull callback!"))
+    let token = match token {
+        Ok(token) => token,
+        Err(e) => {
+            return Err(ApiError::BadRequest(format!(
+                "Failed to exchange token with 42 Intra: {}",
+                e
+            )));
+        }
+    };
+
+	// Remove old session data
+    // And save the token from 42 Intra in the session.
+    session.remove("pkce_verifier");
+    session.remove("state");
+    session.insert("token", token)?;
+
+
+
+    // // Handle the case where neither error nor code is present (unexpected state)		
+	Ok(HttpResponse::SeeOther()
+   .insert_header((LOCATION, "/"))
 
 }
