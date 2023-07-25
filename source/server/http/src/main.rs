@@ -92,10 +92,10 @@ fn setup_oauth_client() -> BasicClient
 {
 	let client_id = 
 		ClientId::new(dotenvy::var("CLIENT_ID")
-		.expect("REDIRACT_URI not set."));
+		.expect("CLIENT_ID not set."));
     let client_secret = 
 		ClientSecret::new(dotenvy::var("CLIENT_SECRET")
-		.expect("REDIRACT_URI not set."));
+		.expect("CLIENT_SECRET not set."));
     let auth_url = 
 		AuthUrl::new("https://api.intra.42.fr/oauth/authorize".to_string())
 		.expect("Invalid authorization endpoint URL");
@@ -104,7 +104,7 @@ fn setup_oauth_client() -> BasicClient
 		.expect("Invalid token endpoint URL");
     let redirect_uri = 
 		RedirectUrl::new(dotenvy::var("REDIRECT_URI").
-		expect("REDIRACT_URI not set."))
+		expect("REDIRECT_URI not set."))
 		.expect("Invalid redirect URL");
 
     BasicClient::new(
