@@ -1,4 +1,6 @@
+use super::errors::ApiError;
 use crate::db::wrapper::Database;
+
 use actix_web::http::header::LOCATION;
 use oauth2::basic::BasicClient;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, PkceCodeChallenge, PkceCodeVerifier};
@@ -6,7 +8,6 @@ use actix_web::{web, HttpResponse, HttpRequest, Responder, http, get};
 use actix_identity::Identity;
 use actix_session::Session;
 use serde::Deserialize;
-use super::errors::ApiError;
 
 pub fn init(cfg: &mut web::ServiceConfig)
 {
@@ -21,21 +22,15 @@ pub fn init(cfg: &mut web::ServiceConfig)
 // Login route: Initiates the OAuth2 flow by redirecting the user to the authorization endpoint
 async fn login(
 	client: web::Data<BasicClient>,
-	session: Session,
-	id: Option<Identity>)
+	session: Session)
 	-> Result<HttpResponse, ApiError> {
 
 	// If user is already logged in redirect to frontend
-	if id.is_some() {
-		return Ok(HttpResponse::Found().body("you're already logged in."));
-		// return Ok(HttpResponse::Found()
-		// .insert_header((LOCATION, "/"))
-		// .finish());
-	}
+
 	// proof key for code exchange
 	let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
-	// Create the authorization URL and redirect the user to it
+	// Create the authorization URL
 	let (auth_url, csrf_token) = &client
 	.authorize_url(CsrfToken::new_random)
 	.set_pkce_challenge(pkce_challenge)
@@ -44,6 +39,7 @@ async fn login(
 	// Store pkce_verifier and state in session for CSRF protection
 	session.insert("pkce_verifier", pkce_verifier)?;
 	session.insert("state", csrf_token.secret().clone())?;
+
 
 	// Redirect the user to the authorization URL
 	Ok(HttpResponse::Found()
@@ -63,21 +59,14 @@ pub struct AuthRequest{
 // Your application then exchanges this authorization code for an access token by making a secure, server-to-server request to the OAuth provider's token endpoint.
 // Along with the authorization code, you'll also need to provide the client ID, client secret, redirect URI, and the grant_type=authorization_code.
 async fn callback(
-	// req: HttpRequest,
+	req: HttpRequest,
     client: web::Data<BasicClient>,
 	query: web::Query<AuthRequest>,
-    session: Session,
-	id: Option<Identity>)
+    session: Session)
 	-> Result<HttpResponse, ApiError>
 {
 
 	// If user is already logged in redirect to frontend
-	if id.is_some() {
-		return Ok(HttpResponse::Found().body("you're already logged in."));
-		// return Ok(HttpResponse::Found()
-		// .insert_header((LOCATION, "/"))
-		// .finish());
-	}
 
 	// Check if authentication failed
 	if let Some(err) = &query.error {
@@ -120,6 +109,7 @@ async fn callback(
     let token = match token {
         Ok(token) => token,
         Err(e) => {
+			log::error!("Failed to exchange token with 42 Intra: {}", e);
             return Err(ApiError::BadRequest(format!(
                 "Failed to exchange token with 42 Intra: {}",
                 e
@@ -133,7 +123,7 @@ async fn callback(
     session.remove("state");
     session.insert("token", token)?;
 
-
+	// let user_info_response = get_user_info(&token. ).await;
 
     // // Handle the case where neither error nor code is present (unexpected state)		
 	Ok(HttpResponse::Found()
@@ -141,3 +131,18 @@ async fn callback(
    .finish())
 
 }
+
+
+// async fn get_user_info(token: &str) -> Result<reqwest::Response, reqwest::Error> {
+//     let client = reqwest::Client::new();
+//     let url = "https://api.intra.42.fr/v2/me";
+
+//     // Make the GET request with the access token in the Authorization header
+//     let response = client
+//         .get(url)
+//         .header("Authorization", format!("Bearer {}", token))
+//         .send()
+//         .await?;
+
+//     Ok(response)
+// }

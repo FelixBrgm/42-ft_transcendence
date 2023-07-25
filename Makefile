@@ -27,3 +27,11 @@ dev_stop:
 
 http:
 	set -a; . ./database/.env; set +a && cd source/server/http && cargo run
+
+re: down up
+
+up:
+	cd .devcontainer && docker-compose up -d
+
+down:
+	cd .devcontainer && docker-compose down 
