@@ -14,5 +14,11 @@ docker exec -it postgres_db bash
 psql -U theOperator -d postgres_db
 -> then using SQL commands
 
+to look up:
+-> log:: to keep a log
+-> anyhow
+-> cors
+-> 
 
-
+shortcuts to inspect in chrome
+Cmd + Option + C	Cmd + Option + J

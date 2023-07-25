@@ -18,7 +18,7 @@ pub fn init(cfg: &mut web::ServiceConfig)
 }
 
 // Login route: Initiates the OAuth2 flow by redirecting the user to the authorization endpoint
-async fn login(client: web::Data<BasicClient>, session: Session) -> impl Responder {
+async fn login(client: web::Data<BasicClient>, session: Session) -> Result<HttpResponse, ApiError> {
 
 	// If user is already logged in redirect to frontend
 
@@ -32,13 +32,13 @@ async fn login(client: web::Data<BasicClient>, session: Session) -> impl Respond
 	.url();
 
 	// Store pkce_verifier and state in session for CSRF protection
-	session.insert("pkce_verifier", pkce_verifier).expect("pkce insert failed");
-	session.insert("state", csrf_token.secret().clone()).expect("csrf_state insert failed");
+	session.insert("pkce_verifier", pkce_verifier)?;
+	session.insert("state", csrf_token.secret().clone())?;
 
 	// Redirect the user to the authorization URL
-	HttpResponse::Found()
+	Ok(HttpResponse::Found()
 	.append_header((http::header::LOCATION, auth_url.to_string()))
-	.finish()
+	.finish())
 }
 
 #[derive(Debug, Deserialize)]
@@ -56,13 +56,10 @@ async fn callback(
 	req: HttpRequest,
     client: web::Data<BasicClient>,
 	query: web::Query<AuthRequest>,
-    session: Session,) -> impl Responder
+    session: Session,) -> Result<HttpResponse, ApiError>
 {
 
 	// If user is already logged in redirect to frontend
-
-	println!("{}", req.query_string());
-	dbg!(&query);
 
 	// Check if authentication failed
 	if let Some(err) = &query.error {
@@ -71,13 +68,25 @@ async fn callback(
             .as_ref()
             .map_or(err.clone(), |desc| format!("{}: {}", err, desc));
 
-        return HttpResponse::Unauthorized().body(reason);
+        return Ok(HttpResponse::Unauthorized().body(reason));
     }
 
 	if query.code.is_none() || query.state.is_none() {
-		return HttpResponse::InternalServerError().body("Unexpected callback state.");
+		return Ok(HttpResponse::InternalServerError().body("Unexpected callback state."));
 	}
 
+	// Extract the code and state from the query parameters
+	let code = oauth2::AuthorizationCode::new(query.code.clone().unwrap());
+	let state = oauth2::CsrfToken::new(query.state.clone().unwrap());
+
+	 // Verify the state for CSRF protection
+	 let session_state = session.get::<String>("state")?;
+	 if session_state.is_none() {
+		 return Err(ApiError::BadRequest("No state".to_string()));
+	 }
+	 if session_state.unwrap() != *state.secret() {
+		 return Err(ApiError::BadRequest("Invalid state".to_string()));
+	 }
 
 	// // Token exchange using authorization code
 	// if let Some(code) = &query.code {
@@ -97,6 +106,6 @@ async fn callback(
     // }
 
     // // Handle the case where neither error nor code is present (unexpected state)
-    HttpResponse::InternalServerError().body("Unexpected callback state.")
+   Ok(HttpResponse::Ok().body(" Successfull callback!"))
 
 }
