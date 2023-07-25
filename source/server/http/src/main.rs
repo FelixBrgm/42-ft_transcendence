@@ -9,6 +9,7 @@ mod db;
 mod api;
 
 use db::wrapper::Database;
+use std::time::Duration;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, cookie};
 use actix_identity::IdentityMiddleware;
@@ -29,9 +30,12 @@ async fn home() -> impl Responder
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-	// std::env::set_var("RUST_LOG", "debug");
+	std::env::set_var("RUST_LOG", "debug");
 	// std::env::set_var("RUST_BACKTRACE", "1");
 	// env_logger::init();
+
+	  // Initialize the logger with a specific log level
+	env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug")).init();
 
 	let database_url = dotenvy::var("DATABASE_URL").expect("DATABASE_URL not set in .env");
 	let db = Database::new(&database_url);
