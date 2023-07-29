@@ -2,12 +2,20 @@ use super::errors::ApiError;
 use crate::db::wrapper::Database;
 
 use actix_web::http::header::LOCATION;
-use oauth2::basic::BasicClient;
-use oauth2::{AuthorizationCode, CsrfToken, Scope, PkceCodeChallenge, PkceCodeVerifier};
+use oauth2::basic::{BasicClient, BasicTokenType};
+use oauth2::{AuthorizationCode, CsrfToken, Scope, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
 use actix_web::{web, HttpResponse, HttpRequest, Responder, http, get};
 use actix_identity::Identity;
 use actix_session::Session;
 use serde::Deserialize;
+use serde_json;
+use reqwest;
+
+// add the log
+// add to db
+// logout
+// testing
+// make it pretty
 
 pub fn init(cfg: &mut web::ServiceConfig)
 {
@@ -109,7 +117,6 @@ async fn callback(
     let token = match token {
         Ok(token) => token,
         Err(e) => {
-			log::error!("Failed to exchange token with 42 Intra: {}", e);
             return Err(ApiError::BadRequest(format!(
                 "Failed to exchange token with 42 Intra: {}",
                 e
@@ -117,13 +124,34 @@ async fn callback(
         }
     };
 
-	// Remove old session data
-    // And save the token from 42 Intra in the session.
+	// Update session data
     session.remove("pkce_verifier");
     session.remove("state");
     session.insert("token", token)?;
 
-	// let user_info_response = get_user_info(&token. ).await;
+	// Retrieve the user information
+	let (id, login,avatar) = get_user_info(token.access_token().secret()).await?;
+
+	println!("ID: {}", id);
+	println!("Login: {}", login);
+	println!("avatar: {}", avatar);
+		
+		// Insert in the db if not yet regirstered
+		
+	// let Ok(data) = serde_json::from_str(&json_string).unwrap()
+
+	// if response.status().is_success() {
+	// 	// Get the response body as a string
+	// 	let json_string = response.text().await.unwrap();
+
+	// 	// Deserialize the JSON string into a serde_json::Value or your specific data structure
+	// 	let user_info: serde_json::Value = serde_json::from_str(&json_string).unwrap();
+	
+	// 	// Now you can work with the user_info data
+	// 	println!("User Information: {:?}", user_info);
+	// } else {
+	// 	eprintln!("Failed to fetch user information: {:?}", response);
+	// }
 
     // // Handle the case where neither error nor code is present (unexpected state)		
 	Ok(HttpResponse::Found()
@@ -132,17 +160,42 @@ async fn callback(
 
 }
 
+async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError>
+{
+	let client = reqwest::Client::new();
+    let user_info_endpoint = "https://api.intra.42.fr/v2/me";
 
-// async fn get_user_info(token: &str) -> Result<reqwest::Response, reqwest::Error> {
-//     let client = reqwest::Client::new();
-//     let url = "https://api.intra.42.fr/v2/me";
+    // Make the GET request with the access token in the Authorization header
+    let Ok(response) = client
+        .get(user_info_endpoint)
+		.bearer_auth(token)
+        // .header("Authorization", format!("Bearer {}", token.access_token().secret()))
+        .send()
+        .await else {
+			return Err(ApiError::InternalServerError);
+		};
 
-//     // Make the GET request with the access token in the Authorization header
-//     let response = client
-//         .get(url)
-//         .header("Authorization", format!("Bearer {}", token))
-//         .send()
-//         .await?;
+		
+		let Ok(user_info) =  response.json::<serde_json::Value>().await else {
+			return Err(ApiError::InternalServerError);
+		};
+		
+		println!("Response: \n\n {} \n\n", user_info);
+		// Extract `id`, `login`, and `avatar` from the `user_info` Value
+		let intra_id = match user_info["id"].as_i64() {
+			Some(val) => val as i32,
+			None => return Err(ApiError::InternalServerError),
+		};
+	
+		let intra_login = match user_info["login"].as_str() {
+			Some(val) => val.to_string(),
+			None => return Err(ApiError::InternalServerError),
+		};
+	
+		let intra_avatar = user_info["image"]["versions"]["medium"]
+		.as_str()
+		.unwrap_or("https://i.pinimg.com/564x/bc/5d/17/bc5d173a3001839b5f4ec29efad072ae.jpg")
+		.to_string();
 
-//     Ok(response)
-// }
+		Ok((intra_id, intra_login, intra_avatar))
+}
