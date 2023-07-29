@@ -71,3 +71,9 @@ impl From<SessionInsertError> for ApiError {
         ApiError::InternalServerError
     }
 }
+
+impl From<reqwest::Error> for ApiError {
+    fn from(_: reqwest::Error) -> Self {
+        ApiError::InternalServerError
+    }
+}
