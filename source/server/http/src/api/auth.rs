@@ -232,7 +232,7 @@ async fn logout(
 	// do i need to remove session ke
 	if id.is_some() {
 		let user = id.unwrap();
-		println!("(login) {:?} is already logged in", user.id());
+		println!("(logout) {:?} is already logged in", user.id());
 		user.logout();
 		session.remove("token");
 	}
