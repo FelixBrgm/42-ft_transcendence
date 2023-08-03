@@ -24,6 +24,5 @@ async fn client(identity: Option<Identity>, db: web::Data<Database>) -> impl Res
 	};
 
 	web::Json("hello world".to_string())
-
 }
 

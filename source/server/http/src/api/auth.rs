@@ -4,9 +4,10 @@ use crate::db::wrapper::Database;
 use actix_web::http::header::LOCATION;
 use oauth2::basic::{BasicClient, BasicTokenType};
 use oauth2::{AuthorizationCode, CsrfToken, Scope, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
-use actix_web::{web, HttpResponse, HttpRequest, Responder, http, get};
+use actix_web::{web, HttpResponse, HttpRequest, HttpMessage, Responder, http, get};
 use actix_identity::Identity;
 use actix_session::Session;
+use openssl::pkey::Id;
 use serde::Deserialize;
 use serde_json;
 use reqwest;
@@ -16,6 +17,7 @@ use reqwest;
 // logout
 // testing
 // make it pretty
+// set default avatar
 
 pub fn init(cfg: &mut web::ServiceConfig)
 {
@@ -29,11 +31,18 @@ pub fn init(cfg: &mut web::ServiceConfig)
 
 // Login route: Initiates the OAuth2 flow by redirecting the user to the authorization endpoint
 async fn login(
+	id: Option<Identity>,
 	client: web::Data<BasicClient>,
 	session: Session)
 	-> Result<HttpResponse, ApiError> {
 
 	// If user is already logged in redirect to frontend
+	// If user is already logged in redirect to frontend
+	if id.is_some() {
+		let user = id.unwrap();
+		println!("(login) {:?} is already logged in", user.id());
+		return Ok(HttpResponse::Found().insert_header((LOCATION, "/")).finish());
+	}
 
 	// proof key for code exchange
 	let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -47,7 +56,6 @@ async fn login(
 	// Store pkce_verifier and state in session for CSRF protection
 	session.insert("pkce_verifier", pkce_verifier)?;
 	session.insert("state", csrf_token.secret().clone())?;
-
 
 	// Redirect the user to the authorization URL
 	Ok(HttpResponse::Found()
@@ -63,18 +71,22 @@ pub struct AuthRequest{
     error_description: Option<String>,
 }
 
-// Your application (callback URL) receives the authorization code in the query parameter of the redirect URI.
-// Your application then exchanges this authorization code for an access token by making a secure, server-to-server request to the OAuth provider's token endpoint.
-// Along with the authorization code, you'll also need to provide the client ID, client secret, redirect URI, and the grant_type=authorization_code.
 async fn callback(
+	id: Option<Identity>,
 	req: HttpRequest,
     client: web::Data<BasicClient>,
 	query: web::Query<AuthRequest>,
-    session: Session)
+    session: Session,
+	database: web::Data<Database>
+)
 	-> Result<HttpResponse, ApiError>
 {
-
 	// If user is already logged in redirect to frontend
+	if id.is_some() {
+		let user = id.unwrap();
+		println!("(callback) {:?} is already logged in", user.id());
+		return Ok(HttpResponse::Found().insert_header((LOCATION, "/")).finish());
+	}
 
 	// Check if authentication failed
 	if let Some(err) = &query.error {
@@ -87,7 +99,7 @@ async fn callback(
     }
 
 	if query.code.is_none() || query.state.is_none() {
-		return Ok(HttpResponse::InternalServerError().body("Unexpected callback state."));
+		return Err(ApiError::InternalServerError);
 	}
 
 	// Extract the code and state from the query parameters
@@ -130,30 +142,18 @@ async fn callback(
     session.insert("token", token)?;
 
 	// Retrieve the user information
-	let (id, login,avatar) = get_user_info(token.access_token().secret()).await?;
+	let (id, login, avatar) = get_user_info(token.access_token().secret()).await?;
 
-	println!("ID: {}", id);
-	println!("Login: {}", login);
-	println!("avatar: {}", avatar);
-		
-		// Insert in the db if not yet regirstered
-		
-	// let Ok(data) = serde_json::from_str(&json_string).unwrap()
+	println!("id {}", id);
+	println!("login {}", login);
+	println!("avatar {}", avatar);
 
-	// if response.status().is_success() {
-	// 	// Get the response body as a string
-	// 	let json_string = response.text().await.unwrap();
+	// add to database if not already added
+	// interact_with_db(user_info, database).await?;
 
-	// 	// Deserialize the JSON string into a serde_json::Value or your specific data structure
-	// 	let user_info: serde_json::Value = serde_json::from_str(&json_string).unwrap();
+	//  
+	Identity::login(&req.extensions(), id.to_string())?;
 	
-	// 	// Now you can work with the user_info data
-	// 	println!("User Information: {:?}", user_info);
-	// } else {
-	// 	eprintln!("Failed to fetch user information: {:?}", response);
-	// }
-
-    // // Handle the case where neither error nor code is present (unexpected state)		
 	Ok(HttpResponse::Found()
    .insert_header((LOCATION, "/"))
    .finish())
@@ -169,33 +169,44 @@ async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError>
     let Ok(response) = client
         .get(user_info_endpoint)
 		.bearer_auth(token)
-        // .header("Authorization", format!("Bearer {}", token.access_token().secret()))
         .send()
         .await else {
 			return Err(ApiError::InternalServerError);
-		};
+	};
 
-		
-		let Ok(user_info) =  response.json::<serde_json::Value>().await else {
-			return Err(ApiError::InternalServerError);
-		};
-		
-		println!("Response: \n\n {} \n\n", user_info);
-		// Extract `id`, `login`, and `avatar` from the `user_info` Value
-		let intra_id = match user_info["id"].as_i64() {
-			Some(val) => val as i32,
-			None => return Err(ApiError::InternalServerError),
-		};
+	let Ok(user_info) =  response.json::<serde_json::Value>().await else {
+		return Err(ApiError::InternalServerError);
+	};
 	
-		let intra_login = match user_info["login"].as_str() {
-			Some(val) => val.to_string(),
-			None => return Err(ApiError::InternalServerError),
-		};
-	
-		let intra_avatar = user_info["image"]["versions"]["medium"]
+	// Extract `id`, `login`, and `avatar` from the `user_info` Value
+	let intra_id = user_info["id"]
+		.as_i64()
+		.ok_or(ApiError::InternalServerError)? as i32;
+
+	let intra_login = user_info["login"]
+		.as_str()
+		.ok_or(ApiError::InternalServerError)?
+		.to_string();
+
+	let intra_avatar = user_info["image"]["versions"]["medium"]
 		.as_str()
 		.unwrap_or("https://i.pinimg.com/564x/bc/5d/17/bc5d173a3001839b5f4ec29efad072ae.jpg")
 		.to_string();
 
-		Ok((intra_id, intra_login, intra_avatar))
+	Ok((intra_id, intra_login, intra_avatar))
+}
+
+async fn interact_with_db(user_info: (i32, String, String), database:web::Data<Database>) -> Result<(), ApiError>
+{
+	let (id, login, avatar) = user_info;
+
+	match database.get_client_by_id(id)
+	{
+		Ok(user) => { println!(" this user was found : {:?}", user);}
+		Err(_) => {
+			println!("didn't find client in db");
+		}
+	}
+	// database.show_clients();
+	Ok(())
 }
