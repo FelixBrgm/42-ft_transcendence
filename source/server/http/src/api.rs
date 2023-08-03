@@ -1,4 +1,4 @@
 
 pub mod user;
 pub mod auth;
-mod errors;
+pub mod errors;

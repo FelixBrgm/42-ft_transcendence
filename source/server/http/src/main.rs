@@ -8,12 +8,13 @@
 mod db;
 mod api;
 
+use db::models::NewUser;
 use db::wrapper::Database;
 use std::time::Duration;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, cookie};
 use actix_identity::IdentityMiddleware;
-use actix_web::{web, App, HttpResponse, HttpServer, HttpRequest, Responder, get};
+use actix_web::{web, App, HttpResponse, HttpServer, HttpRequest, Responder, get, HttpMessage};
 use actix_session::{Session, SessionMiddleware, storage::CookieSessionStore};
 use actix_cors::Cors;
 // use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
@@ -26,6 +27,15 @@ use oauth2::{ClientId, ClientSecret, AuthUrl, TokenUrl, RedirectUrl, StandardTok
 async fn home() -> impl Responder
 {
 	HttpResponse::Ok().body("Welcome home!")
+}
+
+async fn test(req: HttpRequest, db: web::Data<Database>) -> Result<HttpResponse, crate::api::errors::ApiError>
+{
+	actix_identity::Identity::login(&req.extensions(), "1".to_string())?;
+	db.add_user(&NewUser { id: 1, login: "anna".to_string(), avatar: "pb".to_string()})?;
+
+	println!("INITIALISED testing Identity 1");
+	Ok(HttpResponse::Ok().body("Initialised Identity 1"))
 }
 
 #[actix_web::main]
@@ -75,6 +85,7 @@ async fn main() -> std::io::Result<()> {
                     .build()
 			)
 			.route("/", web::get().to(home))
+			.route("/test", web::get().to(test))
 			.service(
 				web::resource("/health")
 				.route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!")})),
