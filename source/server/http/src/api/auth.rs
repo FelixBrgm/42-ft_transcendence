@@ -25,7 +25,7 @@ pub fn init(cfg: &mut web::ServiceConfig)
 		web::scope("/auth")
 		 .route("/login", web::get().to(login))
 		 .route("/callback", web::get().to(callback))
-		 //  .route("/logout", web::get().to(logout))
+		  .route("/logout", web::get().to(logout))
 	);
 }
 
@@ -36,7 +36,6 @@ async fn login(
 	session: Session)
 	-> Result<HttpResponse, ApiError> {
 
-	// If user is already logged in redirect to frontend
 	// If user is already logged in redirect to frontend
 	if id.is_some() {
 		let user = id.unwrap();
@@ -61,6 +60,24 @@ async fn login(
 	Ok(HttpResponse::Found()
 	.append_header((http::header::LOCATION, auth_url.to_string()))
 	.finish())
+}
+
+async fn logout(
+	// id: Option<Identity>,
+	// req: HttpRequest,
+    // client: web::Data<BasicClient>,
+	// query: web::Query<AuthRequest>,
+    // session: Session,
+	database: web::Data<Database>
+) -> Result<HttpResponse, ApiError>
+{
+	// database.add_client(&crate::db::models::NewClient { title: "1", is_online:true});
+	// database.add_client(&crate::db::models::NewClient { title: "herbert", is_online:true});
+	// database.add_client(&crate::db::models::NewClient { title: "sissi", is_online:true});
+	// database.add_client(&crate::db::models::NewClient { title: "heinz", is_online:true});
+	// database.add_client(&crate::db::models::NewClient { title: "franz", is_online:true});
+	// database.show_clients();
+	return Ok(HttpResponse::Found().insert_header((LOCATION, "/")).finish())
 }
 
 #[derive(Debug, Deserialize)]
@@ -142,17 +159,17 @@ async fn callback(
     session.insert("token", token)?;
 
 	// Retrieve the user information
-	let (id, login, avatar) = get_user_info(token.access_token().secret()).await?;
+	let user_info = get_user_info(token.access_token().secret()).await?;
 
-	println!("id {}", id);
-	println!("login {}", login);
-	println!("avatar {}", avatar);
+	println!("id {}", user_info.0);
+	println!("login {}", user_info.1);
+	println!("avatar {}", user_info.2);
+
+	// Identity::login(&req.extensions(), (user_info.0).to_string())?;
 
 	// add to database if not already added
-	// interact_with_db(user_info, database).await?;
-
+	interact_with_db(user_info, database).await?;
 	//  
-	Identity::login(&req.extensions(), id.to_string())?;
 	
 	Ok(HttpResponse::Found()
    .insert_header((LOCATION, "/"))
@@ -199,14 +216,17 @@ async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError>
 async fn interact_with_db(user_info: (i32, String, String), database:web::Data<Database>) -> Result<(), ApiError>
 {
 	let (id, login, avatar) = user_info;
+	println!("came to interact with db");
 
-	match database.get_client_by_id(id)
+	database.add_user(&crate::db::models::NewUser{id, login, avatar});
+
+	match database.get_user_by_id(id)
 	{
 		Ok(user) => { println!(" this user was found : {:?}", user);}
 		Err(_) => {
 			println!("didn't find client in db");
 		}
 	}
-	// database.show_clients();
+	database.show_users();
 	Ok(())
 }

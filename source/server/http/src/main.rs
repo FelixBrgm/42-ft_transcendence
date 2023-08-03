@@ -82,7 +82,7 @@ async fn main() -> std::io::Result<()> {
 			.service(
 				web::scope("/api")
 				.configure(api::auth::init)
-				.configure(api::client::init)
+				.configure(api::user::init)
 			)
 	})
     // .bind_openssl("127.0.0.1:8080", builder)

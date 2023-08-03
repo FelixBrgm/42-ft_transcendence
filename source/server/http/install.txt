@@ -15,10 +15,12 @@ psql -U theOperator -d postgres_db
 -> then using SQL commands
 
 to look up:
--> log:: to keep a log
--> anyhow
--> cors
--> 
+
+to do:
+- create neccessary tables (app_user, channel_message for now)
+- update table after auth
+- make api structure
+- unit testing
 
 shortcuts to inspect in chrome
 Cmd + Option + C	Cmd + Option + J
