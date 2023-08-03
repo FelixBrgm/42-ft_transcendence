@@ -12,9 +12,9 @@ use serde::Deserialize;
 use serde_json;
 use reqwest;
 
+// add to db			DONE
+// logout				
 // add the log
-// add to db
-// logout
 // testing
 // make it pretty
 // set default avatar
@@ -28,6 +28,10 @@ pub fn init(cfg: &mut web::ServiceConfig)
 		  .route("/logout", web::get().to(logout))
 	);
 }
+
+// ************************************************************ \\
+//							  LOGIN
+// ************************************************************ \\
 
 // Login route: Initiates the OAuth2 flow by redirecting the user to the authorization endpoint
 async fn login(
@@ -62,23 +66,9 @@ async fn login(
 	.finish())
 }
 
-async fn logout(
-	// id: Option<Identity>,
-	// req: HttpRequest,
-    // client: web::Data<BasicClient>,
-	// query: web::Query<AuthRequest>,
-    // session: Session,
-	database: web::Data<Database>
-) -> Result<HttpResponse, ApiError>
-{
-	// database.add_client(&crate::db::models::NewClient { title: "1", is_online:true});
-	// database.add_client(&crate::db::models::NewClient { title: "herbert", is_online:true});
-	// database.add_client(&crate::db::models::NewClient { title: "sissi", is_online:true});
-	// database.add_client(&crate::db::models::NewClient { title: "heinz", is_online:true});
-	// database.add_client(&crate::db::models::NewClient { title: "franz", is_online:true});
-	// database.show_clients();
-	return Ok(HttpResponse::Found().insert_header((LOCATION, "/")).finish())
-}
+// ************************************************************ \\
+//							 CALLBACK
+// ************************************************************ \\
 
 #[derive(Debug, Deserialize)]
 pub struct AuthRequest{
@@ -165,7 +155,6 @@ async fn callback(
 
 	// add to database if not already added
 	interact_with_db(user_info, database).await?;
-	//  
 	
 	Ok(HttpResponse::Found()
    .insert_header((LOCATION, "/"))
@@ -201,6 +190,7 @@ async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError>
 		.ok_or(ApiError::InternalServerError)?
 		.to_string();
 
+	// todo: put this in .env
 	let intra_avatar = user_info["image"]["versions"]["medium"]
 		.as_str()
 		.unwrap_or("https://i.pinimg.com/564x/bc/5d/17/bc5d173a3001839b5f4ec29efad072ae.jpg")
@@ -213,6 +203,7 @@ async fn interact_with_db(user_info: (i32, String, String), database:web::Data<D
 {
 	let (id, login, avatar) = user_info;
 
+	// todo: set status
 	match database.get_user_by_id(id)
 	{
 		Ok(user) => { println!(" this user was found : {:?}", user);}
@@ -222,4 +213,29 @@ async fn interact_with_db(user_info: (i32, String, String), database:web::Data<D
 		}
 	}
 	Ok(())
+}
+
+// ************************************************************ \\
+//							  LOGOUT
+// ************************************************************ \\
+
+async fn logout(
+	// req: HttpRequest,
+    // client: web::Data<BasicClient>,
+	id: Option<Identity>,
+    session: Session,
+	database: web::Data<Database>
+) -> Result<HttpResponse, ApiError>
+{
+
+	// set status in database
+	// do i need to remove session ke
+	if id.is_some() {
+		let user = id.unwrap();
+		println!("(login) {:?} is already logged in", user.id());
+		user.logout();
+		session.remove("token");
+	}
+	
+	return Ok(HttpResponse::Found().insert_header((LOCATION, "/")).finish())
 }

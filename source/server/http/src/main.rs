@@ -32,8 +32,11 @@ async fn home() -> impl Responder
 async fn test(req: HttpRequest, db: web::Data<Database>) -> Result<HttpResponse, crate::api::errors::ApiError>
 {
 	actix_identity::Identity::login(&req.extensions(), "1".to_string())?;
-	db.add_user(&NewUser { id: 1, login: "anna".to_string(), avatar: "pb".to_string()})?;
-
+	if let Err(_) = db.add_user(&NewUser { id: 1, login: "anna".to_string(), avatar: "pb".to_string()})
+	{
+		println!("1 is already inside the db!");
+		return Ok(HttpResponse::Ok().body("Identity 1 is already initalized"));
+	}
 	println!("INITIALISED testing Identity 1");
 	Ok(HttpResponse::Ok().body("Initialised Identity 1"))
 }
@@ -45,7 +48,7 @@ async fn main() -> std::io::Result<()> {
 	// env_logger::init();
 
 	  // Initialize the logger with a specific log level
-	// env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug")).init();
+	// env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
 	let database_url = dotenvy::var("DATABASE_URL").expect("DATABASE_URL not set in .env");
 	let db = Database::new(&database_url);
@@ -67,34 +70,34 @@ async fn main() -> std::io::Result<()> {
     // Start the Actix Web server
 	HttpServer::new( move || {
 	
-			let cors = Cors::default()
-			.allow_any_origin()
-			.allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
-			.allowed_headers(vec![header::CONTENT_TYPE, header::AUTHORIZATION, header::ACCEPT])
-			.supports_credentials();
-	
-			App::new()
-			.app_data(web::Data::new(db.clone()))
-			.app_data(web::Data::new(auth_client.clone()))
-			.wrap(cors)
-			.wrap(Logger::default())
-			.wrap(IdentityMiddleware::default())
-			.wrap(
-				SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
-                    .cookie_secure(false)
-                    .build()
-			)
-			.route("/", web::get().to(home))
-			.route("/test", web::get().to(test))
-			.service(
-				web::resource("/health")
-				.route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!")})),
-			)
-			.service(
-				web::scope("/api")
-				.configure(api::auth::init)
-				.configure(api::user::init)
-			)
+		let cors = Cors::default()
+		.allow_any_origin()
+		.allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+		.allowed_headers(vec![header::CONTENT_TYPE, header::AUTHORIZATION, header::ACCEPT])
+		.supports_credentials();
+
+		App::new()
+		.app_data(web::Data::new(db.clone()))
+		.app_data(web::Data::new(auth_client.clone()))
+		.wrap(cors)
+		.wrap(Logger::default())
+		.wrap(IdentityMiddleware::default())
+		.wrap(
+			SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
+				.cookie_secure(false)
+				.build()
+		)
+		.route("/", web::get().to(home))
+		.route("/test", web::get().to(test))
+		.service(
+			web::resource("/health")
+			.route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!")})),
+		)
+		.service(
+			web::scope("/api")
+			.configure(api::auth::init)
+			.configure(api::user::init)
+		)
 	})
     // .bind_openssl("127.0.0.1:8080", builder)
 	.bind("127.0.0.1:8080")
