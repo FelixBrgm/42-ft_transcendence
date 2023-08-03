@@ -17,10 +17,16 @@ psql -U theOperator -d postgres_db
 to look up:
 
 to do:
-- create neccessary tables (app_user, channel_message for now)
-- update table after auth
+- create neccessary tables
+	-> user DONE
+	-> room
+	-> messages
+	-> games
+- update table after auth DONE
+- logout 
 - make api structure
 - unit testing
+- overthink error handling
 
 shortcuts to inspect in chrome
 Cmd + Option + C	Cmd + Option + J
