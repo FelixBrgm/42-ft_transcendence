@@ -161,11 +161,7 @@ async fn callback(
 	// Retrieve the user information
 	let user_info = get_user_info(token.access_token().secret()).await?;
 
-	println!("id {}", user_info.0);
-	println!("login {}", user_info.1);
-	println!("avatar {}", user_info.2);
-
-	// Identity::login(&req.extensions(), (user_info.0).to_string())?;
+	Identity::login(&req.extensions(), (user_info.0).to_string())?;
 
 	// add to database if not already added
 	interact_with_db(user_info, database).await?;
@@ -216,17 +212,14 @@ async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError>
 async fn interact_with_db(user_info: (i32, String, String), database:web::Data<Database>) -> Result<(), ApiError>
 {
 	let (id, login, avatar) = user_info;
-	println!("came to interact with db");
-
-	database.add_user(&crate::db::models::NewUser{id, login, avatar});
 
 	match database.get_user_by_id(id)
 	{
 		Ok(user) => { println!(" this user was found : {:?}", user);}
 		Err(_) => {
-			println!("didn't find client in db");
+			println!("adding user {}, {}",id, login);
+			database.add_user(&crate::db::models::NewUser{id, login, avatar})?;
 		}
 	}
-	database.show_users();
 	Ok(())
 }
