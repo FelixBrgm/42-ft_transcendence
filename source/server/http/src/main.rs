@@ -72,7 +72,7 @@ async fn main() -> std::io::Result<()> {
 			.wrap(
 				SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
                     .cookie_secure(false)
-                    .build(),
+                    .build()
 			)
 			.route("/", web::get().to(home))
 			.service(
