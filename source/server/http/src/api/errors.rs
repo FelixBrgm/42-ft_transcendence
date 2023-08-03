@@ -30,6 +30,8 @@
 //     }
 // }
 
+use std::any;
+
 use actix_session::{SessionGetError, SessionInsertError};
 use actix_web::{HttpResponse, ResponseError};
 use derive_more::Display;
@@ -58,6 +60,12 @@ impl ResponseError for ApiError {
             ApiError::InternalServerError => {HttpResponse::InternalServerError().json("Internal Server Error")}
         }
     }
+}
+
+impl From<anyhow::Error> for ApiError {
+	fn from(_err: anyhow::Error) -> Self {
+		ApiError::InternalServerError
+	}
 }
 
 impl From<SessionGetError> for ApiError {

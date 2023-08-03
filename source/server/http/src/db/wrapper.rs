@@ -55,7 +55,7 @@ impl Database
     }
 	
 	// Get the client in the clients table by name
-	pub fn get_client_name(&self, name: &str) -> Result<Client> {
+	pub fn get_client_by_name(&self, name: &str) -> Result<Client> {
 
 		Ok (clients
 		.filter(title.eq(name))
@@ -64,7 +64,7 @@ impl Database
   	}
 
 	// Get the client in the clients table by id
-	pub fn get_client_id(&self, find_id: i32) -> Result<Client> {
+	pub fn get_client_by_id(&self, find_id: i32) -> Result<Client> {
 
 		Ok (clients
 		.find(find_id)
