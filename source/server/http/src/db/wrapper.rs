@@ -105,7 +105,7 @@ impl Database
 	}
 
 	// Update the client in the clients table
-	pub fn set_user(&self, new_user: &User) -> Result<()> {
+	pub fn update_user(&self, new_user: &UpdateUser) -> Result<()> {
 		use super::schema::app_user::dsl::*;
 		diesel::update(app_user.filter(id.eq(new_user.id)))
 		.set(new_user)

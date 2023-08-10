@@ -2,22 +2,6 @@ use crate::db::schema::*;
 use diesel::{Queryable, Insertable, AsChangeset};
 use serde::Serialize;
 
-// ----------- test CLIENT STRUCT -----------------
-#[derive (Insertable)]
-#[diesel(table_name = clients)]
-pub struct NewClient<'a> {
-	pub title: &'a str,
-	pub is_online: bool,
-}
-
-#[derive(Debug, Queryable, AsChangeset)]
-#[diesel(table_name = clients)]
-pub struct Client {
-	pub id: i32,
-	pub title: String,
-	pub is_online: bool,
-}
-
 // ----------- Users  -----------------
 #[derive (Insertable, Debug, Clone)]
 #[diesel(table_name = app_user)]
@@ -25,6 +9,18 @@ pub struct NewUser {
 	pub id: i32,
 	pub login: String,
 	pub avatar: String,
+}
+
+#[derive(Queryable, PartialEq, AsChangeset, Debug, Clone, Default)]
+#[diesel(table_name = app_user)]
+pub struct UpdateUser {
+    pub id: i32,
+    pub login: Option<String>,
+    pub avatar: Option<String>,
+    pub password: Option<Vec<u8>>,
+    pub status: Option<String>,
+    pub wins: Option<i32>,
+    pub losses: Option<i32>,
 }
 
 #[derive(Debug, Queryable, AsChangeset, Serialize)]

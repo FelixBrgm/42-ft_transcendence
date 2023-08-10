@@ -10,32 +10,33 @@ use super::user::User;
 use super::login::handle_socket_login;
 use super::runtime::{process_socket_data, RoomSocket};
 
-pub async fn chat_start() {
-    // TODO
-    // LOGIN wiht user http
-    // room updates if they change something
-    let (room_update_sender, room_update_receiver) = mpsc::channel::<RoomSocket>(100);
+// pub async fn chat_start() {
+//     // TODO
+//     // LOGIN wiht user http
+//     // room updates if they change something
+//     let (room_update_sender, room_update_receiver) = mpsc::channel::<RoomSocket>(100);
 
-    {
-        let room_update_sender = room_update_sender.clone();
-        tokio::spawn(start_chat_server(room_update_sender, room_update_receiver));
-    }
+//     {
+//         let room_update_sender = room_update_sender.clone();
+//         tokio::spawn(start_chat_server(room_update_sender, room_update_receiver));
+//     }
 
-    println!("ROOM ADDED");
-    let _ = room_update_sender.try_send(RoomSocket {
-        id: String::from("Test"),
-        participant_uids: vec![],
-        buffer: vec![],
-    });
+//     println!("ROOM ADDED");
+//     let _ = room_update_sender.try_send(RoomSocket {
+//         id: String::from("Test"),
+//         participant_uids: vec![],
+//         buffer: vec![],
+//     });
 
-    tokio::time::sleep(Duration::from_secs(15000)).await;
-    // room_udpate_sender usage in the http server
-}
+//     tokio::time::sleep(Duration::from_secs(15000)).await;
+//     // room_udpate_sender usage in the http server
+// }
 
-async fn start_chat_server(
+pub async fn start_chat_server(
     room_update_sender: Sender<RoomSocket>,
     room_update_receiver: Receiver<RoomSocket>,
 ) {
+	println!("in start chat server");
     let (login_successful_sender, login_successful_receiver) = mpsc::channel::<User>(2);
 
     let handle_1 = tokio::spawn(async move {

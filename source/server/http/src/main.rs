@@ -11,7 +11,8 @@ mod chat;
 
 use db::models::NewUser;
 use db::wrapper::Database;
-use chat::chat::chat_start;
+use chat::chat::start_chat_server;
+use chat::runtime::RoomSocket;
 use std::time::Duration;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, cookie};
@@ -19,6 +20,7 @@ use actix_identity::IdentityMiddleware;
 use actix_web::{web, App, HttpResponse, HttpServer, HttpRequest, Responder, get, HttpMessage};
 use actix_session::{Session, SessionMiddleware, storage::CookieSessionStore};
 use actix_cors::Cors;
+use tokio::sync::mpsc::{self, Sender, Receiver};
 // use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 
 use oauth2::basic::BasicClient;
@@ -47,13 +49,18 @@ async fn test(req: HttpRequest, db: web::Data<Database>) -> Result<HttpResponse,
 async fn main() -> std::io::Result<()> {
 	// std::env::set_var("RUST_LOG", "debug");
 	// std::env::set_var("RUST_BACKTRACE", "1");
-	// env_logger::init();
+	env_logger::init();
 
 	// Initialize the logger with a specific log level
 	// env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
-	chat_start();
-	println!("Chatserver started!");
+	// let (room_update_sender, room_update_receiver) = mpsc::channel::<RoomSocket>(100);
+    // {
+    //     let room_update_sender = room_update_sender.clone();
+    //     tokio::spawn(start_chat_server(room_update_sender, room_update_receiver));
+    // }
+	// println!("Chatserver started!");
+	// tokio::time::sleep(Duration::from_secs(1500)).await;
 
 	let database_url = dotenvy::var("DATABASE_URL").expect("DATABASE_URL not set in .env");
 	let db = Database::new(&database_url);
