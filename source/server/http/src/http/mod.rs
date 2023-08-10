@@ -13,5 +13,5 @@ pub async fn start_actix_server(room_update_sender: mpsc::Sender<RoomSocket>) {
 
     let client = oauth::setup_oauth_client();
 
-    api::start_actix_server(db, client).await;
+    api::start_actix_server(db, client, room_update_sender).await;
 }

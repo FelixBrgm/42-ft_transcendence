@@ -1,11 +1,9 @@
-
 use serde::Deserialize;
 use tokio::sync::mpsc::Receiver;
 use tokio::time::Duration;
 
-
-use super::RoomSocket;
 use super::user::User;
+use super::RoomSocket;
 
 #[derive(Deserialize, Debug)]
 pub struct Request {

@@ -1,42 +1,32 @@
-use crate::http::db::Database;
 use super::error::ApiError;
-use actix_web::{web, HttpResponse};
+use crate::http::db::Database;
 use actix_identity::Identity;
+use actix_web::{get, post, web, HttpResponse};
 use anyhow::Result;
 
-pub fn init(cfg: &mut web::ServiceConfig)
-{
-	cfg.service(
-		web::scope("/user")
-		 .route("", web::get().to(user_get))
-		 .route("", web::put().to(user_put))
-		 
-	);
-}
-
 // returns the information of the user sending the request
+#[get("/user")]
 async fn user_get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-
-	let Ok(id) = identity.id() else {
+    let Ok(id) = identity.id() else {
 		return Err(ApiError::Unauthorized)
 	};
 
-	let user = db.get_user_by_id(id.parse::<i32>()?)?;
-	Ok(HttpResponse::Ok().json(&user))
+    let user = db.get_user_by_id(id.parse::<i32>()?)?;
+    Ok(HttpResponse::Ok().json(&user))
 }
 
-async fn user_put(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-	
-	let Ok(id) = identity.id() else {
+#[post("/user")]
+async fn user_post(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
+    let Ok(id) = identity.id() else {
 		return Err(ApiError::Unauthorized)
 	};
 
-	// let result = db.set_user();
+    // let result = db.set_user();
 
     // match result {
     //     Ok(_) => Ok(HttpResponse::Ok().finish()),
     //     Err(_) => Err(ApiError::InternalServerError),
     // }
 
-	Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Ok().finish())
 }
