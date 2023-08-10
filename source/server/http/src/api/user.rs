@@ -42,20 +42,3 @@ async fn user_put(identity: Identity, db: web::Data<Database>) -> Result<HttpRes
 	Ok(HttpResponse::Ok().finish())
 }
 
-// // updates the information of the user sending the request
-// async fn user_put(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-// 	println!("PUT /api/user");
-// 	if let Ok(id_str) = identity.id()
-// 	{
-// 		if let Ok(id) = id_str.parse::<i32>() {
-//             let user = db.get_user_by_id(id);
-// 			if let Ok(user) = user{
-// 				println!("user is {:?}", user);
-// 				return Ok(HttpResponse::Ok().json(&user));
-// 			}
-//         }
-// 		return Err(ApiError::InternalServerError);
-// 	}
-// 	return Err(ApiError::Unauthorized)
-// }
-

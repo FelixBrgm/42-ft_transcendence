@@ -7,9 +7,11 @@
 
 mod db;
 mod api;
+mod chat;
 
 use db::models::NewUser;
 use db::wrapper::Database;
+use chat::chat::chat_start;
 use std::time::Duration;
 use actix_web::middleware::Logger;
 use actix_web::{http::header, cookie};
@@ -47,8 +49,11 @@ async fn main() -> std::io::Result<()> {
 	// std::env::set_var("RUST_BACKTRACE", "1");
 	// env_logger::init();
 
-	  // Initialize the logger with a specific log level
+	// Initialize the logger with a specific log level
 	// env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+
+	chat_start();
+	println!("Chatserver started!");
 
 	let database_url = dotenvy::var("DATABASE_URL").expect("DATABASE_URL not set in .env");
 	let db = Database::new(&database_url);
