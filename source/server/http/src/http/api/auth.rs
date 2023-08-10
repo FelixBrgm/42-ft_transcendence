@@ -41,6 +41,8 @@ async fn login(
 	.set_pkce_challenge(pkce_challenge)
 	.url();
 
+	println!("the auth_url: {}", auth_url);
+
 	// Store pkce_verifier and state in session for CSRF protection
 	session.insert("pkce_verifier", pkce_verifier)?;
 	session.insert("state", csrf_token.secret().clone())?;

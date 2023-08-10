@@ -10,6 +10,7 @@ RUN apt-get update && \
     apt-get install -y netcat && \
     apt-get install -y libpq-dev && \
     apt-get install -y git && \
+    apt-get install -y pkg-config && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Vue CLI
