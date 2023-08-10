@@ -60,7 +60,7 @@ pub fn create_websocket_connection(socket: WebSocketStream<TcpStream>) -> Connec
                     if let Ok(msg) = msg {
                         if let Ok(msg) = msg.into_text() {
                             // When dropped this fails and with break the read variable is dropped and the read is closed
-                            if let Err(msg) = socket_to_mscp_sender.send(msg).await {
+                            if let Err(_) = socket_to_mscp_sender.send(msg).await {
                                 let _ = disconnect_sender.send(()).await;
                                 break;
                             }

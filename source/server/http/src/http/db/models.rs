@@ -1,14 +1,14 @@
-use crate::db::schema::*;
-use diesel::{Queryable, Insertable, AsChangeset};
+use super::schema::*;
+use diesel::{AsChangeset, Insertable, Queryable};
 use serde::Serialize;
 
 // ----------- Users  -----------------
-#[derive (Insertable, Debug, Clone)]
+#[derive(Insertable, Debug, Clone)]
 #[diesel(table_name = app_user)]
 pub struct NewUser {
-	pub id: i32,
-	pub login: String,
-	pub avatar: String,
+    pub id: i32,
+    pub login: String,
+    pub avatar: String,
 }
 
 #[derive(Queryable, PartialEq, AsChangeset, Debug, Clone, Default)]

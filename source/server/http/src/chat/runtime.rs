@@ -1,14 +1,11 @@
-use serde::{Deserialize, Serialize};
+
+use serde::Deserialize;
 use tokio::sync::mpsc::Receiver;
 use tokio::time::Duration;
 
-use super::user::User;
 
-pub struct RoomSocket {
-    pub id: String,
-    pub participant_uids: Vec<String>,
-    pub buffer: Vec<Response>,
-}
+use super::RoomSocket;
+use super::user::User;
 
 #[derive(Deserialize, Debug)]
 pub struct Request {
@@ -16,7 +13,7 @@ pub struct Request {
     msg: String,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(serde::Serialize, Debug)]
 pub struct Response {
     room_id: String,
     msg: String,
@@ -68,7 +65,7 @@ pub async fn process_socket_data(
                         }),
                         None => (),
                     },
-                    Err(err) => (),
+                    Err(_err) => (),
                 }
             }
         }
@@ -97,5 +94,6 @@ pub async fn process_socket_data(
 }
 
 async fn send_msg_to_http(res: Response) {
+    let _ = res;
     // HTTP request to the server to save the message/response in the database
 }
