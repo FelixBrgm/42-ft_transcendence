@@ -2,7 +2,7 @@ use rand::Rng;
 use tokio::{net::TcpListener, sync::mpsc::Sender};
 
 use crate::chat::bridge::{self, Connection};
-use crate::chat::runtime::RoomSocket;
+use crate::chat::RoomSocket;
 use crate::chat::user::User;
 
 pub async fn handle_socket_login(

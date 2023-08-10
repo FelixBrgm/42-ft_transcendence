@@ -1,9 +1,8 @@
-
-use crate::db::wrapper::Database;
-use crate::api::errors::ApiError;
-use actix_web::{get, web, HttpRequest, HttpMessage, HttpResponse, Responder};
+use crate::http::db::Database;
+use super::error::ApiError;
+use actix_web::{web, HttpResponse};
 use actix_identity::Identity;
-use anyhow::{Result};
+use anyhow::Result;
 
 pub fn init(cfg: &mut web::ServiceConfig)
 {
@@ -41,4 +40,3 @@ async fn user_put(identity: Identity, db: web::Data<Database>) -> Result<HttpRes
 
 	Ok(HttpResponse::Ok().finish())
 }
-

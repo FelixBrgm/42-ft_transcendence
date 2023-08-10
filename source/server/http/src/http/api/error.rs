@@ -1,6 +1,4 @@
-use std::any;
 use std::num::ParseIntError;
-
 use actix_session::{SessionGetError, SessionInsertError};
 use actix_web::{HttpResponse, ResponseError};
 use derive_more::Display;

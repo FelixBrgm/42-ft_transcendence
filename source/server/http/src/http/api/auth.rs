@@ -1,24 +1,17 @@
-use super::errors::ApiError;
-use crate::db::wrapper::Database;
-use crate::db::models;
+
+use super::error::ApiError;
+use crate::http::db::Database;
+use crate::http::db::models;
 
 use actix_web::http::header::LOCATION;
-use oauth2::basic::{BasicClient, BasicTokenType};
-use oauth2::{AuthorizationCode, CsrfToken, Scope, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
-use actix_web::{web, HttpResponse, HttpRequest, HttpMessage, Responder, http, get};
+use oauth2::basic::BasicClient;
+use oauth2::{CsrfToken, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
+use actix_web::{web, HttpResponse, HttpRequest, HttpMessage, http};
 use actix_identity::Identity;
 use actix_session::Session;
-use openssl::pkey::Id;
 use serde::Deserialize;
 use serde_json;
 use reqwest;
-
-// add to db			DONE
-// logout				
-// add the log
-// testing
-// make it pretty
-// set default avatar
 
 pub fn init(cfg: &mut web::ServiceConfig)
 {

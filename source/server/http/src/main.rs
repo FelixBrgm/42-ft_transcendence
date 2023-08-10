@@ -1,7 +1,25 @@
+use tokio::sync::mpsc;
 
-#[actix_web::main]
-async fn main() {
+mod chat;
+mod http;
 
+use chat::RoomSocket;
+
+#[tokio::main]
+async fn main() -> std::io::Result<()> {
+    let (room_update_sender, room_update_receiver) = mpsc::channel::<chat::RoomSocket>(100);
+    
+    {
+        let room_update_sender = room_update_sender.clone();
+        let _ = tokio::spawn(chat::start_chat_server(
+            room_update_sender,
+            room_update_receiver,
+        ));
+    }
+
+    http::start_actix_server(room_update_sender).await;
+
+    Ok(()) // only so no error hehe
 }
 // // #[macro_use]
 // // extern crate diesel;
@@ -126,22 +144,6 @@ async fn main() {
 //     .expect("Failed to bind to port 8080")
 //     .run()
 //     .await
-// }
-
-// fn setup_oauth_client() -> BasicClient {
-//     let client_id = ClientId::new(dotenvy::var("CLIENT_ID").expect("CLIENT_ID not set."));
-//     let client_secret =
-//         ClientSecret::new(dotenvy::var("CLIENT_SECRET").expect("CLIENT_SECRET not set."));
-//     let auth_url = AuthUrl::new("https://api.intra.42.fr/oauth/authorize".to_string())
-//         .expect("Invalid authorization endpoint URL");
-//     let token_url = TokenUrl::new("https://api.intra.42.fr/oauth/token".to_string())
-//         .expect("Invalid token endpoint URL");
-//     let redirect_uri =
-//         RedirectUrl::new(dotenvy::var("REDIRECT_URI").expect("REDIRECT_URI not set."))
-//             .expect("Invalid redirect URL");
-
-//     BasicClient::new(client_id, Some(client_secret), auth_url, Some(token_url))
-//         .set_redirect_uri(redirect_uri)
 // }
 
 // // curl -X GET http://127.0.0.1:8080/health
