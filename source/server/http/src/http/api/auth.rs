@@ -3,6 +3,7 @@ use super::error::ApiError;
 use crate::http::db::Database;
 use crate::http::db::models;
 
+use actix_web::get;
 use actix_web::http::header::LOCATION;
 use oauth2::basic::BasicClient;
 use oauth2::{CsrfToken, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
@@ -13,20 +14,11 @@ use serde::Deserialize;
 use serde_json;
 use reqwest;
 
-pub fn init(cfg: &mut web::ServiceConfig)
-{
-	cfg.service(
-		web::scope("/auth")
-			.route("/login", web::get().to(login))
-			.route("/callback", web::get().to(callback))
-			.route("/logout", web::get().to(logout))
-	);
-}
-
 // ************************************************************ \\
 //							  LOGIN
 // ************************************************************ \\
 
+#[get("/auth/login")]
 // Login route: Initiates the OAuth2 flow by redirecting the user to the authorization endpoint
 async fn login(
 	id: Option<Identity>,
@@ -71,6 +63,7 @@ pub struct AuthRequest{
     error_description: Option<String>,
 }
 
+#[get("/auth/callback")]
 async fn callback(
 	id: Option<Identity>,
 	req: HttpRequest,
@@ -193,15 +186,15 @@ async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError>
 
 async fn interact_with_db(user_info: (i32, String, String), database:web::Data<Database>) -> Result<(), ApiError>
 {
-	let (id, login, avatar) = user_info;
+	let (id, login_d, avatar) = user_info;
 
 	// todo: implement password
 	match database.get_user_by_id(id)
 	{
 		Ok(user) => { println!(" this user was found : {:?}", user);}
 		Err(_) => {
-			println!("adding user {}, {}",id, login);
-			database.add_user(&models::NewUser{id, login, avatar})?;
+			println!("adding user {}, {}",id, login_d);
+			database.add_user(&models::NewUser{id, login: login_d, avatar})?;
 		}
 	}
 	Ok(())
@@ -210,7 +203,7 @@ async fn interact_with_db(user_info: (i32, String, String), database:web::Data<D
 // ************************************************************ \\
 //							  LOGOUT
 // ************************************************************ \\
-
+#[get("/auth/logout")]
 async fn logout(
 	id: Option<Identity>,
 	database: web::Data<Database>
