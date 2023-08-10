@@ -1,5 +1,6 @@
 use super::errors::ApiError;
 use crate::db::wrapper::Database;
+use crate::db::models;
 
 use actix_web::http::header::LOCATION;
 use oauth2::basic::{BasicClient, BasicTokenType};
@@ -23,9 +24,9 @@ pub fn init(cfg: &mut web::ServiceConfig)
 {
 	cfg.service(
 		web::scope("/auth")
-		 .route("/login", web::get().to(login))
-		 .route("/callback", web::get().to(callback))
-		  .route("/logout", web::get().to(logout))
+			.route("/login", web::get().to(login))
+			.route("/callback", web::get().to(callback))
+			.route("/logout", web::get().to(logout))
 	);
 }
 
@@ -42,8 +43,7 @@ async fn login(
 
 	// If user is already logged in redirect to frontend
 	if id.is_some() {
-		let user = id.unwrap();
-		println!("(login) {:?} is already logged in", user.id());
+		println!("(login) {:?} is already logged in", id.unwrap().id());
 		return Ok(HttpResponse::Found().insert_header((LOCATION, "/")).finish());
 	}
 
@@ -90,8 +90,7 @@ async fn callback(
 {
 	// If user is already logged in redirect to frontend
 	if id.is_some() {
-		let user = id.unwrap();
-		println!("(callback) {:?} is already logged in", user.id());
+		println!("(callback) {:?} is already logged in",id.unwrap().id());
 		return Ok(HttpResponse::Found().insert_header((LOCATION, "/")).finish());
 	}
 
@@ -116,10 +115,10 @@ async fn callback(
 	 // Verify the state for CSRF protection
 	 let session_state = session.get::<String>("state")?;
 	 if session_state.is_none() {
-		 return Err(ApiError::BadRequest("No state".to_string()));
+		 return Err(ApiError::BadRequest("No state (CSRF)".to_string()));
 	 }
 	 if session_state.unwrap() != *state.secret() {
-		 return Err(ApiError::BadRequest("Invalid state".to_string()));
+		 return Err(ApiError::BadRequest("Invalid state (CSRF)".to_string()));
 	 }
 
 	// Retrieve the pkceVerifier from the session
@@ -190,7 +189,7 @@ async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError>
 		.ok_or(ApiError::InternalServerError)?
 		.to_string();
 
-	// todo: put this in .env
+	// todo: put this in .env and define a default avatar
 	let intra_avatar = user_info["image"]["versions"]["medium"]
 		.as_str()
 		.unwrap_or("https://i.pinimg.com/564x/bc/5d/17/bc5d173a3001839b5f4ec29efad072ae.jpg")
@@ -203,13 +202,13 @@ async fn interact_with_db(user_info: (i32, String, String), database:web::Data<D
 {
 	let (id, login, avatar) = user_info;
 
-	// todo: set status
+	// todo: implement password
 	match database.get_user_by_id(id)
 	{
 		Ok(user) => { println!(" this user was found : {:?}", user);}
 		Err(_) => {
 			println!("adding user {}, {}",id, login);
-			database.add_user(&crate::db::models::NewUser{id, login, avatar})?;
+			database.add_user(&models::NewUser{id, login, avatar})?;
 		}
 	}
 	Ok(())
@@ -220,22 +219,24 @@ async fn interact_with_db(user_info: (i32, String, String), database:web::Data<D
 // ************************************************************ \\
 
 async fn logout(
-	// req: HttpRequest,
-    // client: web::Data<BasicClient>,
 	id: Option<Identity>,
-    session: Session,
 	database: web::Data<Database>
 ) -> Result<HttpResponse, ApiError>
 {
+	if let Some(id) = id{
+		println!("logging out user");
+		database.update_user(&models::UpdateUser{
+			id: id.id()?.parse()?,
+			status: Some("offline".to_string()),
+			..Default::default()
+		})?;
 
-	// set status in database
-	// do i need to remove session ke
-	if id.is_some() {
-		let user = id.unwrap();
-		println!("(logout) {:?} is already logged in", user.id());
-		user.logout();
-		session.remove("token");
+		id.logout();
 	}
 	
-	return Ok(HttpResponse::Found().insert_header((LOCATION, "/")).finish())
+	println!("redirecting user");
+
+	Ok(HttpResponse::Found()
+   .insert_header((LOCATION, "/"))
+   .finish())
 }
