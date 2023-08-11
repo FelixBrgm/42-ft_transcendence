@@ -4,6 +4,14 @@ use actix_identity::Identity;
 use actix_web::{get, post, web, HttpResponse};
 use anyhow::Result;
 
+// default url
+#[get("/")]
+async fn home() -> HttpResponse
+{
+	HttpResponse::Ok().body("welcome home!")
+}
+
+
 // returns the information of the user sending the request
 #[get("/user")]
 async fn user_get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {

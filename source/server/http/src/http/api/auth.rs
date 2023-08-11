@@ -14,6 +14,9 @@ use serde::Deserialize;
 use serde_json;
 use reqwest;
 
+// todo:
+// set user to online if logged in again,
+
 // ************************************************************ \\
 //							  LOGIN
 // ************************************************************ \\
@@ -124,8 +127,7 @@ async fn callback(
         Ok(token) => token,
         Err(e) => {
             return Err(ApiError::BadRequest(format!(
-                "Failed to exchange token with 42 Intra: {}",
-                e
+                "Failed to exchange token with 42 Intra: {}", e
             )));
         }
     };
@@ -193,7 +195,14 @@ async fn interact_with_db(user_info: (i32, String, String), database:web::Data<D
 	// todo: implement password
 	match database.get_user_by_id(id)
 	{
-		Ok(user) => { println!(" this user was found : {:?}", user);}
+		Ok(user) => { println!(" this user was found : {:?}", user);
+						database.update_user(&models::UpdateUser{
+							id,
+							status: Some("online".to_string()),
+							..Default::default()
+						})?;
+						println!(" this user was found : {:?}", database.get_user_by_id(id)?);
+					}
 		Err(_) => {
 			println!("adding user {}, {}",id, login_d);
 			database.add_user(&models::NewUser{id, login: login_d, avatar})?;

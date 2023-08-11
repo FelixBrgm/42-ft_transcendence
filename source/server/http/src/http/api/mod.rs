@@ -50,6 +50,7 @@ pub async fn start_actix_server(
                 web::resource("/health")
                     .route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!") })),
             )
+			.service(user::home)
             .service(user::user_get)
             .service(user::user_post)
             .service(auth::login)
