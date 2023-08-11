@@ -39,7 +39,23 @@ diesel::table! {
 }
 
 diesel::table! {
+    room_user_connection (id) {
+        id -> Int4,
+        user_id -> Int4,
+        room_id -> Int4,
+    }
+}
+
+diesel::table! {
     user_chat_room (id) {
+        id -> Int4,
+        user_id -> Int4,
+        room_id -> Int4,
+    }
+}
+
+diesel::table! {
+    user_room_connection (id) {
         id -> Int4,
         user_id -> Int4,
         room_id -> Int4,
@@ -49,12 +65,18 @@ diesel::table! {
 diesel::joinable!(chat_messages -> app_user (sender_id));
 diesel::joinable!(chat_messages -> chat_rooms (room_id));
 diesel::joinable!(chat_rooms -> app_user (owner));
+diesel::joinable!(room_user_connection -> app_user (user_id));
+diesel::joinable!(room_user_connection -> chat_rooms (room_id));
 diesel::joinable!(user_chat_room -> app_user (user_id));
 diesel::joinable!(user_chat_room -> chat_rooms (room_id));
+diesel::joinable!(user_room_connection -> app_user (user_id));
+diesel::joinable!(user_room_connection -> chat_rooms (room_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     app_user,
     chat_messages,
     chat_rooms,
+    room_user_connection,
     user_chat_room,
+    user_room_connection,
 );
