@@ -34,3 +34,8 @@ pub struct User {
     pub wins: i32,
     pub losses: i32,
 }
+
+// ----------- Rooms -----------------
+
+// ----------- Messages --------------
+// ----------- Connections  ----------
