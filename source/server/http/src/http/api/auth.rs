@@ -1,7 +1,7 @@
 
 use super::error::ApiError;
 use crate::http::db::Database;
-use crate::http::db::models;
+use crate::http::db::models::NewUser;
 
 use actix_web::get;
 use actix_session::Session;
@@ -14,19 +14,31 @@ use serde::Deserialize;
 use serde_json;
 use reqwest;
 
-// todo:
-// set user to online if logged in again,
-
 // ************************************************************ \\
 //							  LOGIN
 // ************************************************************ \\
 
+/// Initiates the OAuth2 login process.
+///
+/// # Endpoint
+/// `GET /auth/login`
+///
+/// # Description
+/// - Initiates the login process using OAuth2 authorization code flow.
+/// - Redirects the user to the intra server for authentication.
+///
+/// # Response
+/// - If the user is already logged in, they will be redirected to the frontend.
+/// - Otherwise, the user will be redirected to the authorization server for authentication.
+///
 #[get("/auth/login")]
 async fn login(
 	id: Option<Identity>,
 	client: web::Data<BasicClient>,
-	session: Session)
-	-> Result<HttpResponse, ApiError> {
+	session: Session
+	)
+	-> Result<HttpResponse, ApiError>
+	{
 
 	// If user is already logged in redirect to frontend
 	if id.is_some() {
@@ -58,20 +70,39 @@ async fn login(
 // ************************************************************ \\
 
 #[derive(Debug, Deserialize)]
-pub struct AuthRequest{
+pub struct AuthRequest {
 	code: Option<String>,
 	state: Option<String>,
 }
 
+/// Handles the OAuth2 callback after successful authentication.
+///
+/// # Endpoint
+/// `GET /auth/callback`
+///
+/// # Description
+/// - Handles the callback from the intra server after successful authentication.
+/// - Retrieves the authorization code, exchanges it for an access token, and retrieves user information.
+/// - Logs in the user, updates session data, and interacts with the database.
+///
+/// # Query Parameters
+/// - `code`: Authorization code received from the intra server.
+/// - `state`: CSRF protection token received from the intra server.
+///
+/// # Response
+/// - If the user is already logged in, they will be redirected to the frontend.
+/// - After successful authentication, the user will be logged in, and their information will be added/updated in the database.
+/// - They will then be redirected to the frontend.
+///
 #[get("/auth/callback")]
 async fn callback(
 	id: Option<Identity>,
 	req: HttpRequest,
-    client: web::Data<BasicClient>,
-	query: web::Query<AuthRequest>,
     session: Session,
+	query: web::Query<AuthRequest>,
+    client: web::Data<BasicClient>,
 	database: web::Data<Database>
-)
+	)
 	-> Result<HttpResponse, ApiError>
 {
 	// If user is already logged in redirect to frontend
@@ -91,7 +122,6 @@ async fn callback(
 		 return Err(ApiError::BadRequest("Invalid state (CSRF)".to_string()));
 	 }
 
-	// Retrieve the pkceVerifier from the session
 	let Some(pkce_verifier) = session.get::<PkceCodeVerifier>("pkce_verifier")? else {
 		return Err(ApiError::InternalServerError);
 	};
@@ -116,12 +146,10 @@ async fn callback(
     session.remove("state");
     session.insert("token", token)?;
 
-	// Retrieve the user information
 	let user_info = get_user_info(token.access_token().secret()).await?;
 
 	Identity::login(&req.extensions(), (user_info.0).to_string())?;
 
-	// add to database if not already added
 	interact_with_db(user_info, database).await?;
 	
 	Ok(HttpResponse::Found()
@@ -144,7 +172,8 @@ fn extract_code_and_state(query: &web::Query<AuthRequest>)
 	Ok((code, state))
 }
 
-async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError>
+async fn get_user_info(token: &str)
+	-> Result<(i32, String, String), ApiError>
 {
 	let client = reqwest::Client::new();
     let user_info_endpoint = "https://api.intra.42.fr/v2/me";
@@ -181,24 +210,21 @@ async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError>
 	Ok((intra_id, intra_login, intra_avatar))
 }
 
-async fn interact_with_db(user_info: (i32, String, String), database:web::Data<Database>) -> Result<(), ApiError>
+async fn interact_with_db(user_info: (i32, String, String), database:web::Data<Database>)
+	-> Result<(), ApiError>
 {
 	let (id, login_d, avatar) = user_info;
 
 	// todo: implement password
 	match database.get_user_by_id(id)
 	{
-		Ok(user) => { println!(" this user was found : {:?}", user);
-						database.update_user(&models::UpdateUser{
-							id,
-							status: Some("online".to_string()),
-							..Default::default()
-						})?;
-						println!(" this user was found : {:?}", database.get_user_by_id(id)?);
+		Ok(user) => {
+						database.update_user_status(id, "online")?;
+						println!(" this user was found : {:?}", user);
 					}
 		Err(_) => {
 			println!("adding user {}, {}",id, login_d);
-			database.add_user(&models::NewUser{id, login: login_d, avatar})?;
+			database.add_user(&NewUser{id, login: login_d, avatar})?;
 		}
 	}
 	Ok(())
@@ -207,25 +233,31 @@ async fn interact_with_db(user_info: (i32, String, String), database:web::Data<D
 // ************************************************************ \\
 //							  LOGOUT
 // ************************************************************ \\
+
+/// Logs out the authenticated user.
+///
+/// # Endpoint
+/// `GET /auth/logout`
+///
+/// # Description
+/// - Logs out the authenticated user.
+/// - Updates user status in the database to "offline".
+/// - Clears the user session.
+///
+/// # Response
+/// - Redirects the user to the frontend after successful logout.
+///
 #[get("/auth/logout")]
 async fn logout(
-	id: Option<Identity>,
+	id: Identity,
 	database: web::Data<Database>
-) -> Result<HttpResponse, ApiError>
+	)
+	-> Result<HttpResponse, ApiError>
 {
-	if let Some(id) = id{
-		println!("logging out user {}", id);
+	println!("logging out user");
 
-		database.update_user(&models::UpdateUser{
-			id: id.id()?.parse()?,
-			status: Some("offline".to_string()),
-			..Default::default()
-		})?;
-	
-		id.logout();
-	}
-	
-	println!("redirecting user");
+	database.update_user_status(id.id()?.parse()?, "offline")?;
+	id.logout();
 
 	Ok(HttpResponse::Found()
    .insert_header((LOCATION, "/"))
