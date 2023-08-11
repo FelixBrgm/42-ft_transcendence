@@ -33,20 +33,20 @@ impl Database {
     //							Users
     //*********************************************************//
     // Insert the new user into the users table
-    pub fn add_user(&self, new_user: &NewUser) -> Result<()> {
+    pub fn add_user(&self, user: &NewUser) -> Result<()> {
         use schema::app_user::dsl::*;
         diesel::insert_into(app_user)
-            .values(new_user)
+            .values(user)
             .execute(&mut self.pool.get()?)?;
 
         Ok(())
     }
 
     // Update the user in the users table
-    pub fn update_user(&self, new_user: &UpdateUser) -> Result<()> {
+    pub fn update_user(&self, user: &UpdateUser) -> Result<()> {
         use schema::app_user::dsl::*;
-        diesel::update(app_user.filter(id.eq(new_user.id)))
-            .set(new_user)
+        diesel::update(app_user.filter(id.eq(user.id)))
+            .set(user)
             .execute(&mut self.pool.get()?)?;
 
         Ok(())
@@ -65,15 +65,68 @@ impl Database {
 	}
 
     // Get the user in the users table by id
-    pub fn get_user_by_id(&self, find_id: i32) -> Result<User> {
+    pub fn get_user_by_id(&self, id: i32) -> Result<User> {
         use schema::app_user::dsl::*;
         Ok(app_user
-            .find(find_id)
+            .find(id)
             .first::<User>(&mut self.pool.get()?)?)
     }
 
+	// Remove the user from the users table by id
+	pub fn remove_user(&self, id: i32) -> Result<()> {
+		use schema::app_user::dsl::*;
+
+		diesel::delete(app_user.filter(id.eq(id)))
+			.execute(&mut self.pool.get()?)?;
+
+		Ok(())
+	}
+
     /// ===============================================================
-    ///                             USERS
+    ///                             ROOMS
+    /// ===============================================================
+
+	// Insert the new room into the chat_rooms table
+	pub fn add_room(&self, room: &NewChatRoom) -> Result<()> {
+		use schema::chat_rooms::dsl::*;
+
+        diesel::insert_into(chat_rooms)
+            .values(room)
+            .execute(&mut self.pool.get()?)?;
+
+        Ok(())
+	}
+	
+	// Update the room in the chat_rooms table
+	pub fn update_room(&self, room: &UpdateChatRoom) -> Result<()> {
+        use schema::chat_rooms::dsl::*;
+        diesel::update(chat_rooms.filter(id.eq(room.id)))
+            .set(room)
+            .execute(&mut self.pool.get()?)?;
+
+        Ok(())
+    }
+	
+	// Get the room in the chat_rooms table by id
+	pub fn get_room_by_id(&self, room_id: i32) -> Result<ChatRoom> {
+		use schema::chat_rooms::dsl::*;
+        Ok(chat_rooms
+            .find(room_id)
+            .first::<ChatRoom>(&mut self.pool.get()?)?)
+	}
+
+	// Remove the room from the chat_rooms table by id
+	pub fn remove_room(&self, id: i32) -> Result<()> {
+		use schema::chat_rooms::dsl::*;
+
+		diesel::delete(chat_rooms.filter(id.eq(id)))
+			.execute(&mut self.pool.get()?)?;
+
+		Ok(())
+	}
+		
+	/// ===============================================================
+	///                             GET ALL
     /// ===============================================================
 
 	/// Get a list of all users from the users table
@@ -82,7 +135,33 @@ impl Database {
 		Ok(app_user.load(&mut self.pool.get()?)?)
 	}
 
-    pub fn show_users(&self) -> Result<()> {
+	/// Get a list of all rooms from the chat_rooms table
+	pub fn get_rooms(&self) -> Result<Vec<ChatRoom>>
+	{
+		use schema::chat_rooms::dsl::*;
+		Ok(chat_rooms.load(&mut self.pool.get()?)?)
+	}
+
+	/// ===============================================================
+    ///                             DEBUG
+    /// ===============================================================
+
+	pub fn show_rooms(&self) -> Result<()> {
+        println!("Showing all rooms...");
+
+        use schema::chat_rooms::dsl::*;
+        let results = chat_rooms
+            .load::<ChatRoom>(&mut self.pool.get()?)
+            .unwrap_or(vec![]);
+
+        for user in results {
+            println!("{:?}", user);
+        }
+
+        Ok(())
+    }
+
+	pub fn show_users(&self) -> Result<()> {
         println!("Showing all users...");
 
         use schema::app_user::dsl::*;

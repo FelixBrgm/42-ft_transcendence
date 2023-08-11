@@ -1,6 +1,5 @@
 -- Your SQL goes here
--- The UNIQUE constraint ensures that a user can only be a member of a chat room once.
-CREATE TABLE user_chat_room (
+CREATE TABLE room_user_connection (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     room_id INT NOT NULL,

@@ -17,23 +17,15 @@ async fn home() -> HttpResponse
 async fn user_get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     
 	let id = identity.id()?;
-
     let user = db.get_user_by_id(id.parse::<i32>()?)?;
 
     Ok(HttpResponse::Ok().json(&user))
 }
 
-#[post("/user")]
-async fn user_post(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-   
-	let id = identity.id()?;
+// #[get("/user/rooms")]
+// #[post("/user/rooms")]
 
-    // let result = db.set_user();
+// #[get("/user/rooms/{room_id}/messages")]
+// #[post("/user/rooms/{room_id}/messages")]
 
-    // match result {
-    //     Ok(_) => Ok(HttpResponse::Ok().finish()),
-    //     Err(_) => Err(ApiError::InternalServerError),
-    // }
 
-    Ok(HttpResponse::Ok().finish())
-}

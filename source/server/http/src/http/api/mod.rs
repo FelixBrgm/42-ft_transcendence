@@ -56,7 +56,7 @@ pub async fn start_actix_server(
             .service(auth::callback)
 			.service(user::home)
             .service(user::user_get)
-            .service(user::user_post)
+            // .service(user::user_post)
 			.service(users::users_get)
 			.default_service(web::to(|| HttpResponse::NotFound()))
     })

@@ -51,6 +51,7 @@ pub struct NewChatRoom {
 #[derive(AsChangeset, Debug)]
 #[diesel(table_name = chat_rooms)]
 pub struct UpdateChatRoom {
+	pub id: i32,
     pub name: Option<String>,
     pub topic: Option<String>,
     pub is_public: Option<bool>,
@@ -82,7 +83,14 @@ pub struct NewMessage {
 // ----------- Connections  ----------
 
 #[derive(Insertable, Debug, Queryable)]
-#[diesel(table_name = user_chat_room)]
+#[diesel(table_name = room_user_connection)]
+pub struct RoomUserConnection {
+    pub user_id: i32,
+    pub room_id: i32,
+}
+
+#[derive(Insertable, Debug, Queryable)]
+#[diesel(table_name = user_room_connection)]
 pub struct UserRoomConnection {
     pub user_id: i32,
     pub room_id: i32,

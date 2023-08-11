@@ -30,3 +30,5 @@ async fn users_get(identity: Identity, db: web::Data<Database>) -> Result<HttpRe
 	let users = db.get_users()?;
     Ok(HttpResponse::Ok().json(&users))
 }
+
+// #[post("/users")]
