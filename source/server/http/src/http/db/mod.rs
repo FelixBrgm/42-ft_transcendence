@@ -32,7 +32,7 @@ impl Database {
     //********************************************************//
     //							Users
     //*********************************************************//
-    // Insert the new user into the clients table
+    // Insert the new user into the users table
     pub fn add_user(&self, new_user: &NewUser) -> Result<()> {
         use schema::app_user::dsl::*;
         diesel::insert_into(app_user)
@@ -42,7 +42,7 @@ impl Database {
         Ok(())
     }
 
-    // Update the client in the clients table
+    // Update the user in the users table
     pub fn update_user(&self, new_user: &UpdateUser) -> Result<()> {
         use schema::app_user::dsl::*;
         diesel::update(app_user.filter(id.eq(new_user.id)))
@@ -52,7 +52,19 @@ impl Database {
         Ok(())
     }
 
-    // Get the client in the clients table by id
+	// Update the user status in the users table
+	pub fn update_user_status(&self, id: i32, status: &str) -> Result<()> {
+
+		self.update_user(&UpdateUser{
+			id,
+			status: Some(status.to_string()),
+			..Default::default()
+		})?;
+
+		Ok(())
+	}
+
+    // Get the user in the users table by id
     pub fn get_user_by_id(&self, find_id: i32) -> Result<User> {
         use schema::app_user::dsl::*;
         Ok(app_user
@@ -63,6 +75,12 @@ impl Database {
     /// ===============================================================
     ///                             USERS
     /// ===============================================================
+
+	/// Get a list of all users from the users table
+	pub fn get_users(&self) -> Result<Vec<User>> {
+		use schema::app_user::dsl::*;
+		Ok(app_user.load(&mut self.pool.get()?)?)
+	}
 
     pub fn show_users(&self) -> Result<()> {
         println!("Showing all users...");
