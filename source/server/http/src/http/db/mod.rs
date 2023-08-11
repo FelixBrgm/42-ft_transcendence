@@ -136,8 +136,7 @@ impl Database {
 	}
 
 	/// Get a list of all rooms from the chat_rooms table
-	pub fn get_rooms(&self) -> Result<Vec<ChatRoom>>
-	{
+	pub fn get_rooms(&self) -> Result<Vec<ChatRoom>> {
 		use schema::chat_rooms::dsl::*;
 		Ok(chat_rooms.load(&mut self.pool.get()?)?)
 	}
@@ -176,3 +175,5 @@ impl Database {
         Ok(())
     }
 }
+
+
