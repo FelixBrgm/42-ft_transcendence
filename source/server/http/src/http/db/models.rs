@@ -1,6 +1,7 @@
 use super::schema::*;
 use diesel::{AsChangeset, Insertable, Queryable};
 use serde::Serialize;
+use chrono::NaiveDateTime;
 
 // ----------- Users  -----------------
 #[derive(Insertable, Debug, Clone)]
@@ -37,5 +38,52 @@ pub struct User {
 
 // ----------- Rooms -----------------
 
+#[derive(Insertable, Debug)]
+#[diesel(table_name = chat_rooms)]
+pub struct NewChatRoom {
+    pub owner: i32,
+    pub name: String,
+    pub topic: Option<String>,
+    pub is_public: bool,
+    pub password: Option<Vec<u8>>,
+}
+
+#[derive(AsChangeset, Debug)]
+#[diesel(table_name = chat_rooms)]
+pub struct UpdateChatRoom {
+    pub name: Option<String>,
+    pub topic: Option<String>,
+    pub is_public: Option<bool>,
+    pub password: Option<Option<Vec<u8>>>,
+}
+
+#[derive(Queryable, Debug)]
+#[diesel(table_name = chat_rooms)]
+pub struct ChatRoom {
+    pub id: i32,
+    pub owner: i32,
+    pub name: String,
+    pub topic: Option<String>,
+    pub is_public: bool,
+    pub password: Option<Vec<u8>>,
+}
+
 // ----------- Messages --------------
+
+#[derive(Insertable, Debug, Queryable)]
+#[diesel(table_name = chat_messages)]
+pub struct NewMessage {
+    pub sender_id: i32,
+    pub room_id: i32,
+	pub message: String,
+	pub timestamp: NaiveDateTime,
+}
+
 // ----------- Connections  ----------
+
+#[derive(Insertable, Debug, Queryable)]
+#[diesel(table_name = user_chat_room)]
+pub struct UserRoomConnection {
+    pub user_id: i32,
+    pub room_id: i32,
+}
