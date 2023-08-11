@@ -4,12 +4,12 @@ use crate::http::db::Database;
 use crate::http::db::models;
 
 use actix_web::get;
-use actix_web::http::header::LOCATION;
-use oauth2::basic::BasicClient;
-use oauth2::{CsrfToken, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
-use actix_web::{web, HttpResponse, HttpRequest, HttpMessage, http};
-use actix_identity::Identity;
 use actix_session::Session;
+use actix_identity::Identity;
+use actix_web::http::header::LOCATION;
+use actix_web::{web, HttpResponse, HttpRequest, HttpMessage, http};
+use oauth2::{CsrfToken, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
+use oauth2::basic::BasicClient;
 use serde::Deserialize;
 use serde_json;
 use reqwest;
@@ -22,7 +22,6 @@ use reqwest;
 // ************************************************************ \\
 
 #[get("/auth/login")]
-// Login route: Initiates the OAuth2 flow by redirecting the user to the authorization endpoint
 async fn login(
 	id: Option<Identity>,
 	client: web::Data<BasicClient>,
@@ -44,8 +43,6 @@ async fn login(
 	.set_pkce_challenge(pkce_challenge)
 	.url();
 
-	println!("the auth_url: {}", auth_url);
-
 	// Store pkce_verifier and state in session for CSRF protection
 	session.insert("pkce_verifier", pkce_verifier)?;
 	session.insert("state", csrf_token.secret().clone())?;
@@ -64,8 +61,6 @@ async fn login(
 pub struct AuthRequest{
 	code: Option<String>,
 	state: Option<String>,
-	error: Option<String>,
-    error_description: Option<String>,
 }
 
 #[get("/auth/callback")]
@@ -85,23 +80,7 @@ async fn callback(
 		return Ok(HttpResponse::Found().insert_header((LOCATION, "/")).finish());
 	}
 
-	// Check if authentication failed
-	if let Some(err) = &query.error {
-        let reason = query
-			.error_description
-            .as_ref()
-            .map_or(err.clone(), |desc| format!("{}: {}", err, desc));
-
-        return Ok(HttpResponse::Unauthorized().body(reason));
-    }
-
-	if query.code.is_none() || query.state.is_none() {
-		return Err(ApiError::InternalServerError);
-	}
-
-	// Extract the code and state from the query parameters
-	let code = oauth2::AuthorizationCode::new(query.code.clone().unwrap());
-	let state = oauth2::CsrfToken::new(query.state.clone().unwrap());
+	let (code, state) = extract_code_and_state(&query)?;
 
 	 // Verify the state for CSRF protection
 	 let session_state = session.get::<String>("state")?;
@@ -148,7 +127,21 @@ async fn callback(
 	Ok(HttpResponse::Found()
    .insert_header((LOCATION, "/"))
    .finish())
+}
 
+fn extract_code_and_state(query: &web::Query<AuthRequest>)
+	-> Result<(oauth2::AuthorizationCode, oauth2::CsrfToken), ApiError>
+{
+	// Check if authentication failed
+	if query.code.is_none() || query.state.is_none() {
+		return Err(ApiError::Unauthorized);
+	}
+
+	// Extract the code and state from the query parameters
+	let code = oauth2::AuthorizationCode::new(query.code.clone().unwrap());
+	let state = oauth2::CsrfToken::new(query.state.clone().unwrap());
+
+	Ok((code, state))
 }
 
 async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError>
@@ -221,13 +214,14 @@ async fn logout(
 ) -> Result<HttpResponse, ApiError>
 {
 	if let Some(id) = id{
-		println!("logging out user");
+		println!("logging out user {}", id);
+
 		database.update_user(&models::UpdateUser{
 			id: id.id()?.parse()?,
 			status: Some("offline".to_string()),
 			..Default::default()
 		})?;
-
+	
 		id.logout();
 	}
 	
