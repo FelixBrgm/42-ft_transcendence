@@ -1,7 +1,7 @@
 use super::schema::*;
+use chrono::NaiveDateTime;
 use diesel::{AsChangeset, Insertable, Queryable};
 use serde::Serialize;
-use chrono::NaiveDateTime;
 
 // ----------- Users  -----------------
 #[derive(Insertable, Debug, Clone)]
@@ -51,7 +51,7 @@ pub struct NewChatRoom {
 #[derive(AsChangeset, Debug)]
 #[diesel(table_name = chat_rooms)]
 pub struct UpdateChatRoom {
-	pub id: i32,
+    pub id: i32,
     pub name: Option<String>,
     pub topic: Option<String>,
     pub is_public: Option<bool>,
@@ -76,8 +76,8 @@ pub struct ChatRoom {
 pub struct NewMessage {
     pub sender_id: i32,
     pub room_id: i32,
-	pub message: String,
-	pub timestamp: NaiveDateTime,
+    pub message: String,
+    pub timestamp: NaiveDateTime,
 }
 
 // ----------- Connections  ----------

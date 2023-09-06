@@ -2,9 +2,9 @@ use tokio::sync::mpsc;
 
 use crate::RoomSocket;
 
+mod api;
 mod db;
 mod oauth;
-mod api;
 
 pub async fn start_actix_server(room_update_sender: mpsc::Sender<RoomSocket>) {
     println!("Starting actix server...");

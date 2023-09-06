@@ -1,6 +1,6 @@
 -- Your SQL goes here
 CREATE TABLE app_user (
-	id INT PRIMARY KEY,
+	id INTEGER PRIMARY KEY,
 	login VARCHAR(255) NOT NULL,
 	avatar VARCHAR(255) NOT NULL,
 	password BYTEA NULL,
