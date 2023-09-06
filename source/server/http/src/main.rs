@@ -1,4 +1,3 @@
-
 use tokio::sync::mpsc;
 
 mod chat;
@@ -9,7 +8,7 @@ use chat::RoomSocket;
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
     let (room_update_sender, room_update_receiver) = mpsc::channel::<chat::RoomSocket>(100);
-    
+
     {
         let room_update_sender = room_update_sender.clone();
         let _ = tokio::spawn(chat::start_chat_server(
