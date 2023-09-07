@@ -63,6 +63,8 @@ pub async fn start_actix_server(
 			.service(user::post)
 			.service(user::rooms_get)
 			.service(room::all)
+			.service(room::get)
+			.service(room::post)
             .default_service(web::to(|| HttpResponse::NotFound()))
 			// .service(auth::login_test)
 				// .service(user::user_get_test)

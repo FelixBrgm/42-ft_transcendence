@@ -36,16 +36,14 @@ async fn get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse
 async fn post(update_user: web::Json<UpdateUser>, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
 
 	let user = update_user.into_inner();
-	println!("post: {:?}", &user);
+
+	let msg = format!("User {} {:?} updated succesfully!", user.id, &user.login);
 	match db.update_user(&user) 
 	{
-		Ok(_) => Ok(HttpResponse::Ok().json("User updated successfully")),
+		Ok(_) => Ok(HttpResponse::Ok().json(msg)),
 		Err(_) => Err(ApiError::InternalServerError),
 	}
 }
-
-// write db functions
-// implement without idenitit
 
 // later user_id is retrieved by identity
 #[get("/user/rooms")]
