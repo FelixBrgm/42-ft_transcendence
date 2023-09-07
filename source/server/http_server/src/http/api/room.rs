@@ -42,20 +42,34 @@ async fn post(
     }
 }
 
-#[post("/room/{room_id}/{user_id}")]
+#[post("/room/{room_id}/add/{user_id}")]
 async fn add_user(
-    room_id: web::Path<i32>,
-    user_id: web::Path<i32>,
+    ids: web::Path<(i32, i32)>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-	let room_id = room_id.into_inner();
-	let user_id = user_id.into_inner();
+    let room_id = ids.0;
+    let user_id = ids.1;
 
-	let msg = format!("Room {} added User {} succesfully!", room_id, user_id);
-	match db.add_connection(user_id, room_id) {
-		Ok(_) => Ok(HttpResponse::Ok().json(msg)),
-		Err(_) => Err(ApiError::InternalServerError),
-	}
+    let msg = format!("Room {} added User {} succesfully!", room_id, user_id);
+    match db.add_connection(user_id, room_id) {
+        Ok(_) => Ok(HttpResponse::Ok().json(msg)),
+        Err(_) => Err(ApiError::InternalServerError),
+    }
+}
+
+#[post("/room/{room_id}/rem/{user_id}")]
+async fn rem_user(
+    ids: web::Path<(i32, i32)>,
+    db: web::Data<Database>,
+) -> Result<HttpResponse, ApiError> {
+    let room_id = ids.0;
+    let user_id = ids.1;
+
+    let msg = format!("Room {} rem User {} succesfully!", room_id, user_id);
+    match db.rem_connection(user_id, room_id) {
+        Ok(_) => Ok(HttpResponse::Ok().json(msg)),
+        Err(_) => Err(ApiError::InternalServerError),
+    }
 }
 
 // #[post("/room/{room_id}/{user_id}")]

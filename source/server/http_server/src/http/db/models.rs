@@ -96,7 +96,18 @@ pub struct UserRoomConnection {
     pub room_id: i32,
 }
 
+#[derive(Insertable, Debug, Queryable)]
+#[diesel(table_name = room_user_connection)]
+pub struct RoomUserQuery {
+	id: i32,
+    pub user_id: i32,
+    pub room_id: i32,
+}
 
-
-
-
+#[derive(Insertable, Debug, Queryable)]
+#[diesel(table_name = user_room_connection)]
+pub struct UserRoomQuery {
+	id: i32,
+    pub user_id: i32,
+    pub room_id: i32,
+}

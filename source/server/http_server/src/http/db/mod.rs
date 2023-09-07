@@ -8,8 +8,6 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use models::*;
 
-use crate::http::db::schema::user_room_connection;
-
 #[derive(Clone)]
 pub struct Database {
     pub pool: Pool<ConnectionManager<PgConnection>>,
@@ -161,61 +159,76 @@ impl Database {
         Ok(())
     }
 
-	/// ===============================================================
+    /// ===============================================================
     ///                        CONNECTIONS
     /// ===============================================================
 
-    fn add_room_user(&self, uid: i32, rid: i32) -> Result<()> {
-        use schema::room_user_connection::dsl::*;
+	// checks if a connectino between user and room exits
+	pub fn check_connection(&self, uid: i32, rid: i32) -> Result<bool> {
+		use schema::room_user_connection::dsl as room_user;
+		use schema::user_room_connection::dsl as user_room;
+	
+		let room_user_exists = room_user::room_user_connection
+			.filter(room_user::user_id.eq(uid).and(room_user::room_id.eq(rid)))
+			.first::<RoomUserQuery>(&mut self.pool.get()?)
+			.optional()
+			.is_ok();
+	
+		let user_room_exists = user_room::user_room_connection
+			.filter(user_room::user_id.eq(uid).and(user_room::room_id.eq(rid)))
+			.first::<UserRoomQuery>(&mut self.pool.get()?)
+			.optional()
+			.is_ok();
+	
+		Ok(room_user_exists && user_room_exists)
+	}
 
-        let con = RoomUserConnection {
+	// adds a conneciton between user and room
+    pub fn add_connection(&self, uid: i32, rid: i32) -> Result<()> {
+        use schema::room_user_connection::dsl as room_user;
+        use schema::user_room_connection::dsl as user_room;
+
+        let ru_con = RoomUserConnection {
             user_id: uid,
             room_id: rid,
         };
 
-        diesel::insert_into(room_user_connection)
-            .values(con)
-            .execute(&mut self.pool.get()?)?;
-        Ok(())
-    }
-
-    fn add_user_room(&self, uid: i32, rid: i32) -> Result<()> {
-        use schema::user_room_connection::dsl::*;
-
-        let con = UserRoomConnection {
+        let ur_con = UserRoomConnection {
             user_id: uid,
             room_id: rid,
         };
 
-        diesel::insert_into(user_room_connection)
-            .values(con)
+        diesel::insert_into(room_user::room_user_connection)
+            .values(ru_con)
+			.on_conflict_do_nothing() 
+            .execute(&mut self.pool.get()?)?;
+
+        diesel::insert_into(user_room::user_room_connection)
+            .values(ur_con)
+			.on_conflict_do_nothing() 
             .execute(&mut self.pool.get()?)?;
         Ok(())
     }
 
-    pub fn add_connection(&self, user_id: i32, room_id: i32) -> Result<()> {
-        self.add_room_user(user_id, room_id)?;
-        self.add_user_room(user_id, room_id)?;
+	// removes the connection between user and room
+    pub fn rem_connection(&self, uid: i32, rid: i32) -> Result<()> {
+        use schema::room_user_connection::dsl as room_user;
+        use schema::user_room_connection::dsl as user_room;
+
+        diesel::delete(
+            room_user::room_user_connection
+                .filter(room_user::user_id.eq(uid).and(room_user::room_id.eq(rid))),
+        )
+        .execute(&mut self.pool.get()?)?;
+
+        diesel::delete(
+            user_room::user_room_connection
+                .filter(user_room::user_id.eq(uid).and(user_room::room_id.eq(rid))),
+        )
+        .execute(&mut self.pool.get()?)?;
         Ok(())
     }
 
-    // pub fn rem_connection(&self)
-
-
-	// pub fn get_user_room(&self) -> Result<Vec<UserRoomConnection>> {
-	// 	use schema::user_room_connection::dsl::*;
-	// 	Ok(user_room_connection.load(&mut self.pool.get()?)?)
-	// }
-
-	// pub fn get_room_user(&self) -> Result<Vec<RoomUserConnection>> {
-	// 	use schema::room_user_connection::dsl::*;
-	// 	Ok(room_user_connection.load(&mut self.pool.get()?)?)
-	// }
-
-	// pub fn get_connecions(&self) -> Result<(Vec<RoomUserConnection>, Vec<UserRoomConnection>)> {
-	// 	let con = &mut self.pool.get()?;
-	// 	Ok((self.get_room_user()?, self.get_user_room()?))
-	// }
     /// ===============================================================
     ///                             GET ALL
     /// ===============================================================
@@ -232,6 +245,15 @@ impl Database {
         Ok(chat_rooms.load(&mut self.pool.get()?)?)
     }
 
+	pub fn get_connecions(&self) -> Result<(Vec<RoomUserQuery>, Vec<UserRoomQuery>)> {
+		use schema::room_user_connection::dsl as room_user;
+        use schema::user_room_connection::dsl as user_room;
+
+		let ru_vec: Vec<RoomUserQuery> = room_user::room_user_connection.load::<RoomUserQuery>(&mut self.pool.get()?)?;
+		let ur_vec: Vec<UserRoomQuery> = user_room::user_room_connection.load::<UserRoomQuery>(&mut self.pool.get()?)?;
+
+    	Ok((ru_vec, ur_vec))
+    }
 
     /// ===============================================================
     ///                             DEBUG
