@@ -8,6 +8,8 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use models::*;
 
+use crate::http::db::schema::user_room_connection;
+
 #[derive(Clone)]
 pub struct Database {
     pub pool: Pool<ConnectionManager<PgConnection>>,
@@ -103,8 +105,8 @@ impl Database {
     ///                             ROOMS
     /// ===============================================================
 
-	// Check if Room exits
-	pub fn check_room(&self, room_id: i32) -> Result<bool> {
+    // Check if Room exits
+    pub fn check_room(&self, room_id: i32) -> Result<bool> {
         use schema::chat_rooms::dsl::*;
 
         let room_count = chat_rooms
@@ -114,7 +116,6 @@ impl Database {
 
         Ok(room_count > 0)
     }
-
 
     // Insert the new room into the chat_rooms table
     pub fn add_room(&self, room: &NewChatRoom) -> Result<()> {
@@ -141,12 +142,14 @@ impl Database {
     pub fn get_room_by_id(&self, room_id: i32) -> Result<Option<ChatRoom>> {
         use schema::chat_rooms::dsl::*;
 
-		match self.check_room(room_id)? {
-			true =>  Ok(Some(chat_rooms
-				.find(room_id)
-				.first::<ChatRoom>(&mut self.pool.get()?)?)),
-			false => Ok(None),
-		}
+        match self.check_room(room_id)? {
+            true => Ok(Some(
+                chat_rooms
+                    .find(room_id)
+                    .first::<ChatRoom>(&mut self.pool.get()?)?,
+            )),
+            false => Ok(None),
+        }
     }
 
     // Remove the room from the chat_rooms table by id
@@ -158,6 +161,61 @@ impl Database {
         Ok(())
     }
 
+	/// ===============================================================
+    ///                        CONNECTIONS
+    /// ===============================================================
+
+    fn add_room_user(&self, uid: i32, rid: i32) -> Result<()> {
+        use schema::room_user_connection::dsl::*;
+
+        let con = RoomUserConnection {
+            user_id: uid,
+            room_id: rid,
+        };
+
+        diesel::insert_into(room_user_connection)
+            .values(con)
+            .execute(&mut self.pool.get()?)?;
+        Ok(())
+    }
+
+    fn add_user_room(&self, uid: i32, rid: i32) -> Result<()> {
+        use schema::user_room_connection::dsl::*;
+
+        let con = UserRoomConnection {
+            user_id: uid,
+            room_id: rid,
+        };
+
+        diesel::insert_into(user_room_connection)
+            .values(con)
+            .execute(&mut self.pool.get()?)?;
+        Ok(())
+    }
+
+    pub fn add_connection(&self, user_id: i32, room_id: i32) -> Result<()> {
+        self.add_room_user(user_id, room_id)?;
+        self.add_user_room(user_id, room_id)?;
+        Ok(())
+    }
+
+    // pub fn rem_connection(&self)
+
+
+	// pub fn get_user_room(&self) -> Result<Vec<UserRoomConnection>> {
+	// 	use schema::user_room_connection::dsl::*;
+	// 	Ok(user_room_connection.load(&mut self.pool.get()?)?)
+	// }
+
+	// pub fn get_room_user(&self) -> Result<Vec<RoomUserConnection>> {
+	// 	use schema::room_user_connection::dsl::*;
+	// 	Ok(room_user_connection.load(&mut self.pool.get()?)?)
+	// }
+
+	// pub fn get_connecions(&self) -> Result<(Vec<RoomUserConnection>, Vec<UserRoomConnection>)> {
+	// 	let con = &mut self.pool.get()?;
+	// 	Ok((self.get_room_user()?, self.get_user_room()?))
+	// }
     /// ===============================================================
     ///                             GET ALL
     /// ===============================================================
@@ -173,6 +231,7 @@ impl Database {
         use schema::chat_rooms::dsl::*;
         Ok(chat_rooms.load(&mut self.pool.get()?)?)
     }
+
 
     /// ===============================================================
     ///                             DEBUG
@@ -208,6 +267,5 @@ impl Database {
         Ok(())
     }
 }
-
 
 // maybe implement some db tests

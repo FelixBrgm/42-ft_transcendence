@@ -268,13 +268,12 @@ struct Token {
 
 #[get("/auth/login_test/{token}")]
 async fn login_test(
-	path: web::Path<Token>,
+    path: web::Path<Token>,
     token: String,
     database: web::Data<Database>,
     req: HttpRequest,
     session: Session,
 ) -> Result<HttpResponse, ApiError> {
-
     println!("login_test called, token {}", &path.token);
 
     let name = String::from("testUser");
@@ -287,12 +286,11 @@ async fn login_test(
 
 #[get("auth/logout_test")]
 async fn logout_test(
-	id: Identity,
-	database: web::Data<Database>,
+    id: Identity,
+    database: web::Data<Database>,
     session: Session,
 ) -> Result<HttpResponse, ApiError> {
-	database.update_user_status(1, "offline")?;
+    database.update_user_status(1, "offline")?;
     id.logout();
-	Ok(HttpResponse::Ok().body("successfull logout of testUser"))
+    Ok(HttpResponse::Ok().body("successfull logout of testUser"))
 }
-
