@@ -80,14 +80,7 @@ pub struct NewMessage {
     pub timestamp: NaiveDateTime,
 }
 
-// ----------- Connections  ----------
-
-#[derive(Insertable, Debug, Queryable)]
-#[diesel(table_name = room_user_connection)]
-pub struct RoomUserConnection {
-    pub user_id: i32,
-    pub room_id: i32,
-}
+// ----------- Connection ----------
 
 #[derive(Insertable, Debug, Queryable)]
 #[diesel(table_name = user_room_connection)]
@@ -96,15 +89,7 @@ pub struct UserRoomConnection {
     pub room_id: i32,
 }
 
-#[derive(Insertable, Debug, Queryable)]
-#[diesel(table_name = room_user_connection)]
-pub struct RoomUserQuery {
-	id: i32,
-    pub user_id: i32,
-    pub room_id: i32,
-}
-
-#[derive(Insertable, Debug, Queryable)]
+#[derive(Insertable, Debug, Queryable, Serialize)]
 #[diesel(table_name = user_room_connection)]
 pub struct UserRoomQuery {
 	id: i32,

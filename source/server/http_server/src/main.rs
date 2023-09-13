@@ -1,7 +1,7 @@
 use tokio::sync::mpsc;
 
 pub mod chat;
-mod http;
+pub mod http;
 
 #[tokio::main]
 async fn main() {

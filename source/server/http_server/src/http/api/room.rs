@@ -52,8 +52,8 @@ async fn add_user(
 
     let msg = format!("Room {} added User {} succesfully!", room_id, user_id);
     match db.add_connection(user_id, room_id) {
-        Ok(_) => Ok(HttpResponse::Ok().json(msg)),
-        Err(_) => Err(ApiError::InternalServerError),
+		Ok(_) => Ok(HttpResponse::Ok().json(msg)),
+        Err(_) => Err(ApiError::NotFound),
     }
 }
 
@@ -71,6 +71,39 @@ async fn rem_user(
         Err(_) => Err(ApiError::InternalServerError),
     }
 }
+
+// remember to turn it back to
+#[post("/room/{room_id}/check/{user_id}")]
+async fn check_user(
+    ids: web::Path<(i32, i32)>,
+    db: web::Data<Database>,
+) -> Result<HttpResponse, ApiError> {
+    let room_id = ids.0;
+    let user_id = ids.1;
+
+    match db.check_connection(user_id, room_id) {
+        Ok(exists) => {
+			match exists {
+				true => Ok(HttpResponse::Ok().json("Connection exists!")),
+				false => Ok(HttpResponse::Ok().json("Connection doesn't exist!")),
+			}
+		},
+        Err(_) => Err(ApiError::InternalServerError),
+    }
+}
+
+#[get("/connections")]
+async fn connections(
+    db: web::Data<Database>,
+) -> Result<HttpResponse, ApiError> {
+
+	match db.get_connections() {
+        Ok(con) => Ok(HttpResponse::Ok().json(&con)),
+        Err(_) => Err(ApiError::InternalServerError),
+    }
+}
+
+
 
 // #[post("/room/{room_id}/{user_id}")]
 // async fn rem_user(
