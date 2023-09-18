@@ -77,6 +77,15 @@ pub struct NewMessage {
     pub sender_id: i32,
     pub room_id: i32,
     pub message: String,
+}
+
+#[derive(Serialize, Debug, Queryable)]
+#[diesel(table_name = chat_messages)]
+pub struct Message {
+    pub id: i32,
+    pub sender_id: i32,
+    pub room_id: i32,
+    pub message: String,
     pub timestamp: NaiveDateTime,
 }
 
@@ -92,7 +101,7 @@ pub struct UserRoomConnection {
 #[derive(Insertable, Debug, Queryable, Serialize)]
 #[diesel(table_name = user_room_connection)]
 pub struct UserRoomQuery {
-	id: i32,
+    id: i32,
     pub user_id: i32,
     pub room_id: i32,
 }
