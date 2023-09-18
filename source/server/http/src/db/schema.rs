@@ -21,7 +21,7 @@ diesel::table! {
         room_id -> Int4,
         sender_id -> Int4,
         message -> Text,
-        timestamp -> Timestamp,
+        timestamp -> Nullable<Timestamp>,
     }
 }
 

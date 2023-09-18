@@ -54,6 +54,3 @@ impl From<ParseIntError> for ApiError {
         ApiError::InternalServerError
     }
 }
-
-// unsafe impl Send for ApiError {}
-// unsafe impl Sync for ApiError {}
