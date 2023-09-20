@@ -13,23 +13,6 @@ use reqwest;
 use serde::Deserialize;
 use serde_json;
 
-// ************************************************************ \\
-//							  LOGIN
-// ************************************************************ \\
-
-/// Initiates the OAuth2 login process.
-///
-/// # Endpoint
-/// `GET /auth/login`
-///
-/// # Description
-/// - Initiates the login process using OAuth2 authorization code flow.
-/// - Redirects the user to the intra server for authentication.
-///
-/// # Response
-/// - If the user is already logged in, they will be redirected to the frontend.
-/// - Otherwise, the user will be redirected to the authorization server for authentication.
-///
 #[get("/auth/login")]
 async fn login(
     id: Option<Identity>,
@@ -38,9 +21,10 @@ async fn login(
 ) -> Result<HttpResponse, ApiError> {
     // If user is already logged in redirect to frontend
     if id.is_some() {
-        println!("(login) {:?} is already logged in", id.unwrap().id());
+		println!("(login) {:?} is already logged in", id.unwrap().id());
+		let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
         return Ok(HttpResponse::Found()
-            .insert_header((LOCATION, "/"))
+		    .set_header(http::header::LOCATION, frontend_url)
             .finish());
     }
 
@@ -73,25 +57,6 @@ pub struct AuthRequest {
     state: Option<String>,
 }
 
-/// Handles the OAuth2 callback after successful authentication.
-///
-/// # Endpoint
-/// `GET /auth/callback`
-///
-/// # Description
-/// - Handles the callback from the intra server after successful authentication.
-/// - Retrieves the authorization code, exchanges it for an access token, and retrieves user information.
-/// - Logs in the user, updates session data, and interacts with the database.
-///
-/// # Query Parameters
-/// - `code`: Authorization code received from the intra server.
-/// - `state`: CSRF protection token received from the intra server.
-///
-/// # Response
-/// - If the user is already logged in, they will be redirected to the frontend.
-/// - After successful authentication, the user will be logged in, and their information will be added/updated in the database.
-/// - They will then be redirected to the frontend.
-///
 #[get("/auth/callback")]
 async fn callback(
     id: Option<Identity>,
@@ -104,8 +69,9 @@ async fn callback(
     // If user is already logged in redirect to frontend
     if id.is_some() {
         println!("(callback) {:?} is already logged in", id.unwrap().id());
+        let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
         return Ok(HttpResponse::Found()
-            .insert_header((LOCATION, "/"))
+		    .set_header(http::header::LOCATION, frontend_url)
             .finish());
     }
 
@@ -151,9 +117,10 @@ async fn callback(
 
     interact_with_db(user_info, database).await?;
 
-    Ok(HttpResponse::Found()
-        .insert_header((LOCATION, "/"))
-        .finish())
+    let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
+	return Ok(HttpResponse::Found()
+		.set_header(http::header::LOCATION, frontend_url)
+		.finish());
 }
 
 fn extract_code_and_state(
@@ -236,19 +203,6 @@ async fn interact_with_db(
 //							  LOGOUT
 // ************************************************************ \\
 
-/// Logs out the authenticated user.
-///
-/// # Endpoint
-/// `GET /auth/logout`
-///
-/// # Description
-/// - Logs out the authenticated user.
-/// - Updates user status in the database to "offline".
-/// - Clears the user session.
-///
-/// # Response
-/// - Redirects the user to the frontend after successful logout.
-///
 #[get("/auth/logout")]
 async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     println!("logging out user");
@@ -256,14 +210,27 @@ async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpRespo
     database.update_user_status(id.id()?.parse()?, "offline")?;
     id.logout();
 
-    Ok(HttpResponse::Found()
-        .insert_header((LOCATION, "/"))
-        .finish())
+    let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
+	Ok(HttpResponse::Found()
+	.set_header(http::header::LOCATION, frontend_url)
+	.finish())
+}
+
+// ************************************************************ \\
+//							 CHECK
+// ************************************************************ \\
+
+#[get("/auth/check")]
+async fn check(id: Option<Identity>) -> Result<HttpResponse, ApiError> {
+    match id {
+        Some(_) => Ok(HttpResponse::Ok().json("User is logged in")),
+        None => Err(ApiError::Unauthorized),
+    }
 }
 
 #[derive(Deserialize)]
 struct Token {
-    token: String, // Assuming the id is a string in the path
+    token: String,
 }
 
 #[get("/auth/login_test/{token}")]

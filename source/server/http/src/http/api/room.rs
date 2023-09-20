@@ -43,7 +43,7 @@ async fn post(
 }
 
 #[post("/room/{room_id}/add/{user_id}")]
-async fn add_user(
+async fn join(
     ids: web::Path<(i32, i32)>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
@@ -58,7 +58,7 @@ async fn add_user(
 }
 
 #[post("/room/{room_id}/rem/{user_id}")]
-async fn rem_user(
+async fn part(
     ids: web::Path<(i32, i32)>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
@@ -98,17 +98,8 @@ async fn connections(db: web::Data<Database>) -> Result<HttpResponse, ApiError> 
     }
 }
 
-// #[post("/room/{room_id}/{user_id}")]
-// async fn rem_user(
-//     room_id: web::Path<i32>,
-//     user_id: web::Path<i32>,
-//     db: web::Data<Database>,
-// ) -> Result<HttpResponse, ApiError> {
-// }
-
 // -------------------- CONNECTIONS -----------------------
 
-// #[post("/room/{id}/rem_user")]
 // #[post("/room/{id}/change_topicr")]
 // #[post("/room/{id}/change_name")]
 // #[post("/room/{id}/change_owner")]

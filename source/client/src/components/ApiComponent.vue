@@ -4,6 +4,7 @@
     <button @click="users">Users</button>
     <button @click="login">LOGIN</button>
     <button @click="logout">LOGOUT</button>
+    <button @click="user">User</button>
     <div v-if="data">
       <h2>API Response:</h2>
       <pre>{{ data }}</pre>
@@ -23,7 +24,7 @@ export default {
   methods: {
     async home() {
       try {
-        const response = await axios.get('http://127.0.0.1:8080'); // Replace with your API endpoint
+        const response = await axios.get('http://127.0.0.1:8080');
         this.data = response.data;
       } catch (error) {
         console.error('Error fetching home data:', error);
@@ -31,10 +32,18 @@ export default {
     },
     async users() {
       try {
-        const response = await axios.get('http://127.0.0.1:8080/users'); // Replace with your API endpoint
+        const response = await axios.get('http://127.0.0.1:8080/users');
         this.data = response.data;
       } catch (error) {
         console.error('Error fetching users:', error);
+      }
+    },
+	async user() {
+      try {
+        const response = await axios.get('http://127.0.0.1:8080/user');
+        this.data = response.data;
+      } catch (error) {
+        console.error('Error fetching user:', error);
       }
     },
 	async login() {
