@@ -42,8 +42,8 @@ pub async fn start_actix_server(
             .wrap(Logger::default())
             .wrap(
                 IdentityMiddleware::builder()
-                    .login_deadline(Some(Duration::from_micros(120000)))
-                    .visit_deadline(Some(Duration::from_micros(120000)))
+                    // .login_deadline(Some(Duration::from_micros(120000)))
+                    // .visit_deadline(Some(Duration::from_micros(120000)))
                     .build(),
             )
             .wrap(
@@ -55,26 +55,25 @@ pub async fn start_actix_server(
                 web::resource("/health")
                     .route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!") })),
             )
+			// authentication
             .service(auth::login)
             .service(auth::logout)
             .service(auth::callback)
+            .service(auth::check)
+			// user
             .service(user::home)
             .service(user::all)
             .service(user::get)
             .service(user::post)
-            .service(user::rooms_get)
+			// room
             .service(room::all)
             .service(room::get)
             .service(room::post)
-            .service(room::add_user)
-            .service(room::rem_user)
+            .service(room::join)
+            .service(room::part)
             .service(room::check_user)
             .service(room::connections)
-            // .service(room::rem_user)
             .default_service(web::to(|| HttpResponse::NotFound()))
-        // .service(auth::login_test)
-        // .service(user::user_get_test)
-        // .service(user::user_post)
     })
     .bind("127.0.0.1:8080")
     .expect("Failed to bind to port 8080")

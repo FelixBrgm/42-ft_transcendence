@@ -47,13 +47,9 @@ async fn post(
 }
 
 // later user_id is retrieved by identity
-#[get("/user/rooms")]
-async fn rooms_get(db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-    // let user_id = user_id.into_inner();
-    // println!("{} rooms, user_id", user_id);
-
-    Ok(HttpResponse::Ok().json("worked"))
-}
+// #[get("/user/rooms")]
+// async fn rooms_get(db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
+// }
 
 // #[post("/user/rooms")]
 
