@@ -38,14 +38,16 @@ export default {
         console.error('Error fetching users:', error);
       }
     },
-	async user() {
-      try {
-        const response = await axios.get('http://127.0.0.1:8080/user');
-        this.data = response.data;
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      }
-    },
+		async user() {
+	try {
+		const response = await axios.get('http://127.0.0.1:8080/user', {
+		withCredentials: true, // Include credentials (cookies)
+		});
+		this.data = response.data;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+	}
+	},
 	async login() {
       try {
         window.location.href = 'http://127.0.0.1:8080/auth/login';
