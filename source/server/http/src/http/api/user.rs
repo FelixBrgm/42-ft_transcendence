@@ -34,13 +34,16 @@ async fn get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse
 // who is allowed to update the user(identity or the game/chat server/frontend-> user
 #[post("/user")]
 async fn post(
+	identity: Identity,
     update_user: web::Json<UpdateUser>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-    let user = update_user.into_inner();
+	
+    let mut user = update_user.into_inner();
+	let uid = identity.id()?.parse::<i32>().unwrap_or(-1);
 
-    let msg = format!("User {} {:?} updated succesfully!", user.id, &user.login);
-    match db.update_user(&user) {
+    let msg = format!("User {} updated succesfully!", uid);
+    match db.update_user(&user, uid) {
         Ok(_) => Ok(HttpResponse::Ok().json(msg)),
         Err(_) => Err(ApiError::InternalServerError),
     }

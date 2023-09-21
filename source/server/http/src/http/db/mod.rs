@@ -56,9 +56,9 @@ impl Database {
     }
 
     // Update the user in the users table
-    pub fn update_user(&self, user: &UpdateUser) -> Result<()> {
+    pub fn update_user(&self, user: &UpdateUser, uid: i32) -> Result<()> {
         use schema::app_user::dsl::*;
-        diesel::update(app_user.filter(id.eq(user.id)))
+        diesel::update(app_user.filter(id.eq(uid)))
             .set(user)
             .execute(&mut self.pool.get()?)?;
 
@@ -68,10 +68,9 @@ impl Database {
     // Update the user status in the users table
     pub fn update_user_status(&self, id: i32, status: &str) -> Result<()> {
         self.update_user(&UpdateUser {
-            id,
             status: Some(status.to_string()),
             ..Default::default()
-        })?;
+        }, id)?;
 
         Ok(())
     }
@@ -459,7 +458,6 @@ mod testing {
                 };
 
                 let update_user = models::UpdateUser {
-                    id: 1,
                     login: Some(String::from("updated_user")),
                     avatar: None,
                     password: None,
@@ -471,7 +469,7 @@ mod testing {
                 db.add_user(&new_user)?;
                 assert_eq!(Ok(1), app_user.count().first::<i64>(con));
 
-                db.update_user(&update_user)?;
+                db.update_user(&update_user, 1)?;
                 assert_eq!(Ok(1), app_user.count().first::<i64>(con));
                 assert_eq!(
                     "updated_user",
