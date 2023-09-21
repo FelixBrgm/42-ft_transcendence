@@ -1,10 +1,24 @@
 <template>
   <div>
+	<h3>Health:</h3>
     <button @click="home">Home</button>
-    <button @click="users">Users</button>
+	<h3>Authentication:</h3>
     <button @click="login">LOGIN</button>
     <button @click="logout">LOGOUT</button>
-    <button @click="user">User</button>
+    <button @click="auth_check">CHECK</button>
+	<h3>Users:</h3>
+    <button @click="users">all Users</button>
+    <button @click="user">my User</button>
+    <form @submit.prevent="update_user">
+      <input type="text" v-model="updateUser.login" placeholder="login" />
+      <input type="text" v-model="updateUser.status" placeholder="status" />
+      <button type="submit" >Update User</button>
+	<h3>Rooms:</h3>
+    <button @click="rooms">create</button>
+  
+
+    
+    </form>
     <div v-if="data">
       <h2>API Response:</h2>
       <pre>{{ data }}</pre>
@@ -19,9 +33,45 @@ export default {
   data() {
     return {
       data: null,
+      updateUser: {
+      login: '',
+      status: '',
+     },
+     newRoom: {
+      name: '',
+      topic: '',
+      is_public: '',
+     },
     };
   },
   methods: {
+	async login() {
+      try {
+        window.location.href = 'http://127.0.0.1:8080/auth/login';
+      } catch (error) {
+        console.error('Error Initiating login:', error);
+      }
+    },
+	async logout() {
+      try {
+        const response = await axios.get('http://127.0.0.1:8080/auth/logout', {
+		withCredentials: true,
+		});
+        this.data = response.data;
+      } catch (error) {
+        console.error('Error Logging out:', error);
+      }
+    },
+	async auth_check() {
+		try {
+			const response = await axios.get('http://127.0.0.1:8080/auth/check', {
+			withCredentials: true,
+			});
+			this.data = response.data;
+		} catch (error) {
+			this.data = 'User is not authorised'
+		}
+	},
     async home() {
       try {
         const response = await axios.get('http://127.0.0.1:8080');
@@ -38,36 +88,39 @@ export default {
         console.error('Error fetching users:', error);
       }
     },
-		async user() {
+	async user() {
 	try {
 		const response = await axios.get('http://127.0.0.1:8080/user', {
-		withCredentials: true, // Include credentials (cookies)
+		withCredentials: true,
 		});
 		this.data = response.data;
 	} catch (error) {
 		console.error('Error fetching user:', error);
 	}
 	},
-	async login() {
-      try {
-        window.location.href = 'http://127.0.0.1:8080/auth/login';
-      } catch (error) {
-        console.error('Error Initiating login:', error);
-      }
-    },
-	async logout() {
-      try {
-        const response = await axios.get('http://127.0.0.1:8080/auth/logout'); // Replace with your API endpoint
-        this.data = response.data;
-      } catch (error) {
-        console.error('Error Logging out:', error);
-      }
-    },
-    // Add more methods for other requests as needed
+	async update_user() {
+	try {
+		const response = await axios.post('http://127.0.0.1:8080/user', this.updateUser, {
+		withCredentials: true,
+		});
+		this.data = response.data;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+	}
+	},
+	async create_room() {
+	try {
+		const response = await axios.post('http://127.0.0.1:8080/room', this.newRoom, {
+		withCredentials: true,
+		});
+		this.data = response.data;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+	}
+	},
   },
 };
 </script>
 
 <style scoped>
-/* Your component styles here */
 </style>

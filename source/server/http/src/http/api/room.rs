@@ -30,6 +30,7 @@ async fn get(room_id: web::Path<i32>, db: web::Data<Database>) -> Result<HttpRes
 // -> add connections between them
 #[post("/room")]
 async fn post(
+	identity: Identity,
     new_room: web::Json<NewChatRoom>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {

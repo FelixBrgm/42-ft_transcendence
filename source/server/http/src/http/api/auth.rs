@@ -209,10 +209,8 @@ async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpRespo
 
     database.update_user_status(id.id()?.parse()?, "offline")?;
     id.logout();
-
-    let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
 	Ok(HttpResponse::Found()
-	.set_header(http::header::LOCATION, frontend_url)
+	.set_header(http::header::LOCATION, "/")
 	.finish())
 }
 

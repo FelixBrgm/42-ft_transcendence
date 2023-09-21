@@ -55,13 +55,14 @@ pub async fn start_actix_server(
                 web::resource("/health")
                     .route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!") })),
             )
+			// home
+            .service(user::home)
 			// authentication
             .service(auth::login)
             .service(auth::logout)
             .service(auth::callback)
             .service(auth::check)
 			// user
-            .service(user::home)
             .service(user::all)
             .service(user::get)
             .service(user::post)

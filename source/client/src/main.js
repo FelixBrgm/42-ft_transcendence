@@ -5,7 +5,7 @@ import App from './App.vue'
 
 createApp(App).mount('#app')
 
-Vuex.use(Vuex);
+// Vuex.use(Vuex);
 
 export default new Vuex.Store({
 	state: {

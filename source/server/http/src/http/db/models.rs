@@ -15,7 +15,7 @@ pub struct NewUser {
 #[derive(Queryable, PartialEq, AsChangeset, Debug, Clone, Default, Deserialize)]
 #[diesel(table_name = app_user)]
 pub struct UpdateUser {
-    pub id: i32,
+    // pub id: i32,
     pub login: Option<String>,
     pub avatar: Option<String>,
     pub password: Option<Vec<u8>>,
