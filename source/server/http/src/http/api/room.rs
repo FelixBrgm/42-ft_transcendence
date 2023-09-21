@@ -26,22 +26,22 @@ async fn get(room_id: web::Path<i32>, db: web::Data<Database>) -> Result<HttpRes
 
 // #[get("/room/{id}/messages")]
 
-// -> add owner
-// -> add connections between them
-#[post("/room")]
-async fn post(
+
+#[post("/room/create")]
+async fn create(
 	identity: Identity,
     new_room: web::Json<NewChatRoom>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let room = new_room.into_inner();
+	let uid = identity.id()?.parse::<i32>()?;
 
-    let msg = format!("Room {} added succesfully!", room.name);
-    match db.add_room(&room) {
-        Ok(_) => Ok(HttpResponse::Ok().json(msg)),
+    match db.create_room(room, uid) {
+        Ok(rid) => Ok(HttpResponse::Ok().json(format!("Room {} added succesfully!", rid))),
         Err(_) => Err(ApiError::InternalServerError),
     }
 }
+
 
 #[post("/room/{room_id}/add/{user_id}")]
 async fn join(

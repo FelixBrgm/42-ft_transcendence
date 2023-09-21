@@ -41,7 +41,7 @@ pub struct User {
 #[derive(Insertable, Debug, Deserialize)]
 #[diesel(table_name = chat_rooms)]
 pub struct NewChatRoom {
-    pub owner: i32,
+    pub owner: Option<i32>,
     pub name: String,
     pub topic: Option<String>,
     pub is_public: bool,
