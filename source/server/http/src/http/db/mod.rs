@@ -127,15 +127,8 @@ impl Database {
     }
 
     // creates a room and sets the owver in the connection tables, returns the id of the created room
-    pub fn create_room(&self, uid: i32, name: &str, public: bool) -> Result<i32> {
-        let new_room = NewChatRoom {
-            owner: uid,
-            name: String::from(name),
-            topic: None,
-            is_public: public,
-            password: None,
-        };
-
+    pub fn create_room(&self, mut new_room: NewChatRoom, uid: i32) -> Result<i32> {
+		new_room.owner = Some(uid);
         let rid = self.add_room(&new_room)?;
         self.add_connection(uid, rid)?;
         Ok(rid)

@@ -68,8 +68,8 @@ pub async fn start_actix_server(
             .service(user::post)
 			// room
             .service(room::all)
+            .service(room::create)
             .service(room::get)
-            .service(room::post)
             .service(room::join)
             .service(room::part)
             .service(room::check_user)

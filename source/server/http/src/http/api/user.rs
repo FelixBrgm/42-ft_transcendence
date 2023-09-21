@@ -39,8 +39,8 @@ async fn post(
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
 	
-    let mut user = update_user.into_inner();
-	let uid = identity.id()?.parse::<i32>().unwrap_or(-1);
+    let user = update_user.into_inner();
+	let uid = identity.id()?.parse::<i32>()?;
 
     let msg = format!("User {} updated succesfully!", uid);
     match db.update_user(&user, uid) {
