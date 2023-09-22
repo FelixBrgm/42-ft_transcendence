@@ -55,25 +55,26 @@ pub async fn start_actix_server(
                 web::resource("/health")
                     .route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!") })),
             )
-			// home
+            // home
             .service(user::home)
-			// authentication
+            .service(user::clear)
+            // authentication
             .service(auth::login)
             .service(auth::logout)
             .service(auth::callback)
             .service(auth::check)
-			// user
+            // user
             .service(user::all)
             .service(user::get)
             .service(user::post)
-			// room
+            .service(user::rooms)
+            // room
             .service(room::all)
-            .service(room::create)
             .service(room::get)
+            .service(room::create)
+            .service(room::update)
             .service(room::join)
             .service(room::part)
-            .service(room::check_user)
-            .service(room::connections)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
     .bind("127.0.0.1:8080")

@@ -21,10 +21,10 @@ async fn login(
 ) -> Result<HttpResponse, ApiError> {
     // If user is already logged in redirect to frontend
     if id.is_some() {
-		println!("(login) {:?} is already logged in", id.unwrap().id());
-		let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
+        println!("(login) {:?} is already logged in", id.unwrap().id());
+        let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
         return Ok(HttpResponse::Found()
-		    .set_header(http::header::LOCATION, frontend_url)
+            .set_header(http::header::LOCATION, frontend_url)
             .finish());
     }
 
@@ -71,7 +71,7 @@ async fn callback(
         println!("(callback) {:?} is already logged in", id.unwrap().id());
         let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
         return Ok(HttpResponse::Found()
-		    .set_header(http::header::LOCATION, frontend_url)
+            .set_header(http::header::LOCATION, frontend_url)
             .finish());
     }
 
@@ -118,9 +118,9 @@ async fn callback(
     interact_with_db(user_info, database).await?;
 
     let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
-	return Ok(HttpResponse::Found()
-		.set_header(http::header::LOCATION, frontend_url)
-		.finish());
+    return Ok(HttpResponse::Found()
+        .set_header(http::header::LOCATION, frontend_url)
+        .finish());
 }
 
 fn extract_code_and_state(
@@ -209,9 +209,9 @@ async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpRespo
 
     database.update_user_status(id.id()?.parse()?, "offline")?;
     id.logout();
-	Ok(HttpResponse::Found()
-	.set_header(http::header::LOCATION, "/")
-	.finish())
+    Ok(HttpResponse::Found()
+        .set_header(http::header::LOCATION, "/")
+        .finish())
 }
 
 // ************************************************************ \\
@@ -221,8 +221,8 @@ async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpRespo
 #[get("/auth/check")]
 async fn check(id: Option<Identity>) -> Result<HttpResponse, ApiError> {
     match id {
-        Some(_) => Ok(HttpResponse::Ok().json("User is logged in")),
-        None => Err(ApiError::Unauthorized),
+        Some(_) => Ok(HttpResponse::Ok().json("User is logged in!")),
+        None => Ok(HttpResponse::Ok().json("User isn't logged in!")),
     }
 }
 

@@ -67,10 +67,13 @@ impl Database {
 
     // Update the user status in the users table
     pub fn update_user_status(&self, id: i32, status: &str) -> Result<()> {
-        self.update_user(&UpdateUser {
-            status: Some(status.to_string()),
-            ..Default::default()
-        }, id)?;
+        self.update_user(
+            &UpdateUser {
+                status: Some(status.to_string()),
+                ..Default::default()
+            },
+            id,
+        )?;
 
         Ok(())
     }
@@ -128,15 +131,30 @@ impl Database {
 
     // creates a room and sets the owver in the connection tables, returns the id of the created room
     pub fn create_room(&self, mut new_room: NewChatRoom, uid: i32) -> Result<i32> {
-		new_room.owner = Some(uid);
+        new_room.owner = Some(uid);
         let rid = self.add_room(&new_room)?;
         self.add_connection(uid, rid)?;
         Ok(rid)
     }
 
-    // Update the room in the chat_rooms table
-    pub fn update_room(&self, room: &UpdateChatRoom) -> Result<()> {
+    pub fn check_room_owner(&self, rid: i32, uid: i32) -> Result<bool> {
         use schema::chat_rooms::dsl::*;
+
+        let room_owner_id = chat_rooms
+            .select(owner)
+            .filter(id.eq(rid).and(owner.eq(uid)))
+            .first::<i32>(&mut self.pool.get()?)?;
+
+        Ok(room_owner_id == uid)
+    }
+
+    // Update the room in the chat_rooms table if the user requesting is is the owner
+    pub fn update_room(&self, room: &UpdateChatRoom, uid: i32) -> Result<()> {
+        use schema::chat_rooms::dsl::*;
+
+        if self.check_room_owner(room.id, uid)? == false {
+            return Err(anyhow::anyhow!("Room not found"));
+        }
 
         diesel::update(chat_rooms.filter(id.eq(room.id)))
             .set(room)
@@ -257,7 +275,8 @@ impl Database {
     }
 
     // removes the connection between user and room
-    pub fn remove_connection(&self, uid: i32, rid: i32) -> Result<()> {
+    // if there is no users in the room, the room is deleted
+    pub fn part_room(&self, uid: i32, rid: i32) -> Result<()> {
         use schema::user_room_connection::dsl as user_room;
 
         diesel::delete(
@@ -265,6 +284,11 @@ impl Database {
                 .filter(user_room::user_id.eq(uid).and(user_room::room_id.eq(rid))),
         )
         .execute(&mut self.pool.get()?)?;
+
+        if self.get_room_connections(rid)?.len() == 0 {
+            self.remove_room(rid)?;
+        }
+
         Ok(())
     }
 
@@ -322,40 +346,6 @@ impl Database {
         use schema::chat_messages::dsl as user_room;
 
         Ok(user_room::chat_messages.load::<Message>(&mut self.pool.get()?)?)
-    }
-
-    /// ===============================================================
-    ///                             DEBUG
-    /// ===============================================================
-
-    pub fn show_rooms(&self) -> Result<()> {
-        println!("Showing all rooms...");
-
-        use schema::chat_rooms::dsl::*;
-        let results = chat_rooms
-            .load::<ChatRoom>(&mut self.pool.get()?)
-            .unwrap_or(vec![]);
-
-        for user in results {
-            println!("{:?}", user);
-        }
-
-        Ok(())
-    }
-
-    pub fn show_users(&self) -> Result<()> {
-        println!("Showing all users...");
-
-        use schema::app_user::dsl::*;
-        let results = app_user
-            .load::<User>(&mut self.pool.get()?)
-            .unwrap_or(vec![]);
-
-        for user in results {
-            println!("{:?}", user);
-        }
-
-        Ok(())
     }
 
     /// ===============================================================
