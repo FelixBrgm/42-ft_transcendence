@@ -48,7 +48,7 @@ pub struct NewChatRoom {
     pub password: Option<Vec<u8>>,
 }
 
-#[derive(AsChangeset, Debug)]
+#[derive(AsChangeset, Debug, Deserialize)]
 #[diesel(table_name = chat_rooms)]
 pub struct UpdateChatRoom {
     pub id: i32,

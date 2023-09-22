@@ -24,17 +24,14 @@ async fn get(room_id: web::Path<i32>, db: web::Data<Database>) -> Result<HttpRes
     }
 }
 
-// #[get("/room/{id}/messages")]
-
-
 #[post("/room/create")]
 async fn create(
-	identity: Identity,
+    identity: Identity,
     new_room: web::Json<NewChatRoom>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let room = new_room.into_inner();
-	let uid = identity.id()?.parse::<i32>()?;
+    let uid = identity.id()?.parse::<i32>()?;
 
     match db.create_room(room, uid) {
         Ok(rid) => Ok(HttpResponse::Ok().json(format!("Room {} added succesfully!", rid))),
@@ -42,70 +39,52 @@ async fn create(
     }
 }
 
-
-#[post("/room/{room_id}/add/{user_id}")]
-async fn join(
-    ids: web::Path<(i32, i32)>,
+#[post("/room/update")]
+async fn update(
+    identity: Identity,
+    update_room: web::Json<UpdateChatRoom>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-    let room_id = ids.0;
-    let user_id = ids.1;
+    let uid = identity.id()?.parse::<i32>()?;
 
-    let msg = format!("Room {} added User {} succesfully!", room_id, user_id);
+    match db.update_room(&update_room, uid) {
+        Ok(rid) => {
+            Ok(HttpResponse::Ok().json(format!("Room {} updated succesfully!", update_room.id)))
+        }
+        Err(_) => Err(ApiError::InternalServerError),
+    }
+}
+
+#[post("/room/join/{room_id}")]
+async fn join(
+    identity: Identity,
+    id: web::Path<i32>,
+    db: web::Data<Database>,
+) -> Result<HttpResponse, ApiError> {
+    let room_id = id.into_inner();
+    let user_id = identity.id()?.parse::<i32>()?;
+
+    let msg = format!("User {} is in Room {}!", user_id, room_id);
     match db.add_connection(user_id, room_id) {
         Ok(_) => Ok(HttpResponse::Ok().json(msg)),
         Err(_) => Err(ApiError::NotFound),
     }
 }
 
-#[post("/room/{room_id}/rem/{user_id}")]
+#[post("/room/part/{room_id}")]
 async fn part(
-    ids: web::Path<(i32, i32)>,
+    identity: Identity,
+    id: web::Path<i32>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-    let room_id = ids.0;
-    let user_id = ids.1;
+    let room_id = id.into_inner();
+    let user_id = identity.id()?.parse::<i32>()?;
 
-    let msg = format!("Room {} rem User {} succesfully!", room_id, user_id);
-    match db.remove_connection(user_id, room_id) {
+    let msg = format!("User {} isn't int Room {}!", user_id, room_id);
+    match db.part_room(user_id, room_id) {
         Ok(_) => Ok(HttpResponse::Ok().json(msg)),
         Err(_) => Err(ApiError::InternalServerError),
     }
 }
-
-// remember to turn it back to
-#[post("/room/{room_id}/check/{user_id}")]
-async fn check_user(
-    ids: web::Path<(i32, i32)>,
-    db: web::Data<Database>,
-) -> Result<HttpResponse, ApiError> {
-    let room_id = ids.0;
-    let user_id = ids.1;
-
-    match db.check_connection(user_id, room_id) {
-        Ok(exists) => match exists {
-            true => Ok(HttpResponse::Ok().json("Connection exists!")),
-            false => Ok(HttpResponse::Ok().json("Connection doesn't exist!")),
-        },
-        Err(_) => Err(ApiError::InternalServerError),
-    }
-}
-
-#[get("/connections")]
-async fn connections(db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-    match db.get_connections() {
-        Ok(con) => Ok(HttpResponse::Ok().json(&con)),
-        Err(_) => Err(ApiError::InternalServerError),
-    }
-}
-
-// -------------------- CONNECTIONS -----------------------
-
-// #[post("/room/{id}/change_topicr")]
-// #[post("/room/{id}/change_name")]
-// #[post("/room/{id}/change_owner")]
-// #[post("/room/{id}/is_public/{bool}]
-
-// #[post("rooms/{id}/change_password")]
 
 // #[post("/room/{id}/messages")]

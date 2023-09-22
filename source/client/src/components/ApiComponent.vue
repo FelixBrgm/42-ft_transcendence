@@ -16,14 +16,36 @@
     </form>
     <h3>Rooms:</h3>
     <button @click="rooms">all Rooms</button>
+    <button @click="user_rooms">my Rooms</button>
     <form @submit.prevent="create_room">
-      <input type="text" v-model="newRoom.name" placeholder="name" />
-      <input type="text" v-model="newRoom.topic" placeholder="topic (optional)" />
+      <input type="text" v-model="newRoom.name" placeholder="Room Name" required />
+      <input type="text" v-model="newRoom.topic" placeholder="Topic (optional)" />
       <label>
-        <input type="checkbox" v-model="newRoom.is_public" /> Public Room
+        Is Public:
+        <input type="checkbox" v-model="newRoom.is_public" />
       </label>
       <button type="submit">Create Room</button>
     </form>
+	<form @submit.prevent="update_room">
+      <input type="number" v-model="updateRoomData.id" placeholder="Room ID" required />
+      <input type="text" v-model="updateRoomData.name" placeholder="New Room Name (optional)" />
+      <input type="text" v-model="updateRoomData.topic" placeholder="New Topic (optional)" />
+      <label>
+        Is Public:
+        <input type="checkbox" v-model="updateRoomData.is_public" />
+      </label>
+      <button type="submit">Update Room</button>
+    </form>
+    <form @submit.prevent="join_room">
+      <input type="number" v-model="createRoomId" placeholder="Room ID" required />
+      <button type="submit">Join Room</button>
+    </form>
+    <form @submit.prevent="part_room">
+      <input type="number" v-model="partRoomId" placeholder="Room ID" required />
+      <button type="submit">Part Room</button>
+    </form>
+    <h3>Reset:</h3>
+    <button @click="clear">CLEAR</button>
     <div v-if="data">
       <h2>API Response:</h2>
       <pre>{{ data }}</pre>
@@ -45,8 +67,16 @@ export default {
      newRoom: {
       name: '',
       topic: '',
-      is_public: '',
+      is_public: false,
      },
+     updateRoomData: {
+        id: null,
+        name: '',
+        topic: '',
+        is_public: false,
+      },
+     partRoomId: null,
+     createRoomId: null,
     };
   },
   methods: {
@@ -74,7 +104,7 @@ export default {
 			});
 			this.data = response.data;
 		} catch (error) {
-			this.data = 'User is not authorised'
+			console.error('Error Logging out:', error);
 		}
 	},
     async home() {
@@ -121,11 +151,66 @@ export default {
 		console.error('Error fetching user:', error);
 	}
 	},
+	async user_rooms() {
+	try {
+		const response = await axios.get('http://127.0.0.1:8080/user/room', {
+		withCredentials: true,
+		});
+		this.data = response.data;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+	}
+	},
 	async create_room() {
 	try {
+		this.newRoom.is_public = Boolean(this.newRoom.is_public);
 		const response = await axios.post('http://127.0.0.1:8080/room/create', this.newRoom, {
 		withCredentials: true,
 		});
+		this.data = response.data;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+	}
+	},
+	async update_room() {
+      try {
+        this.updateRoomData.is_public = Boolean(this.updateRoomData.is_public);
+
+        const response = await axios.post('http://127.0.0.1:8080/room/update', this.updateRoomData, {
+          withCredentials: true,
+        });
+
+        this.data = response.data;
+      } catch (error) {
+        console.error('Error updating room:', error);
+      }
+    },
+	async join_room() {
+	try {
+		const url = `http://127.0.0.1:8080/room/join/${this.createRoomId}`;
+		const response = await axios.post(url, null, {
+		withCredentials: true,
+		});
+		this.data = response.data;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+	}
+	},
+	async part_room() {
+	try {
+		const url = `http://127.0.0.1:8080/room/part/${this.partRoomId}`;
+		const response = await axios.post(url, null, {
+		withCredentials: true,
+		});
+		this.data = response.data;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+	}
+	},
+	async clear() {
+	try {
+		const url = `http://127.0.0.1:8080/clear`
+		const response = await axios.get(url);
 		this.data = response.data;
 	} catch (error) {
 		console.error('Error fetching user:', error);
