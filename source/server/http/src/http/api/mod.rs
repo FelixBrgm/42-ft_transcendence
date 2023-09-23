@@ -73,7 +73,6 @@ pub async fn start_actix_server(
             .service(room::update)
             .service(room::join)
             .service(room::part)
-            .service(room::send)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
     .bind("127.0.0.1:8080")

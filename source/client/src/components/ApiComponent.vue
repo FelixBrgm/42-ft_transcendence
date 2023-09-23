@@ -53,12 +53,6 @@
       <button type="submit">Part Room</button>
     </form>
     <h3>Messages:</h3>
-    <form @submit.prevent="send_message">
-      <input type="number" v-model="newMessage.sender_id" placeholder="sender_id" required />
-      <input type="number" v-model="newMessage.room_id" placeholder="room_id" required />
-      <input type="text" v-model="newMessage.message" placeholder="message" required />
-      <button type="submit">Send message</button>
-    </form>
     <form @submit.prevent="messages_room">
       <input type="number" v-model="messageRoomId" placeholder="Room ID" required />
       <button type="submit">Room messages</button>
@@ -97,7 +91,6 @@ export default {
      partRoomId: null,
      createRoomId: null,
      listRoomId: null,
-     messageRoomId: null,
      partnerId: null,
      newMessage: {
          sender_id: null,
@@ -260,17 +253,6 @@ export default {
 	try {
 		const url = `http://127.0.0.1:8080/room/messages/${this.messageRoomId}`;
 		const response = await axios.get(url, null, {
-		withCredentials: true,
-		});
-		this.data = response.data;
-	} catch (error) {
-		console.error('Error fetching user:', error);
-	}
-	},
-	async send_message() {
-	try {
-		console.log(this.newMessage)
-		const response = await axios.post('http://127.0.0.1:8080/room/send', this.newMessage, {
 		withCredentials: true,
 		});
 		this.data = response.data;

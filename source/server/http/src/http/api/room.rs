@@ -1,7 +1,9 @@
 use super::error::ApiError;
 use crate::http::db::models::{NewChatRoom, NewMessage, UpdateChatRoom};
 use crate::http::db::Database;
+use crate::http::RoomSocket;
 
+use tokio::sync::mpsc::Sender;
 use actix_identity::Identity;
 use actix_web::{get, post, web, HttpResponse};
 use anyhow::Result;
@@ -37,6 +39,7 @@ async fn list(room_id: web::Path<i32>, db: web::Data<Database>) -> Result<HttpRe
     }
 }
 
+// how to implement this whith the chat server
 #[get("/room/messages/{room_id}")]
 async fn messages(
     room_id: web::Path<i32>,
@@ -54,13 +57,16 @@ async fn messages(
 async fn create(
     identity: Identity,
     new_room: web::Json<NewChatRoom>,
+	room_update_sender: web::Data<Sender<RoomSocket>>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let room = new_room.into_inner();
     let uid = identity.id()?.parse::<i32>()?;
 
     match db.create_room(room, uid) {
-        Ok(rid) => Ok(HttpResponse::Ok().json(format!("Room {} added succesfully!", rid))),
+        Ok(rid) => {
+			Ok(HttpResponse::Ok().json(format!("Room {} added succesfully!", rid)))
+		}
         Err(_) => Err(ApiError::InternalServerError),
     }
 }
@@ -69,6 +75,7 @@ async fn create(
 async fn personal(
     identity: Identity,
     user_id: web::Path<i32>,
+	room_update_sender: web::Data<Sender<RoomSocket>>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let owner_id = identity.id()?.parse::<i32>()?;
@@ -100,6 +107,7 @@ async fn update(
 async fn join(
     identity: Identity,
     id: web::Path<i32>,
+	room_update_sender: web::Data<Sender<RoomSocket>>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let room_id = id.into_inner();
@@ -116,6 +124,7 @@ async fn join(
 async fn part(
     identity: Identity,
     id: web::Path<i32>,
+	room_update_sender: web::Data<Sender<RoomSocket>>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let room_id = id.into_inner();
@@ -123,23 +132,6 @@ async fn part(
 
     let msg = format!("User {} isn't int Room {}!", user_id, room_id);
     match db.part_room(user_id, room_id) {
-        Ok(_) => Ok(HttpResponse::Ok().json(msg)),
-        Err(_) => Err(ApiError::InternalServerError),
-    }
-}
-
-#[post("/room/send")]
-async fn send(
-    identity: Identity,
-    message: web::Json<NewMessage>,
-    db: web::Data<Database>,
-) -> Result<HttpResponse, ApiError> {
-    let message = message.into_inner();
-    let msg = format!(
-        "User {} send message to {}!",
-        message.sender_id, message.room_id
-    );
-    match db.add_message(&message) {
         Ok(_) => Ok(HttpResponse::Ok().json(msg)),
         Err(_) => Err(ApiError::InternalServerError),
     }

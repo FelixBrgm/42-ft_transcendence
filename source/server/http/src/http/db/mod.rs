@@ -316,17 +316,12 @@ impl Database {
     pub fn add_message(&self, msg: &NewMessage) -> Result<i32> {
         use schema::chat_messages::dsl::*;
 
-        match self.check_connection(msg.sender_id, msg.room_id)? {
-            true => {
-                let inserted_id = diesel::insert_into(chat_messages)
-                    .values(msg)
-                    .returning(id)
-                    .get_result::<i32>(&mut self.pool.get()?)?;
+        let inserted_id = diesel::insert_into(chat_messages)
+            .values(msg)
+            .returning(id)
+            .get_result::<i32>(&mut self.pool.get()?)?;
 
-                Ok(inserted_id)
-            }
-            false => Err(anyhow::anyhow!("User is not in the Room!")),
-        }
+        Ok(inserted_id)
     }
 
     pub fn get_messages_by_room_id(&self, rid: i32) -> Result<Vec<Message>> {
