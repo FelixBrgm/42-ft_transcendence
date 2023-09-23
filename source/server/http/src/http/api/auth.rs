@@ -24,7 +24,7 @@ async fn login(
         println!("(login) {:?} is already logged in", id.unwrap().id());
         let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
         return Ok(HttpResponse::Found()
-            .set_header(http::header::LOCATION, frontend_url)
+            .set_header(LOCATION, frontend_url)
             .finish());
     }
 
@@ -43,7 +43,7 @@ async fn login(
 
     // Redirect the user to the authorization URL
     Ok(HttpResponse::Found()
-        .append_header((http::header::LOCATION, auth_url.to_string()))
+        .append_header((LOCATION, auth_url.to_string()))
         .finish())
 }
 
@@ -71,7 +71,7 @@ async fn callback(
         println!("(callback) {:?} is already logged in", id.unwrap().id());
         let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
         return Ok(HttpResponse::Found()
-            .set_header(http::header::LOCATION, frontend_url)
+            .set_header(LOCATION, frontend_url)
             .finish());
     }
 
@@ -119,7 +119,7 @@ async fn callback(
 
     let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
     return Ok(HttpResponse::Found()
-        .set_header(http::header::LOCATION, frontend_url)
+        .set_header(LOCATION, frontend_url)
         .finish());
 }
 
@@ -209,9 +209,7 @@ async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpRespo
 
     database.update_user_status(id.id()?.parse()?, "offline")?;
     id.logout();
-    Ok(HttpResponse::Found()
-        .set_header(http::header::LOCATION, "/")
-        .finish())
+    Ok(HttpResponse::Found().set_header(LOCATION, "/").finish())
 }
 
 // ************************************************************ \\
@@ -224,38 +222,4 @@ async fn check(id: Option<Identity>) -> Result<HttpResponse, ApiError> {
         Some(_) => Ok(HttpResponse::Ok().json("User is logged in!")),
         None => Ok(HttpResponse::Ok().json("User isn't logged in!")),
     }
-}
-
-#[derive(Deserialize)]
-struct Token {
-    token: String,
-}
-
-#[get("/auth/login_test/{token}")]
-async fn login_test(
-    path: web::Path<Token>,
-    token: String,
-    database: web::Data<Database>,
-    req: HttpRequest,
-    session: Session,
-) -> Result<HttpResponse, ApiError> {
-    println!("login_test called, token {}", &path.token);
-
-    let name = String::from("testUser");
-    interact_with_db((1, name.clone(), "default".to_string()), database).await?;
-    session.insert("token", path.token.clone())?;
-    Identity::login(&req.extensions(), "1".to_string())?;
-
-    Ok(HttpResponse::Ok().body("successfull insertion"))
-}
-
-#[get("auth/logout_test")]
-async fn logout_test(
-    id: Identity,
-    database: web::Data<Database>,
-    session: Session,
-) -> Result<HttpResponse, ApiError> {
-    database.update_user_status(1, "offline")?;
-    id.logout();
-    Ok(HttpResponse::Ok().body("successfull logout of testUser"))
 }

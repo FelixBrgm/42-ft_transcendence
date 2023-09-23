@@ -129,11 +129,27 @@ impl Database {
         Ok(inserted_id)
     }
 
-    // creates a room and sets the owver in the connection tables, returns the id of the created room
+    // creates a room and sets the owner in the connection tables, returns the id of the created room
     pub fn create_room(&self, mut new_room: NewChatRoom, uid: i32) -> Result<i32> {
         new_room.owner = Some(uid);
         let rid = self.add_room(&new_room)?;
         self.add_connection(uid, rid)?;
+        Ok(rid)
+    }
+
+    pub fn create_personal_room(&self, owner_id: i32, partner_id: i32) -> Result<i32> {
+        let new_room = NewChatRoom {
+            owner: Some(owner_id),
+            name: format!("{}-{}", owner_id, partner_id),
+            topic: None,
+            is_public: false,
+            password: None,
+        };
+
+        let rid = self.add_room(&new_room)?;
+        self.add_connection(owner_id, rid)?;
+        self.add_connection(partner_id, rid)?;
+
         Ok(rid)
     }
 
@@ -300,15 +316,20 @@ impl Database {
     pub fn add_message(&self, msg: &NewMessage) -> Result<i32> {
         use schema::chat_messages::dsl::*;
 
-        let inserted_id = diesel::insert_into(chat_messages)
-            .values(msg)
-            .returning(id)
-            .get_result::<i32>(&mut self.pool.get()?)?;
+        match self.check_connection(msg.sender_id, msg.room_id)? {
+            true => {
+                let inserted_id = diesel::insert_into(chat_messages)
+                    .values(msg)
+                    .returning(id)
+                    .get_result::<i32>(&mut self.pool.get()?)?;
 
-        Ok(inserted_id)
+                Ok(inserted_id)
+            }
+            false => Err(anyhow::anyhow!("User is not in the Room!")),
+        }
     }
 
-    pub fn get_message_by_room_id(&self, rid: i32) -> Result<Vec<Message>> {
+    pub fn get_messages_by_room_id(&self, rid: i32) -> Result<Vec<Message>> {
         use schema::chat_messages::dsl::*;
 
         let room_messages = chat_messages

@@ -71,7 +71,7 @@ pub struct ChatRoom {
 
 // ----------- Messages --------------
 
-#[derive(Insertable, Debug, Queryable)]
+#[derive(Insertable, Debug, Queryable, Deserialize)]
 #[diesel(table_name = chat_messages)]
 pub struct NewMessage {
     pub sender_id: i32,
