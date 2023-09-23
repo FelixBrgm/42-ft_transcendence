@@ -40,12 +40,7 @@ pub async fn start_actix_server(
             .app_data(web::Data::new(room_update_sender.clone()))
             .wrap(cors)
             .wrap(Logger::default())
-            .wrap(
-                IdentityMiddleware::builder()
-                    // .login_deadline(Some(Duration::from_micros(120000)))
-                    // .visit_deadline(Some(Duration::from_micros(120000)))
-                    .build(),
-            )
+            .wrap(IdentityMiddleware::builder().build())
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
                     .cookie_secure(false)
@@ -71,10 +66,14 @@ pub async fn start_actix_server(
             // room
             .service(room::all)
             .service(room::get)
+            .service(room::list)
+            .service(room::messages)
             .service(room::create)
+            .service(room::personal)
             .service(room::update)
             .service(room::join)
             .service(room::part)
+            .service(room::send)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
     .bind("127.0.0.1:8080")

@@ -15,7 +15,7 @@ async fn home() -> HttpResponse {
 #[get("/clear")]
 async fn clear(db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     match db.clear_tables() {
-        Ok(users) => Ok(HttpResponse::Ok().json("database has cleared all tables!")),
+        Ok(_) => Ok(HttpResponse::Ok().json("database has cleared all tables!")),
         Err(_) => Err(ApiError::InternalServerError),
     }
 }
@@ -40,7 +40,7 @@ async fn get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse
     }
 }
 
-// who is allowed to update the user(identity or the game/chat server/frontend-> user
+// who is allowed to update the user(identity or the game/chat server/frontend-> user, probably both
 #[post("/user")]
 async fn post(
     identity: Identity,
@@ -65,16 +65,3 @@ async fn rooms(identity: Identity, db: web::Data<Database>) -> Result<HttpRespon
         Err(_) => Err(ApiError::InternalServerError),
     }
 }
-
-// later user_id is retrieved by identity
-// #[get("/user/rooms")]
-// async fn rooms_get(db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-// }
-
-// #[post("/user/rooms")]
-
-// #[get("/user/rooms/{room_id}]
-// #[post("/user/rooms/{room_id}]
-
-// #[get("/user/rooms/{room_id}/messages")]
-// #[post("/user/rooms/{room_id}/messages")]

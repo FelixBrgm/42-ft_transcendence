@@ -26,6 +26,10 @@
       </label>
       <button type="submit">Create Room</button>
     </form>
+    <form @submit.prevent="create_personal_room">
+      <input type="number" v-model="partnerId" placeholder="Partner ID" required />
+      <button type="submit">Create personal Room</button>
+    </form>
 	<form @submit.prevent="update_room">
       <input type="number" v-model="updateRoomData.id" placeholder="Room ID" required />
       <input type="text" v-model="updateRoomData.name" placeholder="New Room Name (optional)" />
@@ -36,6 +40,10 @@
       </label>
       <button type="submit">Update Room</button>
     </form>
+    <form @submit.prevent="list_room">
+      <input type="number" v-model="listRoomId" placeholder="Room ID" required />
+      <button type="submit">List Room Users</button>
+    </form>
     <form @submit.prevent="join_room">
       <input type="number" v-model="createRoomId" placeholder="Room ID" required />
       <button type="submit">Join Room</button>
@@ -43,6 +51,17 @@
     <form @submit.prevent="part_room">
       <input type="number" v-model="partRoomId" placeholder="Room ID" required />
       <button type="submit">Part Room</button>
+    </form>
+    <h3>Messages:</h3>
+    <form @submit.prevent="send_message">
+      <input type="number" v-model="newMessage.sender_id" placeholder="sender_id" required />
+      <input type="number" v-model="newMessage.room_id" placeholder="room_id" required />
+      <input type="text" v-model="newMessage.message" placeholder="message" required />
+      <button type="submit">Send message</button>
+    </form>
+    <form @submit.prevent="messages_room">
+      <input type="number" v-model="messageRoomId" placeholder="Room ID" required />
+      <button type="submit">Room messages</button>
     </form>
     <h3>Reset:</h3>
     <button @click="clear">CLEAR</button>
@@ -77,6 +96,14 @@ export default {
       },
      partRoomId: null,
      createRoomId: null,
+     listRoomId: null,
+     messageRoomId: null,
+     partnerId: null,
+     newMessage: {
+         sender_id: null,
+         room_id: null,
+         message: '',
+     },
     };
   },
   methods: {
@@ -172,6 +199,17 @@ export default {
 		console.error('Error fetching user:', error);
 	}
 	},
+	async create_personal_room() {
+	try {
+		const url = `http://127.0.0.1:8080/room/create/personal/${this.partnerId}`;
+		const response = await axios.post(url, null, {
+		withCredentials: true,
+		});
+		this.data = response.data;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+	}
+	},
 	async update_room() {
       try {
         this.updateRoomData.is_public = Boolean(this.updateRoomData.is_public);
@@ -185,6 +223,17 @@ export default {
         console.error('Error updating room:', error);
       }
     },
+	async list_room() {
+	try {
+		const url = `http://127.0.0.1:8080/room/list/${this.listRoomId}`;
+		const response = await axios.get(url, null, {
+		withCredentials: true,
+		});
+		this.data = response.data;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+	}
+	},
 	async join_room() {
 	try {
 		const url = `http://127.0.0.1:8080/room/join/${this.createRoomId}`;
@@ -200,6 +249,28 @@ export default {
 	try {
 		const url = `http://127.0.0.1:8080/room/part/${this.partRoomId}`;
 		const response = await axios.post(url, null, {
+		withCredentials: true,
+		});
+		this.data = response.data;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+	}
+	},
+	async messages_room() {
+	try {
+		const url = `http://127.0.0.1:8080/room/messages/${this.messageRoomId}`;
+		const response = await axios.get(url, null, {
+		withCredentials: true,
+		});
+		this.data = response.data;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+	}
+	},
+	async send_message() {
+	try {
+		console.log(this.newMessage)
+		const response = await axios.post('http://127.0.0.1:8080/room/send', this.newMessage, {
 		withCredentials: true,
 		});
 		this.data = response.data;
