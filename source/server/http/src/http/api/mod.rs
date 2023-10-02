@@ -5,7 +5,7 @@ use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse, HttpServer};
 use oauth2::basic::BasicClient;
-use std::time::Duration;
+// use std::time::Duration;
 use tokio::sync::mpsc;
 
 mod auth;
@@ -21,6 +21,8 @@ pub async fn start_actix_server(
     // get cookie key from enviroment
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
     let secret_key = cookie::Key::from(env_key.as_bytes());
+
+	// send chatserver all rooms and connections
 
     // Start the Actix Web server
     let _ = HttpServer::new(move || {
@@ -69,8 +71,8 @@ pub async fn start_actix_server(
             .service(room::list)
             .service(room::messages)
             .service(room::create)
-            .service(room::personal)
             .service(room::update)
+            .service(room::personal)
             .service(room::join)
             .service(room::part)
             .default_service(web::to(|| HttpResponse::NotFound()))
