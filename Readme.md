@@ -29,8 +29,7 @@ Start docker!
 ## Step 3: Configure Visual Studio Code
 
 1. Open the project folder in VSCode.
-2. Install the [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
-3. Follow the instructions to "reopen" the folder in a container.
+2. Attach to the running 'dev' Container
 
 ## Working with Git
 
@@ -44,16 +43,6 @@ git pull
 git add .
 git commit -m "Your commit message"
 git pus
-```
-### TODO
-- automated tests
-- 42api answer
-- load balancer
-
-### Start database
-Type in this command in the root of the project outside of the development environment
-```
-make postgres
 ```
 
 ### Additional Notes
