@@ -1,17 +1,17 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::Receiver;
 use tokio::time::Duration;
 
 use super::user::User;
 use super::RoomSocket;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Request {
     room_id: String,
     msg: String,
 }
 
-#[derive(serde::Serialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct Response {
     room_id: String,
     msg: String,
@@ -35,13 +35,32 @@ pub async fn process_socket_data(
     let mut users: Vec<User> = Vec::new();
     let mut rooms: Vec<RoomSocket> = Vec::new();
 
+    // vvvvvv DELETE IS FOR TESTING ONLY vvvvvvvv
+    rooms.push(RoomSocket::new(String::from("test"), vec![]));
+    
+    let req = {
+        Request {
+            room_id: String::from("test"),
+            msg: String::from("msgasdf"),
+        }
+    };
+    let asd = serde_json::to_string::<Request>(&req).unwrap();
+    println!("{}", asd);
+    // ^^^^^ DELETE IS FOR TESTING ONLY ^^^^^
     loop {
         // remove disconnected users
         users.retain_mut(|user| !user.is_disconnected());
-
+        
         // Check for newly connected users and add them
         while let Ok(user) = login_successful_receiver.try_recv() {
             users.retain(|u| u.uid != user.uid);
+            // vvvvvv DELETE IS FOR TESTING ONLY vvvvvvvv
+            println!("{:?}", user.uid);
+            if let Some(room) = rooms.iter_mut().find(|r| r.id == "test") {
+                room.participant_uids.push(String::from(&user.uid));
+                println!("{:?}", room.participant_uids);
+            }
+            // ^^^^^ DELETE IS FOR TESTING ONLY ^^^^^
             users.push(user);
         }
 
