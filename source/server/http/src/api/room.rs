@@ -1,22 +1,11 @@
 use super::error::ApiError;
-use crate::http::db::models::{NewChatRoom, NewMessage, UpdateChatRoom};
-use crate::http::db::Database;
-use crate::http::RoomSocket;
+use crate::db::models::{NewChatRoom, UpdateChatRoom};
+use crate::db::Database;
 
-use tokio::sync::mpsc::Sender;
 use actix_identity::Identity;
 use actix_web::{get, post, web, HttpResponse};
 use anyhow::Result;
 
-// call them all rooms
-// ids after rooms/
-
-async fn update_chatserver(rid: i32, db: web::Data<Database>, room_update_sender: web::Data<Sender<RoomSocket>>) -> Result<(), ApiError>
-{
-	let participant_uids = db.get_room_connections(rid)?;
-	let room_socket = RoomSocket::new(rid.to_string(), participant_uids);
-	room_update_sender.send(room_socket).await.map_err(|_| ApiError::InternalServerError)
-}
 
 #[get("/rooms")]
 async fn all(db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
@@ -64,14 +53,12 @@ async fn messages(
 async fn create(
     identity: Identity,
     new_room: web::Json<NewChatRoom>,
-	room_update_sender: web::Data<Sender<RoomSocket>>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
 	let room = new_room.into_inner();
 	let uid = identity.id()?.parse::<i32>()?;
 		
 	let rid = db.create_room(room, uid)?;
-	update_chatserver(rid, db, room_update_sender).await?;
 	
 	Ok(HttpResponse::Ok().json(format!("Room {} added successfully!", rid)))
 }
@@ -80,14 +67,12 @@ async fn create(
 async fn personal(
     identity: Identity,
     user_id: web::Path<i32>,
-	room_update_sender: web::Data<Sender<RoomSocket>>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let owner_id = identity.id()?.parse::<i32>()?;
     let partner_id = user_id.into_inner();
 
     let rid = db.create_personal_room(owner_id, partner_id)?;
-	update_chatserver(rid, db, room_update_sender).await?;
 
 	Ok(HttpResponse::Ok().json(format!("Personal Room {} added successfully!", rid)))
 }
@@ -109,14 +94,12 @@ async fn update(
 async fn join(
     identity: Identity,
     id: web::Path<i32>,
-	room_update_sender: web::Data<Sender<RoomSocket>>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let room_id = id.into_inner();
     let user_id = identity.id()?.parse::<i32>()?;
 
    db.join_room(user_id, room_id)?;
-   update_chatserver(room_id, db, room_update_sender).await?;
 
 	Ok(HttpResponse::Ok().json(format!("Joined Room {} successfully!", room_id)))
 }
@@ -125,14 +108,12 @@ async fn join(
 async fn part(
     identity: Identity,
     id: web::Path<i32>,
-	room_update_sender: web::Data<Sender<RoomSocket>>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let room_id = id.into_inner();
     let user_id = identity.id()?.parse::<i32>()?;
 
     db.part_room(user_id, room_id)?;
-	update_chatserver(room_id, db, room_update_sender).await?;
 
 	Ok(HttpResponse::Ok().json(format!("Is not in Room {}!", room_id)))
 }
