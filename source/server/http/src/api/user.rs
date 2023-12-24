@@ -1,5 +1,5 @@
 use super::error::ApiError;
-use crate::http::db::{models::UpdateUser, Database};
+use crate::db::{models::UpdateUser, Database};
 
 use actix_identity::Identity;
 use actix_web::{get, post, web, HttpResponse};

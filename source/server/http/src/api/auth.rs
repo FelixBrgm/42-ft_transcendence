@@ -1,12 +1,12 @@
 use super::error::ApiError;
-use crate::http::db::models::NewUser;
-use crate::http::db::Database;
+use crate::db::models::NewUser;
+use crate::db::Database;
 
 use actix_identity::Identity;
 use actix_session::Session;
 use actix_web::get;
 use actix_web::http::header::LOCATION;
-use actix_web::{http, web, HttpMessage, HttpRequest, HttpResponse};
+use actix_web::{web, HttpMessage, HttpRequest, HttpResponse};
 use oauth2::basic::BasicClient;
 use oauth2::{CsrfToken, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
 use reqwest;
