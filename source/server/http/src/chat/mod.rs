@@ -37,8 +37,8 @@ pub struct ClientMessage {
     pub room: String,
 }
 
-#[derive(Debug)]
-struct ChatServer {
+#[derive(Debug, Clone)]
+pub struct ChatServer {
 	sessions: HashMap<usize, Recipient<Message>>,
 }
 
@@ -82,4 +82,12 @@ impl Handler<Connect> for ChatServer {
         // id
 		0
     }
+}
+
+impl Handler<ClientMessage> for ChatServer {
+	type Result = ();
+
+	fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
+		println!("should send message");
+	}
 }

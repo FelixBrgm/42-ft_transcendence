@@ -17,6 +17,8 @@ async fn main() {
 
     let auth_client = oauth::setup_oauth_client();
 
+	let chat_server = chat::ChatServer::new();
+
 	// get cookie key from enviroment
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
     let secret_key = cookie::Key::from(env_key.as_bytes());
@@ -37,6 +39,7 @@ async fn main() {
 
         App::new()
             .app_data(web::Data::new(db.clone()))
+			.app_data(web::Data::new(chat_server.clone()))
             .app_data(web::Data::new(auth_client.clone()))
             .wrap(cors)
             .wrap(Logger::default())
@@ -73,9 +76,11 @@ async fn main() {
             .service(room::personal)
             .service(room::join)
             .service(room::part)
+			// chat
+			.service(ws::server)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
-    .bind("127.0.0.1:8080")
+    .bind("0.0.0.0:8080")
     .expect("Failed to bind to port 8080")
     .run()
     .await;
