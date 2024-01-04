@@ -1,6 +1,7 @@
+mod db;
 mod api;
 mod chat;
-mod db;
+// mod game;
 mod oauth;
 
 use actix::Actor;
@@ -8,9 +9,8 @@ use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse, HttpServer};
-use oauth2::basic::BasicClient;
 
-use crate::api::{auth, room, user, ws};
+use crate::api::{auth, room, user};
 
 #[actix_web::main]
 async fn main() {
@@ -18,13 +18,15 @@ async fn main() {
 
     let auth_client = oauth::setup_oauth_client();
 
-    let chat_server = chat::ChatServer::new().start();
+    let chat_server = chat::ChatServer::new(db.clone()).start();
+
+	// let game_server = game::GameServer::new().start();
 
     // get cookie key from enviroment
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
     let secret_key = cookie::Key::from(env_key.as_bytes());
 
-    println!(" < This works >");
+    println!(" < --- * --- >");
 
     // Start the Actix Web server
     let _ = HttpServer::new(move || {
@@ -41,6 +43,7 @@ async fn main() {
         App::new()
             .app_data(web::Data::new(db.clone()))
             .app_data(web::Data::new(chat_server.clone()))
+			// .app_data(web::Data::new(game_server.clone()))
             .app_data(web::Data::new(auth_client.clone()))
             .wrap(cors)
             .wrap(Logger::default())
@@ -78,7 +81,9 @@ async fn main() {
             .service(room::join)
             .service(room::part)
             // chat
-            .service(ws::server)
+            .service(api::chat::server)
+			//  game
+			// .service(api::game::server)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
     .bind("0.0.0.0:8080")

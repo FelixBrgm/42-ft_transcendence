@@ -1,11 +1,10 @@
 use super::error::ApiError;
 use actix::prelude::*;
-use actix_identity::Identity;
-use actix_web_actors::ws::{Message, WebsocketContext};
+// use actix_identity::Identity;
 
 use crate::chat;
 use actix::{Actor, Addr, StreamHandler};
-use actix_web::{get, web, App, Error, HttpRequest, HttpResponse, HttpServer};
+use actix_web::{get, web, HttpRequest, HttpResponse,};
 use actix_web_actors::ws;
 use std::time::{Duration, Instant};
 
@@ -34,7 +33,7 @@ impl ChatSession {
     fn hb(&self, ctx: &mut ws::WebsocketContext<Self>) {
         ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
-                println!(" Websocket CLient hearbeat failes, disconnecting!");
+                println!(" Websocket CLient hearbeat failed, disconnecting!");
 
                 act.addr.do_send(chat::Disconnect {
                     id: act.id,
@@ -54,7 +53,6 @@ impl Actor for ChatSession {
     type Context = ws::WebsocketContext<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
-        println!("websocket session started");
 
         self.hb(ctx);
 
@@ -66,9 +64,9 @@ impl Actor for ChatSession {
                 room_id: self.room,
             })
             .into_actor(self)
-            .then(|res, act, ctx| {
-                match res {
-                    Ok(res) => {}
+            .then(|_res, _, ctx| {
+                match _res {
+                    Ok(_) => {}
                     _ => ctx.stop(),
                 }
                 fut::ready(())
@@ -124,10 +122,10 @@ impl Handler<chat::Message> for ChatSession {
     type Result = ();
 
     fn handle(&mut self, msg: chat::Message, ctx: &mut Self::Context) {
-        println!("chatsession message handler");
         ctx.text(msg.0);
     }
 }
+
 
 #[get("/ws")]
 async fn server(
@@ -135,13 +133,14 @@ async fn server(
     stream: web::Payload,
     server: web::Data<Addr<chat::ChatServer>>,
 ) -> Result<HttpResponse, ApiError> {
+
+
     let resp = ws::start(
-        ChatSession::new(0, 0, server.get_ref().clone()),
+        ChatSession::new(100758, 1, server.get_ref().clone()),
         &req,
         stream,
     );
 
-    println!("WebSocket response: {:?}", resp);
 
     match resp {
         Ok(ws) => Ok(ws),

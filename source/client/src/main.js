@@ -18,8 +18,6 @@ export default new Vuex.Store({
 	}
 })
 
-Vuex.config.productionTip = false;
-
 Vuex.use(VueNativeSock, 'http://127.0.0.1:8080/ws', {
   format: 'json',
   reconnection: true, // Enable automatic reconnection

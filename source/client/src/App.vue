@@ -1,18 +1,13 @@
 <template>
   <api-component></api-component>
-  <div id="app">
-    <WebSocket />
-  </div>
 </template>
 
 <script>
 import ApiComponent from './components/ApiComponent.vue'
-import WebSocket from './components/WebSocket.vue';
 
 export default {
   name: 'App',
   components: {
-	WebSocket,
 	ApiComponent
   }
 }
