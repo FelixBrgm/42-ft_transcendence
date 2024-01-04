@@ -135,7 +135,6 @@ async fn server(
     stream: web::Payload,
     server: web::Data<Addr<chat::ChatServer>>,
 ) -> Result<HttpResponse, ApiError> {
-    println!("WebSocket connection requested for URL: {}", req.uri());
     let resp = ws::start(
         ChatSession::new(0, 0, server.get_ref().clone()),
         &req,

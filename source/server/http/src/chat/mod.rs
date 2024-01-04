@@ -51,7 +51,7 @@ pub struct ChatServer {
 
 impl ChatServer {
     pub fn new() -> ChatServer {
-        println!("chat server is being created.");
+        println!("chat server is created.");
         ChatServer {
             sessions: HashMap::new(),
             rooms: HashMap::new(),
