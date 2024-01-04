@@ -24,7 +24,7 @@ async fn login(
         println!("(login) {:?} is already logged in", id.unwrap().id());
         let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
         return Ok(HttpResponse::Found()
-			.insert_header((LOCATION, frontend_url))
+            .insert_header((LOCATION, frontend_url))
             .finish());
     }
 
@@ -71,7 +71,7 @@ async fn callback(
         println!("(callback) {:?} is already logged in", id.unwrap().id());
         let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
         return Ok(HttpResponse::Found()
-			.insert_header((LOCATION, frontend_url))
+            .insert_header((LOCATION, frontend_url))
             .finish());
     }
 
@@ -119,7 +119,7 @@ async fn callback(
 
     let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
     return Ok(HttpResponse::Found()
-		.insert_header((LOCATION, frontend_url))
+        .insert_header((LOCATION, frontend_url))
         .finish());
 }
 
@@ -210,8 +210,8 @@ async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpRespo
     database.update_user_status(id.id()?.parse()?, "offline")?;
     id.logout();
     Ok(HttpResponse::Found()
-		.insert_header((LOCATION, "/"))
-		.finish())
+        .insert_header((LOCATION, "/"))
+        .finish())
 }
 
 // ************************************************************ \\
