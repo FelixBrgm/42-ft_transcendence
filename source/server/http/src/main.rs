@@ -3,6 +3,7 @@ mod chat;
 mod db;
 mod oauth;
 
+use actix::Actor;
 use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
@@ -11,19 +12,19 @@ use oauth2::basic::BasicClient;
 
 use crate::api::{auth, room, user, ws};
 
-#[tokio::main]
+#[actix_web::main]
 async fn main() {
     let db = db::Database::new();
 
     let auth_client = oauth::setup_oauth_client();
 
-    let chat_server = chat::ChatServer::new();
+    let chat_server = chat::ChatServer::new().start();
 
     // get cookie key from enviroment
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
     let secret_key = cookie::Key::from(env_key.as_bytes());
 
-    println!(" < OKAYYY LETS GO >");
+    println!(" < This works >");
 
     // Start the Actix Web server
     let _ = HttpServer::new(move || {
