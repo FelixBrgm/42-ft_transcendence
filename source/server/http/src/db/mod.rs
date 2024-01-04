@@ -8,7 +8,8 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use models::*;
 
-type DbConnection = diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+type DbConnection =
+    diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
 
 #[derive(Clone)]
 pub struct Database {
@@ -133,21 +134,20 @@ impl Database {
 
     // creates a room and sets the owner in the connection tables, returns the id of the created room
     pub fn create_room(&self, mut new_room: NewChatRoom, uid: i32) -> Result<i32> {
-		let mut con = self.pool.get()?;
+        let mut con = self.pool.get()?;
 
-		con.transaction::<i32, anyhow::Error, _>(
-		|con| {
-			new_room.owner = Some(uid);
-			let rid = self.add_room(con, &new_room)?;
-			self.add_connection(con, uid, rid)?;
-			
-			Ok(rid)
-		})
+        con.transaction::<i32, anyhow::Error, _>(|con| {
+            new_room.owner = Some(uid);
+            let rid = self.add_room(con, &new_room)?;
+            self.add_connection(con, uid, rid)?;
+
+            Ok(rid)
+        })
     }
 
     pub fn create_personal_room(&self, owner_id: i32, partner_id: i32) -> Result<i32> {
-		let mut con = self.pool.get()?;
-	
+        let mut con = self.pool.get()?;
+
         let new_room = NewChatRoom {
             owner: Some(owner_id),
             name: format!("{}-{}", owner_id, partner_id),
@@ -156,37 +156,34 @@ impl Database {
             password: None,
         };
 
-		con.transaction::<i32, anyhow::Error, _>(
-		|con| {
-			let rid = self.add_room(con, &new_room)?;
-			self.add_connection(con, owner_id, rid)?;
-			self.add_connection(con, partner_id, rid)?;
-			
-			Ok(rid)
-		})
+        con.transaction::<i32, anyhow::Error, _>(|con| {
+            let rid = self.add_room(con, &new_room)?;
+            self.add_connection(con, owner_id, rid)?;
+            self.add_connection(con, partner_id, rid)?;
 
+            Ok(rid)
+        })
     }
 
-	pub fn join_room(&self, user_id: i32, room_id: i32) -> Result<()> {
-		let mut con = self.pool.get()?;
+    pub fn join_room(&self, user_id: i32, room_id: i32) -> Result<()> {
+        let mut con = self.pool.get()?;
 
-		// check if the room is there and joinable, add connection
-		con.transaction::<(), anyhow::Error, _>(
-		|con| {
-			use schema::chat_rooms::dsl::*;
+        // check if the room is there and joinable, add connection
+        con.transaction::<(), anyhow::Error, _>(|con| {
+            use schema::chat_rooms::dsl::*;
 
-			let exists = chat_rooms
-				.filter(id.eq(user_id).and(is_public.eq(true)))
-				.count()
-				.execute(con)?;
-	
-			if exists == 0 {
-				return Err(anyhow::anyhow!("Room is not there/joinable!"));
-			}
+            let exists = chat_rooms
+                .filter(id.eq(user_id).and(is_public.eq(true)))
+                .count()
+                .execute(con)?;
 
-			self.add_connection(con, user_id, room_id)
-		})
-	}
+            if exists == 0 {
+                return Err(anyhow::anyhow!("Room is not there/joinable!"));
+            }
+
+            self.add_connection(con, user_id, room_id)
+        })
+    }
 
     pub fn check_room_owner(&self, rid: i32, uid: i32) -> Result<bool> {
         use schema::chat_rooms::dsl::*;
@@ -322,7 +319,10 @@ impl Database {
             .select(id)
             .load::<i32>(&mut self.pool.get()?)?;
 
-		let user_ids_as_strings: Vec<String> = room_connections.iter().map(|&uid| uid.to_string()).collect();
+        let user_ids_as_strings: Vec<String> = room_connections
+            .iter()
+            .map(|&uid| uid.to_string())
+            .collect();
 
         Ok(user_ids_as_strings)
     }
@@ -330,25 +330,23 @@ impl Database {
     // removes the connection between user and room
     // if there is no users in the room, the room is deleted
     pub fn part_room(&self, uid: i32, rid: i32) -> Result<()> {
-		
-		let mut con = self.pool.get()?;
+        let mut con = self.pool.get()?;
 
-		con.transaction::<(), anyhow::Error, _>(
-			|con| {
-				use schema::user_room_connection::dsl as user_room;
-				
-				diesel::delete(
-					user_room::user_room_connection
-					.filter(user_room::user_id.eq(uid).and(user_room::room_id.eq(rid))),
-				)
-				.execute(con)?;
-			
-			if self.get_room_connections(rid)?.len() == 0 {
-				self.remove_room(con, rid)?;
-			}
-			
-			Ok(())
-		})
+        con.transaction::<(), anyhow::Error, _>(|con| {
+            use schema::user_room_connection::dsl as user_room;
+
+            diesel::delete(
+                user_room::user_room_connection
+                    .filter(user_room::user_id.eq(uid).and(user_room::room_id.eq(rid))),
+            )
+            .execute(con)?;
+
+            if self.get_room_connections(rid)?.len() == 0 {
+                self.remove_room(con, rid)?;
+            }
+
+            Ok(())
+        })
     }
 
     /// ===============================================================

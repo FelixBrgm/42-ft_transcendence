@@ -2,10 +2,9 @@
 import { createApp } from 'vue'
 import Vuex from 'vuex';
 import App from './App.vue'
+import VueNativeSock from 'vue-native-websocket';
 
 createApp(App).mount('#app')
-
-// Vuex.use(Vuex);
 
 export default new Vuex.Store({
 	state: {
@@ -19,35 +18,15 @@ export default new Vuex.Store({
 	}
 })
 
-// const address = 'ws://localhost:4242';
-// const numConnections = 0;
+Vuex.config.productionTip = false;
 
-// for (let i = 0; i < numConnections; i++) {
-//   const client = new WebSocket(address);
+Vuex.use(VueNativeSock, 'http://127.0.0.1:8080/ws', {
+  format: 'json',
+  reconnection: true, // Enable automatic reconnection
+  reconnectionAttempts: 5, // Number of attempts
+  reconnectionDelay: 3000, // Delay between attempts in milliseconds
+});
 
-//   client.onopen = () => {
-//     console.log("WebSocket connected" + i);
-//   };  
-//   client.onmessage = () => {
-//     // const message = event.data;
-//     // console.log(message);
-//     client.send('u');
-//   };
-// //   client.on('connect', connection => {
-// //     console.log('Connected to server');
-    
-// //     // Send messages or perform actions on the server
-// //     connection.send('Hello, server!');
-    
-// //     // Handle server responses or continue interacting with the server
-// //     connection.on('message', message => {
-// //       console.log('Received message:', message.utf8Data);
-// //     });
-// //   });
-  
-// //   client.on('connectFailed', error => {
-// //     console.log('Connection failed:', error.toString());
-// //   });
-  
-// //   client.connect(address);
-// }
+new Vuex({
+  render: (h) => h(App),
+}).$mount('#app');

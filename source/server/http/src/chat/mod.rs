@@ -1,6 +1,5 @@
-
 use actix::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::db::models::NewMessage;
 use crate::db::Database;
@@ -12,9 +11,11 @@ pub struct Message(pub String);
 
 /// New chat session is created
 #[derive(Message)]
-#[rtype(usize)]
+#[rtype(result = "()")]
 pub struct Connect {
     pub addr: Recipient<Message>,
+    pub room_id: usize,
+    pub self_id: usize,
 }
 
 /// Session is disconnected
@@ -22,10 +23,11 @@ pub struct Connect {
 #[rtype(result = "()")]
 pub struct Disconnect {
     pub id: usize,
+    pub room_id: usize,
 }
 
 // TO DO: i might want to derive the Message trait for a NewMessage instead
-/// Send message to specific room
+// / Send message to specific room
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct ClientMessage {
@@ -34,60 +36,99 @@ pub struct ClientMessage {
     /// Peer message
     pub msg: String,
     /// Room name
-    pub room: String,
+    pub room_id: usize,
 }
+
+// --------------------- CHATSERVER ------------------
+
+type Socket = Recipient<Message>;
 
 #[derive(Debug, Clone)]
 pub struct ChatServer {
-	sessions: HashMap<usize, Recipient<Message>>,
+    sessions: HashMap<usize, Socket>,
+    rooms: HashMap<usize, HashSet<usize>>,
 }
 
 impl ChatServer {
     pub fn new() -> ChatServer {
-        ChatServer{
-			sessions: HashMap::new(),
-		}
+        println!("chat server is being created.");
+        ChatServer {
+            sessions: HashMap::new(),
+            rooms: HashMap::new(),
+        }
+    }
+
+    fn send_message(&self, message: &str, recipient: &usize) {
+        if let Some(socket_recipient) = self.sessions.get(recipient) {
+            let _ = socket_recipient.do_send(Message(message.to_owned()));
+        } else {
+            println!(
+                "attempting to send message to {}, but couldn't find him in the session",
+                recipient
+            )
+        }
     }
 }
 
 impl Actor for ChatServer {
-	    /// We are going to use simple Context, we just need ability to communicate
-    /// with other actors
-	type Context = Context<Self>;
+    type Context = Context<Self>;
 }
 
-/// Handler for Connect message.
-///
-/// Register new session and assign unique id to this session
 impl Handler<Connect> for ChatServer {
-    type Result = usize;
+    type Result = ();
 
-    fn handle(&mut self, msg: Connect, _: &mut Context<Self>) -> usize {
+    fn handle(&mut self, msg: Connect, _: &mut Context<Self>) {
         println!("Someone joined");
 
-        // // notify all users in same room
-        // self.send_message("main", "Someone joined", 0);
+        self.rooms
+            .entry(msg.room_id)
+            .or_insert_with(HashSet::new)
+            .insert(msg.self_id);
+        self.rooms
+            .get(&msg.room_id)
+            .unwrap()
+            .iter()
+            .filter(|con_id| *con_id.to_owned() != msg.self_id)
+            .for_each(|con_id| self.send_message(&format!("{} just joined!", msg.self_id), con_id));
+        self.sessions.insert(msg.self_id, msg.addr);
+        self.send_message(&format!("your id is {}", &msg.self_id), &msg.self_id);
+    }
+}
 
-        // // register session with random id
-        // let id = self.rng.gen::<usize>();
-        // self.sessions.insert(id, msg.addr);
+impl Handler<Disconnect> for ChatServer {
+    type Result = ();
 
-        // // auto join session to main room
-        // self.rooms.entry("main".to_owned()).or_default().insert(id);
+    fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
+        println!("Someone disconnected");
 
-        // let count = self.visitor_count.fetch_add(1, Ordering::SeqCst);
-        // self.send_message("main", &format!("Total visitors {count}"), 0);
-
-        // // send id back
-        // id
-		0
+        if self.sessions.remove(&msg.id).is_some() {
+            self.rooms
+                .get(&msg.room_id)
+                .unwrap()
+                .iter()
+                .filter(|conn_id| *conn_id.to_owned() != msg.id)
+                .for_each(|user_id| {
+                    self.send_message(&format!("{} disconnected.", &msg.id), user_id)
+                });
+            if let Some(chatserver) = self.rooms.get_mut(&msg.room_id) {
+                if chatserver.len() > 1 {
+                    chatserver.remove(&msg.id);
+                } else {
+                    self.rooms.remove(&msg.room_id);
+                }
+            }
+        }
     }
 }
 
 impl Handler<ClientMessage> for ChatServer {
-	type Result = ();
+    type Result = ();
 
-	fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
-		println!("should send message");
-	}
+    fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
+        self.rooms
+            .get(&msg.room_id)
+            .unwrap()
+            .iter()
+            .for_each(|client| self.send_message(&msg.msg, client));
+    }
 }

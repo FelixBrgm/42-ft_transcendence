@@ -6,7 +6,6 @@ use actix_identity::Identity;
 use actix_web::{get, post, web, HttpResponse};
 use anyhow::Result;
 
-
 #[get("/rooms")]
 async fn all(db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     match db.get_rooms() {
@@ -55,12 +54,12 @@ async fn create(
     new_room: web::Json<NewChatRoom>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-	let room = new_room.into_inner();
-	let uid = identity.id()?.parse::<i32>()?;
-		
-	let rid = db.create_room(room, uid)?;
-	
-	Ok(HttpResponse::Ok().json(format!("Room {} added successfully!", rid)))
+    let room = new_room.into_inner();
+    let uid = identity.id()?.parse::<i32>()?;
+
+    let rid = db.create_room(room, uid)?;
+
+    Ok(HttpResponse::Ok().json(format!("Room {} added successfully!", rid)))
 }
 
 #[post("/room/create/personal/{user_id}")]
@@ -74,7 +73,7 @@ async fn personal(
 
     let rid = db.create_personal_room(owner_id, partner_id)?;
 
-	Ok(HttpResponse::Ok().json(format!("Personal Room {} added successfully!", rid)))
+    Ok(HttpResponse::Ok().json(format!("Personal Room {} added successfully!", rid)))
 }
 
 #[post("/room/update")]
@@ -85,10 +84,10 @@ async fn update(
 ) -> Result<HttpResponse, ApiError> {
     let uid = identity.id()?.parse::<i32>()?;
 
-    db.update_room(&update_room, uid).map_err(|_| ApiError::InternalServerError)?;
-    Ok(HttpResponse::Ok().json(format!("Room {} updated succesfully!", update_room.id))) 
+    db.update_room(&update_room, uid)
+        .map_err(|_| ApiError::InternalServerError)?;
+    Ok(HttpResponse::Ok().json(format!("Room {} updated succesfully!", update_room.id)))
 }
-
 
 #[post("/room/join/{room_id}")]
 async fn join(
@@ -99,9 +98,9 @@ async fn join(
     let room_id = id.into_inner();
     let user_id = identity.id()?.parse::<i32>()?;
 
-   db.join_room(user_id, room_id)?;
+    db.join_room(user_id, room_id)?;
 
-	Ok(HttpResponse::Ok().json(format!("Joined Room {} successfully!", room_id)))
+    Ok(HttpResponse::Ok().json(format!("Joined Room {} successfully!", room_id)))
 }
 
 #[post("/room/part/{room_id}")]
@@ -115,5 +114,5 @@ async fn part(
 
     db.part_room(user_id, room_id)?;
 
-	Ok(HttpResponse::Ok().json(format!("Is not in Room {}!", room_id)))
+    Ok(HttpResponse::Ok().json(format!("Is not in Room {}!", room_id)))
 }

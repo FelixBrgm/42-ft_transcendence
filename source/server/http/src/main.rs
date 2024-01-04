@@ -1,6 +1,6 @@
 mod api;
-mod db;
 mod chat;
+mod db;
 mod oauth;
 
 use actix_cors::Cors;
@@ -9,21 +9,21 @@ use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse, HttpServer};
 use oauth2::basic::BasicClient;
 
-use crate::api::{auth, user, ws, room};
+use crate::api::{auth, room, user, ws};
 
 #[tokio::main]
 async fn main() {
-	let db = db::Database::new();
+    let db = db::Database::new();
 
     let auth_client = oauth::setup_oauth_client();
 
-	let chat_server = chat::ChatServer::new();
+    let chat_server = chat::ChatServer::new();
 
-	// get cookie key from enviroment
+    // get cookie key from enviroment
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
     let secret_key = cookie::Key::from(env_key.as_bytes());
 
-	println!(" < OKAYYY LETS GO >");
+    println!(" < OKAYYY LETS GO >");
 
     // Start the Actix Web server
     let _ = HttpServer::new(move || {
@@ -39,7 +39,7 @@ async fn main() {
 
         App::new()
             .app_data(web::Data::new(db.clone()))
-			.app_data(web::Data::new(chat_server.clone()))
+            .app_data(web::Data::new(chat_server.clone()))
             .app_data(web::Data::new(auth_client.clone()))
             .wrap(cors)
             .wrap(Logger::default())
@@ -76,8 +76,8 @@ async fn main() {
             .service(room::personal)
             .service(room::join)
             .service(room::part)
-			// chat
-			.service(ws::server)
+            // chat
+            .service(ws::server)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
     .bind("0.0.0.0:8080")
