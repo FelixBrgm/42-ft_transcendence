@@ -4,12 +4,10 @@ use std::collections::{HashMap, HashSet};
 use crate::db::models::NewMessage;
 use crate::db::Database;
 
-/// Chat server sends this messages to session
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct Message(pub String);
 
-/// New chat session is created
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct Connect {
@@ -18,7 +16,6 @@ pub struct Connect {
     pub self_id: usize,
 }
 
-/// Session is disconnected
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct Disconnect {
@@ -26,16 +23,11 @@ pub struct Disconnect {
     pub room_id: usize,
 }
 
-// TO DO: i might want to derive the Message trait for a NewMessage instead
-// / Send message to specific room
-#[derive(Message)]
+#[derive(Message, Debug)]
 #[rtype(result = "()")]
 pub struct ClientMessage {
-    /// Id of the client session
     pub id: usize,
-    /// Peer message
     pub msg: String,
-    /// Room name
     pub room_id: usize,
 }
 
@@ -43,16 +35,17 @@ pub struct ClientMessage {
 
 type Socket = Recipient<Message>;
 
-#[derive(Debug, Clone)]
+#[derive (Clone)]
 pub struct ChatServer {
+	db: Database,
     sessions: HashMap<usize, Socket>,
     rooms: HashMap<usize, HashSet<usize>>,
 }
 
 impl ChatServer {
-    pub fn new() -> ChatServer {
-        println!("chat server is created.");
+    pub fn new(db: Database) -> ChatServer {
         ChatServer {
+			db,
             sessions: HashMap::new(),
             rooms: HashMap::new(),
         }
@@ -80,16 +73,19 @@ impl Handler<Connect> for ChatServer {
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) {
         println!("Someone joined");
 
+		// insert new connectoin into rooms
         self.rooms
             .entry(msg.room_id)
             .or_insert_with(HashSet::new)
             .insert(msg.self_id);
+		// update everyobody in the room
         self.rooms
             .get(&msg.room_id)
             .unwrap()
             .iter()
             .filter(|con_id| *con_id.to_owned() != msg.self_id)
             .for_each(|con_id| self.send_message(&format!("{} just joined!", msg.self_id), con_id));
+		// add the session
         self.sessions.insert(msg.self_id, msg.addr);
         self.send_message(&format!("your id is {}", &msg.self_id), &msg.self_id);
     }
@@ -99,7 +95,7 @@ impl Handler<Disconnect> for ChatServer {
     type Result = ();
 
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
-        println!("Someone disconnected");
+        println!("{} disconnected", msg.id);
 
         if self.sessions.remove(&msg.id).is_some() {
             self.rooms
@@ -124,7 +120,19 @@ impl Handler<Disconnect> for ChatServer {
 impl Handler<ClientMessage> for ChatServer {
     type Result = ();
 
+
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
+
+		println!("{:?}", msg);
+		match self.db.add_message(&NewMessage{
+			sender_id: msg.id as i32,
+			room_id: msg.room_id as i32,
+			message: msg.msg.to_string(),
+		}) {
+			Ok(_) => {},
+			Err(e) => {println!("{}", e)},
+		};
+
         self.rooms
             .get(&msg.room_id)
             .unwrap()
