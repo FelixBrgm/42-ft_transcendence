@@ -31,6 +31,21 @@ pub struct ClientMessage {
     pub room_id: usize,
 }
 
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct RoomUpdate {
+    pub user_id: usize,
+    pub action: RoomAction,
+    pub room_id: usize,
+}
+
+#[derive(Message)]
+#[rtype(result = "()")]
+pub enum RoomAction {
+    Join,
+    Leave,
+}
+
 // --------------------- CHATSERVER ------------------
 
 type Socket = Recipient<Message>;
@@ -119,7 +134,6 @@ impl Handler<Disconnect> for ChatServer {
 
 impl Handler<ClientMessage> for ChatServer {
     type Result = ();
-
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
 
