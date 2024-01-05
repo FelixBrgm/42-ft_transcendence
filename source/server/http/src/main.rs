@@ -9,11 +9,28 @@ use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse, HttpServer};
+use log::info;
 
 use crate::api::{auth, room, user};
 
+
+/*
+	implement logging
+	make join and leave handler for chat server
+	test the chat server (with endpoint for each room like chat/{room_id})
+
+	find out how to handle one on one chat
+
+	make the game server
+	should update the db on it's own
+
+*/
+
 #[actix_web::main]
 async fn main() {
+
+	env_logger::init();
+
     let db = db::Database::new();
 
     let auth_client = oauth::setup_oauth_client();
