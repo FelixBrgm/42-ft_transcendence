@@ -9,6 +9,7 @@ pub struct Player {
     pub position: u16,
     pub last_input: char,
 }
+
 impl Player {
     pub fn new(
         sender: Sender<String>,

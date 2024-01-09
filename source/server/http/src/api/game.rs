@@ -2,7 +2,7 @@ use super::error::ApiError;
 use actix::prelude::*;
 // use actix_identity::Identity;
 
-use crate::chat;
+use crate::game;
 use crate::db::Database;
 use actix::{Actor, Addr, StreamHandler};
 use actix_web::{get, web, HttpRequest, HttpResponse};
@@ -10,36 +10,33 @@ use actix_web_actors::ws;
 use log::{debug, error};
 use std::time::{Duration, Instant};
 
-const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
+const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(1);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
-struct ChatSession {
-    id: usize,
-    room: usize,
-    hb: Instant,
-    addr: Addr<chat::ChatServer>,
+struct GameSession {
+	id: usize,
+	addr: Addr<game::GameServer>,
+	hb: Instant,
 }
 
-impl ChatSession {
-    pub fn new(id: usize, room: usize, addr: Addr<chat::ChatServer>) -> ChatSession {
-        ChatSession {
-            id: id,
-            room: room,
-            addr: addr,
-            hb: Instant::now(),
-        }
-    }
+impl GameSession {
+	pub fn new(id: usize, addr: Addr<game::GameServer>) -> GameSession {
+		GameSession {
+			id,
+			addr,
+			hb: Instant::now(),
+		}
+	}
 }
 
-impl ChatSession {
+impl GameSession {
     fn hb(&self, ctx: &mut ws::WebsocketContext<Self>) {
         ctx.run_interval(HEARTBEAT_INTERVAL, |act, ctx| {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
-                println!("ChatServer: Websocket CLient hearbeat failed, disconnecting!");
+                println!("GameServer: Websocket CLient hearbeat failed, disconnecting!");
 
-                act.addr.do_send(chat::Disconnect {
+                act.addr.do_send(game::Disconnect {
                     id: act.id,
-                    room_id: act.room,
                 });
 
                 ctx.stop();
@@ -51,18 +48,17 @@ impl ChatSession {
     }
 }
 
-impl Actor for ChatSession {
-    type Context = ws::WebsocketContext<Self>;
+impl Actor for GameSession {
+	type Context = ws::WebsocketContext<Self>;
 
-    fn started(&mut self, ctx: &mut Self::Context) {
+	fn started(&mut self, ctx: &mut Self::Context) {
         self.hb(ctx);
 
         let addr = ctx.address();
         self.addr
-            .send(chat::Connect {
-                addr: addr.recipient(),
+            .send(game::Connect {
+                socket: addr.recipient(),
                 id: self.id,
-                room_id: self.room,
             })
             .into_actor(self)
             .then(|_res, _, ctx| {
@@ -76,16 +72,14 @@ impl Actor for ChatSession {
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
-        self.addr.do_send(chat::Disconnect {
+        self.addr.do_send(game::Disconnect {
             id: self.id,
-            room_id: self.room,
         });
         Running::Stop
     }
 }
 
-/// WebSocket message handler
-impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ChatSession {
+impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for GameSession {
     fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
             Ok(ws::Message::Ping(msg)) => {
@@ -106,23 +100,22 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for ChatSession {
                 ctx.stop();
             }
             Ok(ws::Message::Nop) => {}
-            Ok(ws::Message::Text(s)) => self.addr.do_send(chat::ClientMessage {
-                id: self.id,
-                msg: s.to_string(),
-                room_id: self.room,
-            }),
-            Err(e) => {
-                println!("{}: an error occured in the chat: {}", self.id, e);
+            // Ok(ws::Message::Text(s)) => self.addr.do_send(game::ClientMessage {
+            //     id: self.id,
+            //     msg: s.to_string(),
+            // }),
+           _ => {
+                println!("{}: an error occured in the game", self.id);
                 ctx.stop();
             }
         }
     }
 }
 
-impl Handler<chat::Message> for ChatSession {
+impl Handler<game::Message> for GameSession {
     type Result = ();
 
-    fn handle(&mut self, msg: chat::Message, ctx: &mut Self::Context) {
+    fn handle(&mut self, msg: game::Message, ctx: &mut Self::Context) {
         ctx.text(msg.0);
     }
 }
@@ -130,24 +123,18 @@ impl Handler<chat::Message> for ChatSession {
 use std::sync::atomic::{AtomicUsize, Ordering};
 static NEXT_CLIENT_ID: AtomicUsize = AtomicUsize::new(1);
 
-// add actix Identity
-// need to load all the past messages in the room
-#[get("/ws/{room_id}")]
+#[get("/game")]
 async fn server(
     req: HttpRequest,
     stream: web::Payload,
-    server: web::Data<Addr<chat::ChatServer>>,
-    room_id: web::Path<usize>,
+    server: web::Data<Addr<game::GameServer>>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-    let rid = room_id.into_inner();
 
-    // need to check if the client is part of an existing room, if not return error message
-
-    let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+	let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
 
     match ws::start(
-        ChatSession::new(client_id, rid, server.get_ref().clone()),
+        GameSession::new(client_id, server.get_ref().clone()),
         &req,
         stream,
     ) {

@@ -1,7 +1,7 @@
-mod db;
 mod api;
 mod chat;
-// mod game;
+mod db;
+mod game;
 mod oauth;
 
 use actix::Actor;
@@ -9,27 +9,26 @@ use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse, HttpServer};
+use env_logger::Env;
 use log::info;
 
 use crate::api::{auth, room, user};
 
-
 /*
-	implement logging
-	make join and leave handler for chat server
-	test the chat server (with endpoint for each room like chat/{room_id})
+    implement logging
+    make join and leave handler for chat server
+    test the chat server (with endpoint for each room like chat/{room_id})
 
-	find out how to handle one on one chat
+    find out how to handle one on one chat
 
-	make the game server
-	should update the db on it's own
+    make the game server
+    should update the db on it's own
 
 */
 
 #[actix_web::main]
 async fn main() {
-
-	env_logger::init();
+    env_logger::init();
 
     let db = db::Database::new();
 
@@ -37,7 +36,7 @@ async fn main() {
 
     let chat_server = chat::ChatServer::new(db.clone()).start();
 
-	// let game_server = game::GameServer::new().start();
+    let game_server = game::GameServer::new().start();
 
     // get cookie key from enviroment
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
@@ -60,7 +59,7 @@ async fn main() {
         App::new()
             .app_data(web::Data::new(db.clone()))
             .app_data(web::Data::new(chat_server.clone()))
-			// .app_data(web::Data::new(game_server.clone()))
+            .app_data(web::Data::new(game_server.clone()))
             .app_data(web::Data::new(auth_client.clone()))
             .wrap(cors)
             .wrap(Logger::default())
@@ -99,8 +98,8 @@ async fn main() {
             .service(room::part)
             // chat
             .service(api::chat::server)
-			//  game
-			// .service(api::game::server)
+            //  game
+            .service(api::game::server)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
     .bind("0.0.0.0:8080")
