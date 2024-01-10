@@ -1,4 +1,6 @@
-use super::{GameConfig, Player, Pong};
+use super::{GameConfig, Player, Pong, UpdateScore};
+use actix::{Context, AsyncContext};
+use rand::Rng;
 
 #[derive(Debug, Clone)]
 pub struct Ball {
@@ -18,29 +20,30 @@ impl Ball {
         }
     }
 
+    // send out score updates
     pub fn update(
         &mut self,
         time_since_last_tick: u16,
         config: &GameConfig,
         players: &[Player; 2],
         score: &mut [u8; 2],
+		ctx: &mut Context<Pong>,
     ) {
-        let length_traveled: u16 = time_since_last_tick * config.length_per_ms_paddle;
+        let length_traveled: u16 = time_since_last_tick * config.ball_speed;
 
+		// if i go left and my ball pos is smaller than 
         if self.direction_x == -1 && self.x < length_traveled {
             if self.player_has_scored(&players[0], config) {
                 self.reset(config);
-                score[1] += 1;
-                println!("POINT");
+				ctx.address().do_send(UpdateScore{side: 0});
             } else {
-				self.direction_x = 1;
+                self.direction_x = 1;
                 self.x = length_traveled - self.x;
             }
         } else if self.direction_x == 1 && self.x + length_traveled > config.width {
-			if self.player_has_scored(&players[1], config) {
-				self.reset(config);
-                score[0] += 1;
-				println!("POINT");
+            if self.player_has_scored(&players[1], config) {
+                self.reset(config);
+				ctx.address().do_send(UpdateScore{side: 1})
             } else {
                 self.direction_x = -1;
                 self.x = config.width - ((self.x + length_traveled) - config.width);
@@ -70,9 +73,13 @@ impl Ball {
 
     pub fn reset(&mut self, config: &GameConfig) {
         self.x = config.width / 2;
-        self.y = config.length / 2;
-        self.direction_x = -1;
-        self.direction_y = -1;
+        self.y = config.height / 2;
+
+        // make the direction random
+        // let mut rng = rand::thread_rng();
+        // let dir = if rng.gen::<bool>() {1} else {-1};
+        self.direction_x = 1;
+        self.direction_y = 1;
     }
 
     fn player_has_scored(&mut self, player: &Player, config: &GameConfig) -> bool {

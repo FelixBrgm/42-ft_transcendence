@@ -111,7 +111,8 @@ impl Handler<Disconnect> for GameServer {
             pong.do_send(pong::GameOver);
         }
 
-        self.pong_instances.retain(|ids, _| ids.0 != msg.id && ids.1 != msg.id);
+        self.pong_instances
+            .retain(|ids, _| ids.0 != msg.id && ids.1 != msg.id);
         self.queue.retain(|player| player.id != msg.id);
     }
 }
@@ -120,16 +121,15 @@ impl Handler<ClientMessage> for GameServer {
     type Result = ();
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
-
-		// find the instance, extract the last cmd and send it to pond game
-		if let Some((ids, pong)) = self
-		.pong_instances
-		.iter()
-		.find(|(ids, _)| ids.0 == msg.id || ids.1 == msg.id)
-		{
-			if let Some(c) = msg.msg.chars().last(){
-				pong.do_send(pong::PlayerInput{id: msg.id, cmd: c});
-			}
-		}
+        // find the instance, extract the last cmd and send it to pond game
+        if let Some((ids, pong)) = self
+            .pong_instances
+            .iter()
+            .find(|(ids, _)| ids.0 == msg.id || ids.1 == msg.id)
+        {
+            if let Some(c) = msg.msg.chars().last() {
+                pong.do_send(pong::PlayerInput { id: msg.id, cmd: c });
+            }
+        }
     }
 }
