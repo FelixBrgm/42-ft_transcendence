@@ -34,7 +34,7 @@ pub struct Disconnect {
 #[rtype(result = "()")]
 pub struct ClientMessage {
     pub id: UserId,
-    pub msg: String,
+    pub msg: char,
 }
 
 // -------- GameServer
@@ -74,6 +74,8 @@ impl Handler<Connect> for GameServer {
 			println!("starting new game between {:?}", player_ids);
 			let pong = Pong::new([p1, p2]).start();
 
+			self.pong_instances.insert(player_ids, pong);
+
 		}
 	}
 }
@@ -84,12 +86,22 @@ impl Handler<Disconnect> for GameServer {
 	fn handle(&mut self, msg: Disconnect, _:&mut Context<Self>) {
 		println!("{} disconnected", msg.id);
 
-		// self.pong_instances
-		// .iter()
-		// .filter(|(ids, _)| ids.0 == msg.id || ids.1 == msg.id)
-		// .for_each(|(_, pong)| {println!("i get here");  pong.lock().unwrap().disconnect()});
 
+		dbg!(&self.pong_instances);
+		self.pong_instances
+		.iter()
+		.filter(|(ids, _)| ids.0 == msg.id || ids.1 == msg.id)
+		.for_each(|(_, pong)| {println!("i get here");  pong.do_send(pong::GameOver)});
 
 		self.queue.retain(|player| player.id != msg.id);
 	} 
+}
+
+
+impl Handler<ClientMessage> for GameServer {
+	type Result = ();
+
+	fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
+		println!("{} send this: {}", msg.id, msg.msg);
+	}
 }
