@@ -1,6 +1,6 @@
-mod schema;
 mod migrations;
 pub mod models;
+mod schema;
 
 use anyhow::Result;
 use diesel::pg::PgConnection;

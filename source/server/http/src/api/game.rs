@@ -2,8 +2,8 @@ use super::error::ApiError;
 use actix::prelude::*;
 // use actix_identity::Identity;
 
-use crate::game;
 use crate::db::Database;
+use crate::game;
 use actix::{Actor, Addr, StreamHandler};
 use actix_web::{get, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
@@ -14,19 +14,19 @@ const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(1);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 struct GameSession {
-	id: usize,
-	addr: Addr<game::GameServer>,
-	hb: Instant,
+    id: usize,
+    addr: Addr<game::GameServer>,
+    hb: Instant,
 }
 
 impl GameSession {
-	pub fn new(id: usize, addr: Addr<game::GameServer>) -> GameSession {
-		GameSession {
-			id,
-			addr,
-			hb: Instant::now(),
-		}
-	}
+    pub fn new(id: usize, addr: Addr<game::GameServer>) -> GameSession {
+        GameSession {
+            id,
+            addr,
+            hb: Instant::now(),
+        }
+    }
 }
 
 impl GameSession {
@@ -35,9 +35,7 @@ impl GameSession {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
                 println!("GameServer: Websocket CLient hearbeat failed, disconnecting!");
 
-                act.addr.do_send(game::Disconnect {
-                    id: act.id,
-                });
+                act.addr.do_send(game::Disconnect { id: act.id });
 
                 ctx.stop();
 
@@ -49,9 +47,9 @@ impl GameSession {
 }
 
 impl Actor for GameSession {
-	type Context = ws::WebsocketContext<Self>;
+    type Context = ws::WebsocketContext<Self>;
 
-	fn started(&mut self, ctx: &mut Self::Context) {
+    fn started(&mut self, ctx: &mut Self::Context) {
         self.hb(ctx);
 
         let addr = ctx.address();
@@ -72,9 +70,7 @@ impl Actor for GameSession {
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
-        self.addr.do_send(game::Disconnect {
-            id: self.id,
-        });
+        self.addr.do_send(game::Disconnect { id: self.id });
         Running::Stop
     }
 }
@@ -100,18 +96,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for GameSession {
                 ctx.stop();
             }
             Ok(ws::Message::Nop) => {}
-            Ok(ws::Message::Text(s)) => {
-
-			if let Some(c) = s.chars().last() {
-				self.addr.do_send(game::ClientMessage {
-					id: self.id,
-					msg: c,
-				})
-			}
-			else {
-				println!("in the text thing something went wrong");
-			}
-			},
+            Ok(ws::Message::Text(s)) => self.addr.do_send(game::ClientMessage {
+                id: self.id,
+                msg: s.to_string(),
+            }),
             Err(e) => {
                 println!("{}: an error occured in the game: {}", self.id, e);
                 ctx.stop();
@@ -138,8 +126,7 @@ async fn server(
     server: web::Data<Addr<game::GameServer>>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-
-	let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+    let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
 
     match ws::start(
         GameSession::new(client_id, server.get_ref().clone()),
