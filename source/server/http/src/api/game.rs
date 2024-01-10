@@ -100,12 +100,20 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for GameSession {
                 ctx.stop();
             }
             Ok(ws::Message::Nop) => {}
-            // Ok(ws::Message::Text(s)) => self.addr.do_send(game::ClientMessage {
-            //     id: self.id,
-            //     msg: s.to_string(),
-            // }),
-           _ => {
-                println!("{}: an error occured in the game", self.id);
+            Ok(ws::Message::Text(s)) => {
+
+			if let Some(c) = s.chars().last() {
+				self.addr.do_send(game::ClientMessage {
+					id: self.id,
+					msg: c,
+				})
+			}
+			else {
+				println!("in the text thing something went wrong");
+			}
+			},
+            Err(e) => {
+                println!("{}: an error occured in the game: {}", self.id, e);
                 ctx.stop();
             }
         }
