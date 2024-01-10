@@ -12,14 +12,13 @@ pub struct GameConfig {
 
 impl GameConfig {
     pub fn new() -> GameConfig {
-
         GameConfig {
             min_time_per_tick_ms: Duration::from_millis(100),
             length_per_ms_paddle: 10,
             length_per_ms_ball: 10,
             length: 10000,
             width: 10000,
-            paddle_length: 20000,
+            paddle_length: 2000,
         }
     }
 }
