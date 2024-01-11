@@ -4,8 +4,8 @@ mod player;
 // mod utils;
 
 use actix::prelude::*;
-use std::time::{Duration, Instant};
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 pub use self::ball::Ball;
 pub use self::config::GameConfig;
@@ -50,7 +50,7 @@ pub struct Pong {
     ball: Ball,
     config: GameConfig,
     finished: bool,
-	paused: bool,
+    paused: bool,
 }
 
 impl Pong {
@@ -61,7 +61,7 @@ impl Pong {
             ball: Ball::new(),
             config: GameConfig::new(),
             finished: false,
-			paused: true,
+            paused: true,
         }
     }
 
@@ -106,13 +106,16 @@ impl Actor for Pong {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
-
-		self.players[0].socket.do_send(Message("FORMAT: {YOU} {OTHER} {BALL.x} {BALL.y}".to_owned()));
-		self.players[1].socket.do_send(Message("FORMAT: {OTHER} {YOU} {BALL.x} {BALL.y}".to_owned()));
+        self.players[0].socket.do_send(Message(
+            "FORMAT: {YOU} {OTHER} {BALL.x} {BALL.y}".to_owned(),
+        ));
+        self.players[1].socket.do_send(Message(
+            "FORMAT: {OTHER} {YOU} {BALL.x} {BALL.y}".to_owned(),
+        ));
 
         self.ball.reset(&self.config);
-		self.players[0].reset(&self.config);
-		self.players[1].reset(&self.config);
+        self.players[0].reset(&self.config);
+        self.players[1].reset(&self.config);
 
         ctx.notify(CountDown);
     }
@@ -126,17 +129,16 @@ impl Handler<Tick> for Pong {
     }
 }
 
-
 impl Handler<CountDown> for Pong {
-	type Result = ();
+    type Result = ();
 
-	fn handle(&mut self, msg: CountDown, ctx: &mut Self::Context) {
-		self.paused = true;
+    fn handle(&mut self, msg: CountDown, ctx: &mut Self::Context) {
+        self.paused = true;
 
-		let delay = 3;
-		self.send_to_players(Message(format!("Starting game in {} Seconds", delay)));
+        let delay = 3;
+        self.send_to_players(Message(format!("Starting game in {} Seconds", delay)));
 
-		let ctx_addr = ctx.address();
+        let ctx_addr = ctx.address();
         let slept = actix::clock::sleep(Duration::from_secs(delay)).into_actor(self);
         let fut = Box::pin(slept);
         let fut = fut.then(move |_r, _, _| {
@@ -145,22 +147,24 @@ impl Handler<CountDown> for Pong {
         });
 
         ctx.spawn(fut);
-	}
+    }
 }
 
 impl Handler<UpdateScore> for Pong {
     type Result = ();
 
     fn handle(&mut self, msg: UpdateScore, ctx: &mut Self::Context) {
-		self.score[msg.side] += 1;
-        self.send_to_players(Message(format!("SCORE {}:{}", self.score[0], self.score[1])));
+        self.score[msg.side] += 1;
+        self.send_to_players(Message(format!(
+            "SCORE {}:{}",
+            self.score[0], self.score[1]
+        )));
 
-		if self.score[msg.side] >= 3 {
-			ctx.notify(GameOver);
-		}
-		else {
-			ctx.notify(CountDown);
-		}
+        if self.score[msg.side] >= 3 {
+            ctx.notify(GameOver);
+        } else {
+            ctx.notify(CountDown);
+        }
     }
 }
 
@@ -170,14 +174,14 @@ impl Handler<GameStart> for Pong {
     fn handle(&mut self, _: GameStart, ctx: &mut Self::Context) {
         self.paused = false;
         self.send_to_players(Message("BEG".to_owned()));
-		self.tick(ctx);
+        self.tick(ctx);
     }
 }
 
 impl Handler<GameOver> for Pong {
     type Result = ();
 
-	// TODO maybe call GameOver with and Enum that determines why or who won
+    // TODO maybe call GameOver with and Enum that determines why or who won
     fn handle(&mut self, _: GameOver, ctx: &mut Self::Context) {
         println!("GameOver");
 
