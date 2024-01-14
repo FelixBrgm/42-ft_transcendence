@@ -15,15 +15,7 @@ use log::info;
 use crate::api::{auth, room, user};
 
 /*
-    implement logging
-    make join and leave handler for chat server
-    test the chat server (with endpoint for each room like chat/{room_id})
-
     find out how to handle one on one chat
-
-    make the game server
-    should update the db on it's own
-
 */
 
 #[actix_web::main]
@@ -36,7 +28,9 @@ async fn main() {
 
     let chat_server = chat::ChatServer::new(db.clone()).start();
 
-    let game_server = game::GameServer::new().start();
+    let matchmaking_server = game::matchmake::MatchmakingServer::new().start();
+    let tournament_server = game::tournament::TournamentServer::new().start();
+    let one_vs_one_server = game::one_vs_one::OneVsOneServer::new().start();
 
     // get cookie key from enviroment
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
@@ -59,7 +53,9 @@ async fn main() {
         App::new()
             .app_data(web::Data::new(db.clone()))
             .app_data(web::Data::new(chat_server.clone()))
-            .app_data(web::Data::new(game_server.clone()))
+            .app_data(web::Data::new(matchmaking_server.clone()))
+            .app_data(web::Data::new(tournament_server.clone()))
+            .app_data(web::Data::new(one_vs_one_server.clone()))
             .app_data(web::Data::new(auth_client.clone()))
             .wrap(cors)
             .wrap(Logger::default())
@@ -99,7 +95,9 @@ async fn main() {
             // chat
             .service(api::chat::server)
             //  game
-            .service(api::game::server)
+            .service(api::game::matchmaking)
+            .service(api::game::tournament)
+            .service(api::game::one_vs_one)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
     .bind("0.0.0.0:8080")

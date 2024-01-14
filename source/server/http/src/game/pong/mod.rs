@@ -1,10 +1,8 @@
 mod ball;
 mod config;
 mod player;
-// mod utils;
 
 use actix::prelude::*;
-use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 pub use self::ball::Ball;
@@ -12,7 +10,7 @@ pub use self::config::GameConfig;
 pub use self::player::Player;
 pub use crate::game::{Message, Socket};
 
-const TICK_INTERVAL: Duration = Duration::from_millis(100);
+const TICK_INTERVAL: Duration = Duration::from_millis(16);
 
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -81,10 +79,10 @@ impl Pong {
 
     fn update(&mut self, ctx: &mut Context<Self>) {
         self.ball
-            .update(10, &self.config, &mut self.players, &mut self.score, ctx);
+            .update(&self.config, &mut self.players, &mut self.score, ctx);
 
         for player in self.players.iter_mut() {
-            player.update(10, &self.config);
+            player.update(&self.config);
         }
     }
 
@@ -194,7 +192,6 @@ impl Handler<PlayerInput> for Pong {
     type Result = ();
 
     fn handle(&mut self, input: PlayerInput, ctx: &mut Self::Context) {
-        println!("{}: {}", input.id, input.cmd);
         if self.players[0].id == input.id {
             self.players[0].last_input = input.cmd;
         } else {
