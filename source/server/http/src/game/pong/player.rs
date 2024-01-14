@@ -1,5 +1,3 @@
-use std::sync::{Arc, Mutex};
-
 use super::GameConfig;
 use crate::game::Socket;
 
@@ -22,8 +20,8 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, time_since_last_tick: u16, config: &GameConfig) {
-        let length_traveled: u16 = time_since_last_tick * config.paddle_speed;
+    pub fn update(&mut self, config: &GameConfig) {
+        let length_traveled: u16 = config.paddle_speed;
 
         match self.last_input {
             'd' => {
@@ -45,5 +43,6 @@ impl Player {
 
     pub fn reset(&mut self, config: &GameConfig) {
         self.position = config.height / 2 + config.paddle_length / 2;
+		self.last_input = 'n';
     }
 }
