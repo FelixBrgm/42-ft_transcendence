@@ -1,7 +1,7 @@
-mod pong;
 pub mod matchmake;
-pub mod tournament;
 pub mod one_vs_one;
+mod pong;
+pub mod tournament;
 
 use actix::prelude::*;
 
@@ -17,6 +17,20 @@ pub struct Message(pub String);
 pub struct Connect {
     pub id: UserId,
     pub socket: Socket,
+}
+
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct TournamentConnect {
+    pub tournament_id: UserId,
+    pub uid: UserId,
+    pub socket: Socket,
+}
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct Create {
+    pub id: UserId,
+    pub size: u8,
 }
 
 #[derive(Message)]

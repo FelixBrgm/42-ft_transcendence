@@ -96,7 +96,8 @@ async fn main() {
             .service(api::chat::server)
             //  game
             .service(api::game::matchmaking)
-            .service(api::game::tournament)
+            .service(api::game::create_tournament)
+            .service(api::game::connect_tournament)
             .service(api::game::one_vs_one)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })

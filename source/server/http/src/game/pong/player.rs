@@ -43,6 +43,6 @@ impl Player {
 
     pub fn reset(&mut self, config: &GameConfig) {
         self.position = config.height / 2 + config.paddle_length / 2;
-		self.last_input = 'n';
+        self.last_input = 'n';
     }
 }
