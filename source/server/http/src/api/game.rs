@@ -3,10 +3,10 @@ use actix::prelude::*;
 // use actix_identity::Identity;
 
 use crate::db::Database;
-use crate::game;
 use crate::game::matchmake::MatchmakingServer;
-use crate::game::tournament::TournamentServer;
 use crate::game::one_vs_one::OneVsOneServer;
+use crate::game::tournament::TournamentServer;
+use crate::game::{self, tournament, UserId};
 
 use actix::{Actor, Addr, StreamHandler};
 use actix_web::{get, web, HttpRequest, HttpResponse};
@@ -28,12 +28,13 @@ struct GameSession {
     id: usize,
     game_mode: GameMode,
     hb: Instant,
+    room_id: Option<UserId>,
 }
 
 #[derive(Message)]
 #[rtype(result = "()")]
-struct Stop{
-	pub id: usize
+struct Stop {
+    pub id: usize,
 }
 
 impl GameSession {
@@ -42,6 +43,7 @@ impl GameSession {
             id,
             game_mode: GameMode::OneVsOne(one_vs_one_server),
             hb: Instant::now(),
+            room_id: None,
         }
     }
 
@@ -50,24 +52,30 @@ impl GameSession {
             id,
             game_mode: GameMode::Matchmaking(matchmaking_server),
             hb: Instant::now(),
+            room_id: None,
         }
     }
 
-    fn new_tournament(id: usize, tournament_server: Addr<TournamentServer>) -> Self {
+    fn new_tournament(
+        id: usize,
+        tournament_server: Addr<TournamentServer>,
+        room_id: UserId,
+    ) -> Self {
         GameSession {
             id,
             game_mode: GameMode::Tournament(tournament_server),
             hb: Instant::now(),
+            room_id: Some(room_id),
         }
     }
 }
 
 impl GameSession {
     fn hb(&self, ctx: &mut ws::WebsocketContext<Self>) {
-		let id = self.id;
+        let id = self.id;
         ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
-				let addr = ctx.address().do_send(Stop{id: id});
+                let addr = ctx.address().do_send(Stop { id: id });
             }
             ctx.ping(b"PING");
         });
@@ -81,66 +89,77 @@ impl Actor for GameSession {
         self.hb(ctx);
 
         let addr = ctx.address();
-		let msg = game::Connect{
-			socket: addr.recipient(),
-            id: self.id,
-		};
 
-		match &self.game_mode {
-			GameMode::OneVsOne(one_vs_one_server) => {
-				one_vs_one_server.send(msg)
-				.into_actor(self)
-				.then(|_res, _, ctx| {
-					match _res {
-						Ok(_) => {}
-						_ => ctx.stop(),
-					}
-					fut::ready(())
-				})
-				.wait(ctx);
-			}
-			GameMode::Matchmaking(matchmaking_server) => {
-				matchmaking_server.send(msg)
-				.into_actor(self)
-				.then(|_res, _, ctx| {
-					match _res {
-						Ok(_) => {}
-						_ => ctx.stop(),
-					}
-					fut::ready(())
-				})
-				.wait(ctx);
-			}
-			GameMode::Tournament(tournament_server) => {
-				tournament_server.send(msg)
-				.into_actor(self)
-				.then(|_res, _, ctx| {
-					match _res {
-						Ok(_) => {}
-						_ => ctx.stop(),
-					}
-					fut::ready(())
-				})
-				.wait(ctx);
-			}
-		};
+        match &self.game_mode {
+            GameMode::OneVsOne(one_vs_one_server) => {
+                let msg = game::Connect {
+                    socket: addr.recipient(),
+                    id: self.id,
+                };
+                one_vs_one_server
+                    .send(msg)
+                    .into_actor(self)
+                    .then(|_res, _, ctx| {
+                        match _res {
+                            Ok(_) => {}
+                            _ => ctx.stop(),
+                        }
+                        fut::ready(())
+                    })
+                    .wait(ctx);
+            }
+            GameMode::Matchmaking(matchmaking_server) => {
+                let msg = game::Connect {
+                    socket: addr.recipient(),
+                    id: self.id,
+                };
+                matchmaking_server
+                    .send(msg)
+                    .into_actor(self)
+                    .then(|_res, _, ctx| {
+                        match _res {
+                            Ok(_) => {}
+                            _ => ctx.stop(),
+                        }
+                        fut::ready(())
+                    })
+                    .wait(ctx);
+            }
+            GameMode::Tournament(tournament_server) => {
+                let tournament_connect = game::TournamentConnect {
+                    socket: addr.recipient(),
+                    uid: self.id,
+                    tournament_id: self.room_id.unwrap(),
+                };
+                tournament_server
+                    .send(tournament_connect)
+                    .into_actor(self)
+                    .then(|_res, _, ctx| {
+                        match _res {
+                            Ok(_) => {}
+                            _ => ctx.stop(),
+                        }
+                        fut::ready(())
+                    })
+                    .wait(ctx);
+            }
+        };
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
+        let msg = game::Disconnect { id: self.id };
 
-		let msg = game::Disconnect { id: self.id };
-
-		match &self.game_mode {
-			GameMode::OneVsOne(game_server) => {
-				game_server.do_send(msg);
-			}
-			GameMode::Matchmaking(matchmaking_server) => {
-				matchmaking_server.do_send(msg);
-			}
-			GameMode::Tournament(tournament_server) => {
-				tournament_server.do_send(msg);
-			}
-		}
+        match &self.game_mode {
+            GameMode::OneVsOne(game_server) => {
+                game_server.do_send(msg);
+            }
+            GameMode::Matchmaking(matchmaking_server) => {
+                matchmaking_server.do_send(msg);
+            }
+            GameMode::Tournament(tournament_server) => {
+                tournament_server.do_send(msg);
+            }
+        }
 
         Running::Stop
     }
@@ -168,23 +187,23 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for GameSession {
             }
             Ok(ws::Message::Nop) => {}
             Ok(ws::Message::Text(s)) => {
-				let msg = game::ClientMessage {
-					id: self.id,
-					msg: s.to_string(),
-				};
+                let msg = game::ClientMessage {
+                    id: self.id,
+                    msg: s.to_string(),
+                };
 
-				match &self.game_mode {
-					GameMode::OneVsOne(one_vs_one_server) => {
-						one_vs_one_server.do_send(msg);
-					}
-					GameMode::Matchmaking(matchmaking_server) => {
-						matchmaking_server.do_send(msg);
-					}
-					GameMode::Tournament(tournament_server) => {
-						tournament_server.do_send(msg);
-					}
-				}
-			},
+                match &self.game_mode {
+                    GameMode::OneVsOne(one_vs_one_server) => {
+                        one_vs_one_server.do_send(msg);
+                    }
+                    GameMode::Matchmaking(matchmaking_server) => {
+                        matchmaking_server.do_send(msg);
+                    }
+                    GameMode::Tournament(tournament_server) => {
+                        tournament_server.do_send(msg);
+                    }
+                }
+            }
             Err(e) => {
                 println!("{}: an error occured in the game: {}", self.id, e);
                 ctx.stop();
@@ -194,27 +213,27 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for GameSession {
 }
 
 impl Handler<Stop> for GameSession {
-	type Result = ();
+    type Result = ();
 
-	fn handle(&mut self, msg: Stop, ctx: &mut Self::Context) {
-		println!("GameServer: Websocket CLient hearbeat failed, disconnecting!");
+    fn handle(&mut self, msg: Stop, ctx: &mut Self::Context) {
+        println!("GameServer: Websocket CLient hearbeat failed, disconnecting!");
 
-			let msg = game::Disconnect { id: msg.id };
+        let msg = game::Disconnect { id: msg.id };
 
-			match &self.game_mode {
-				GameMode::OneVsOne(game_server) => {
-					game_server.do_send(msg);
-				}
-				GameMode::Matchmaking(matchmaking_server) => {
-					matchmaking_server.do_send(msg);
-				}
-				GameMode::Tournament(tournament_server) => {
-					tournament_server.do_send(msg);
-				}
-			}
+        match &self.game_mode {
+            GameMode::OneVsOne(game_server) => {
+                game_server.do_send(msg);
+            }
+            GameMode::Matchmaking(matchmaking_server) => {
+                matchmaking_server.do_send(msg);
+            }
+            GameMode::Tournament(tournament_server) => {
+                tournament_server.do_send(msg);
+            }
+        }
 
-			ctx.stop();
-	}
+        ctx.stop();
+    }
 }
 
 impl Handler<game::Message> for GameSession {
@@ -227,7 +246,6 @@ impl Handler<game::Message> for GameSession {
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 static NEXT_CLIENT_ID: AtomicUsize = AtomicUsize::new(1);
-
 
 //  -------------------------- GAME ENDPOINTS ----------------------------
 #[get("/game/matchmake")]
@@ -252,17 +270,49 @@ async fn matchmaking(
     }
 }
 
-#[get("/game/tournament")]
-async fn tournament(
+#[get("/game/create_tournament/{size}")]
+async fn create_tournament(
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<TournamentServer>>,
     db: web::Data<Database>,
+    size: web::Path<u8>,
+) -> Result<HttpResponse, ApiError> {
+    let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+    let size = size.into_inner();
+    if !(size == 2
+        || size == 4
+        || size == 8
+        || size == 16
+        || size == 32
+        || size == 64
+        || size == 128)
+    {
+        return Err(ApiError::BadRequest(
+            "Tournament size must be a power of 2 between 2 and 128".to_string(),
+        ));
+    }
+    match server.get_ref().try_send(game::Create {
+        id: client_id,
+        size: size,
+    }) {
+        Ok(_) => Ok(HttpResponse::Ok().finish()),
+        Err(_) => Err(ApiError::InternalServerError),
+    }
+}
+
+#[get("/game/connect_tournament/{tournament_id}")]
+async fn connect_tournament(
+    req: HttpRequest,
+    stream: web::Payload,
+    server: web::Data<Addr<TournamentServer>>,
+    db: web::Data<Database>,
+    room_id: web::Path<UserId>,
 ) -> Result<HttpResponse, ApiError> {
     let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
 
     match ws::start(
-        GameSession::new_tournament(client_id, server.get_ref().clone()),
+        GameSession::new_tournament(client_id, server.get_ref().clone(), room_id.into_inner()),
         &req,
         stream,
     ) {
@@ -273,7 +323,6 @@ async fn tournament(
         }
     }
 }
-
 #[get("/game/one_vs_one")]
 async fn one_vs_one(
     req: HttpRequest,

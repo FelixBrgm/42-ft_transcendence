@@ -69,16 +69,16 @@ impl Ball {
             self.dir_y.reverse();
         }
 
-		// if the ball is out of bounds
-		if self.x < 0 || self.x > config.width {
-			
-			let scoring_side = if self.x < 0 { 1 } else { 0 };
-			ctx.notify(UpdateScore { side: scoring_side });
+        // if the ball is out of bounds
+        // if self.x < 0 || self.x > config.width {
 
-			self.reset(config);
-			players[0].reset(config);
-			players[1].reset(config);
-		}
+        // 	let scoring_side = if self.x < 0 { 1 } else { 0 };
+        // 	ctx.notify(UpdateScore { side: scoring_side });
+
+        // 	self.reset(config);
+        // 	players[0].reset(config);
+        // 	players[1].reset(config);
+        // }
     }
 
     fn collides_with_paddle(&self, player: &Player, config: &GameConfig) -> bool {
@@ -92,7 +92,7 @@ impl Ball {
 
         self.dir_x = Dir::Pos;
         self.dir_y = Dir::Pos;
-		
+
         // // generate the ball pos in the middle third of the field
         // self.y = rng.gen_range(config.height / 3, (2 * config.height) / 3);;
 
