@@ -3,8 +3,7 @@ use log::{error, info};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use crate::db::models::NewMessage;
-use crate::db::Database;
+// use crate::db::Database;
 use crate::game::pong;
 use crate::game::pong::{Player, Pong};
 use crate::game::{ClientMessage, Connect, Disconnect, Socket, UserId};
