@@ -1,12 +1,10 @@
 use actix::prelude::*;
 use log::{error, info};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 
 use crate::game::pong;
 use crate::game::{UserId, Socket, Connect, Disconnect, ClientMessage};
-use crate::db::models::NewMessage; 
-use crate::db::Database;
+// use crate::db::Database;
 use crate::game::pong::{Player, Pong};
 
 #[derive(Clone)]
