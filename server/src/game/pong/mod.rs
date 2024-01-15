@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 pub use self::ball::Ball;
 pub use self::config::GameConfig;
 pub use self::player::Player;
-pub use crate::game::{Message, Socket};
+pub use crate::game::{Message, Socket, UserId};
 
 const TICK_INTERVAL: Duration = Duration::from_millis(16);
 
@@ -40,6 +40,14 @@ pub struct GameStart;
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct GameOver;
+
+// send game result to he hosting server
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct GameResult {
+	players: [Player; 2],
+	winner: UserId,
+}
 
 #[derive(Debug, Clone)]
 pub struct Pong {
@@ -182,9 +190,9 @@ impl Handler<GameOver> for Pong {
     // TODO maybe call GameOver with and Enum that determines why or who won
     fn handle(&mut self, _: GameOver, ctx: &mut Self::Context) {
         println!("GameOver");
-
         self.finished = true;
         self.send_to_players(Message("END".to_owned()));
+
     }
 }
 

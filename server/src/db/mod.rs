@@ -107,6 +107,7 @@ impl Database {
     /// ===============================================================
     ///                             ROOMS
     /// ===============================================================
+	/// 
 
     // Check if Room exits
     pub fn check_room(&self, room_id: i32) -> Result<bool> {
@@ -120,8 +121,6 @@ impl Database {
         Ok(room_count > 0)
     }
 
-    pub fn is_user_in_room(&self, user_id: i32, room_id: i32) {}
-
     // Insert the new room into the chat_rooms table, returns the id of the inserted room
     pub fn add_room(&self, con: &mut DbConnection, room: &NewChatRoom) -> Result<i32> {
         use schema::chat_rooms::dsl::*;
@@ -134,6 +133,7 @@ impl Database {
         Ok(inserted_id)
     }
 
+	// TODO: Check this again, the new_room owner
     // creates a room and sets the owner in the connection tables, returns the id of the created room
     pub fn create_room(&self, mut new_room: NewChatRoom, uid: i32) -> Result<i32> {
         let mut con = self.pool.get()?;
@@ -174,10 +174,15 @@ impl Database {
         con.transaction::<(), anyhow::Error, _>(|con| {
             use schema::chat_rooms::dsl::*;
 
-            let exists = chat_rooms
-                .filter(id.eq(user_id).and(is_public.eq(true)))
-                .count()
-                .execute(con)?;
+            // let exists = chat_rooms
+            //     .filter(id.eq(user_id).and(is_public.eq(true)))
+            //     .count()
+            //     .execute(con)?;
+
+			let exists = chat_rooms
+            .filter(id.eq(room_id).and(is_public.eq(true)))
+            .count()
+            .first::<i64>(con)?;
 
             if exists == 0 {
                 return Err(anyhow::anyhow!("Room is not there/joinable!"));
@@ -263,7 +268,7 @@ impl Database {
     ///                        CONNECTIONS
     /// ===============================================================
 
-    // checks if a connectino between user and room exits
+    // checks if a connection between user and room exits
     pub fn check_connection(&self, uid: i32, rid: i32) -> Result<bool> {
         use schema::user_room_connection::dsl as user_room;
 

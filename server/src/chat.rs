@@ -98,7 +98,7 @@ impl Handler<Disconnect> for ChatServer {
     type Result = ();
 
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
-        println!("{} disconnected", msg.id);
+        info!("{} disconnected", msg.id);
 
         if self.sessions.remove(&msg.id).is_some() {
             self.rooms
@@ -120,20 +120,21 @@ impl Handler<Disconnect> for ChatServer {
     }
 }
 
+// TODO: make a good error handling
 impl Handler<ClientMessage> for ChatServer {
     type Result = ();
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
-        println!("{:?}", msg);
-        // // ADD IT TO THE MESSSAGE TABLE
-        // match self.db.add_message(&NewMessage{
-        // 	sender_id: msg.id as i32,
-        // 	room_id: msg.room_id as i32,
-        // 	message: msg.msg.to_string(),
-        // }) {
-        // 	Ok(_) => {},
-        // 	Err(e) => {error!("CHATSERVER: {}: {}", msg.id, e)},
-        // };
+        info!("{:?}", msg);
+
+        match self.db.add_message(&NewMessage{
+        	sender_id: msg.id as i32,
+        	room_id: msg.room_id as i32,
+        	message: msg.msg.to_string(),
+        }) {
+        	Ok(_) => {},
+        	Err(e) => {println!("CHATSERVER failed to add Message to the DataBase: {}: {}", msg.id, e)},
+        };
 
         self.rooms
             .get(&msg.room_id)
