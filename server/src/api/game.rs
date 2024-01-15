@@ -6,12 +6,11 @@ use crate::db::Database;
 use crate::game::matchmake::MatchmakingServer;
 use crate::game::one_vs_one::OneVsOneServer;
 use crate::game::tournament::TournamentServer;
-use crate::game::{self, tournament, UserId};
+use crate::game::{self, UserId};
 
 use actix::{Actor, Addr, StreamHandler};
 use actix_web::{get, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
-use log::{debug, error};
 use std::time::{Duration, Instant};
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(1);
@@ -25,9 +24,9 @@ enum GameMode {
 }
 
 struct GameSession {
-    id: usize,
-    game_mode: GameMode,
+	id: usize,
     hb: Instant,
+    game_mode: GameMode,
     room_id: Option<UserId>,
 }
 
