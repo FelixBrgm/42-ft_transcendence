@@ -70,15 +70,15 @@ impl Ball {
         }
 
         // if the ball is out of bounds
-        // if self.x < 0 || self.x > config.width {
+        if self.x < 0 || self.x > config.width {
 
-        // 	let scoring_side = if self.x < 0 { 1 } else { 0 };
-        // 	ctx.notify(UpdateScore { side: scoring_side });
+        	let scoring_side = if self.x < 0 { 1 } else { 0 };
+        	ctx.notify(UpdateScore { side: scoring_side });
 
-        // 	self.reset(config);
-        // 	players[0].reset(config);
-        // 	players[1].reset(config);
-        // }
+        	self.reset(config);
+        	players[0].reset(config);
+        	players[1].reset(config);
+        }
     }
 
     fn collides_with_paddle(&self, player: &Player, config: &GameConfig) -> bool {

@@ -10,7 +10,6 @@ pub struct Player {
 }
 
 impl Player {
-    // TODO: position should be in the middle
     pub fn new(id: usize, socket: Socket) -> Player {
         Player {
             id,
