@@ -1,12 +1,12 @@
 use super::error::ApiError;
-use crate::http::db::models::NewUser;
-use crate::http::db::Database;
+use crate::db::models::NewUser;
+use crate::db::Database;
 
 use actix_identity::Identity;
 use actix_session::Session;
 use actix_web::get;
 use actix_web::http::header::LOCATION;
-use actix_web::{http, web, HttpMessage, HttpRequest, HttpResponse};
+use actix_web::{web, HttpMessage, HttpRequest, HttpResponse};
 use oauth2::basic::BasicClient;
 use oauth2::{CsrfToken, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
 use reqwest;
@@ -24,7 +24,7 @@ async fn login(
         println!("(login) {:?} is already logged in", id.unwrap().id());
         let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
         return Ok(HttpResponse::Found()
-			.insert_header((LOCATION, frontend_url))
+            .insert_header((LOCATION, frontend_url))
             .finish());
     }
 
@@ -71,7 +71,7 @@ async fn callback(
         println!("(callback) {:?} is already logged in", id.unwrap().id());
         let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
         return Ok(HttpResponse::Found()
-			.insert_header((LOCATION, frontend_url))
+            .insert_header((LOCATION, frontend_url))
             .finish());
     }
 
@@ -119,7 +119,7 @@ async fn callback(
 
     let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
     return Ok(HttpResponse::Found()
-		.insert_header((LOCATION, frontend_url))
+        .insert_header((LOCATION, frontend_url))
         .finish());
 }
 
@@ -210,8 +210,8 @@ async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpRespo
     database.update_user_status(id.id()?.parse()?, "offline")?;
     id.logout();
     Ok(HttpResponse::Found()
-		.insert_header((LOCATION, "/"))
-		.finish())
+        .insert_header((LOCATION, "/"))
+        .finish())
 }
 
 // ************************************************************ \\

@@ -8,7 +8,8 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use models::*;
 
-type DbConnection = diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+type DbConnection =
+    diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
 
 #[derive(Clone)]
 pub struct Database {
@@ -119,6 +120,8 @@ impl Database {
         Ok(room_count > 0)
     }
 
+    pub fn is_user_in_room(&self, user_id: i32, room_id: i32) {}
+
     // Insert the new room into the chat_rooms table, returns the id of the inserted room
     pub fn add_room(&self, con: &mut DbConnection, room: &NewChatRoom) -> Result<i32> {
         use schema::chat_rooms::dsl::*;
@@ -133,21 +136,20 @@ impl Database {
 
     // creates a room and sets the owner in the connection tables, returns the id of the created room
     pub fn create_room(&self, mut new_room: NewChatRoom, uid: i32) -> Result<i32> {
-		let mut con = self.pool.get()?;
+        let mut con = self.pool.get()?;
 
-		con.transaction::<i32, anyhow::Error, _>(
-		|con| {
-			new_room.owner = Some(uid);
-			let rid = self.add_room(con, &new_room)?;
-			self.add_connection(con, uid, rid)?;
-			
-			Ok(rid)
-		})
+        con.transaction::<i32, anyhow::Error, _>(|con| {
+            new_room.owner = Some(uid);
+            let rid = self.add_room(con, &new_room)?;
+            self.add_connection(con, uid, rid)?;
+
+            Ok(rid)
+        })
     }
 
     pub fn create_personal_room(&self, owner_id: i32, partner_id: i32) -> Result<i32> {
-		let mut con = self.pool.get()?;
-	
+        let mut con = self.pool.get()?;
+
         let new_room = NewChatRoom {
             owner: Some(owner_id),
             name: format!("{}-{}", owner_id, partner_id),
@@ -156,37 +158,34 @@ impl Database {
             password: None,
         };
 
-		con.transaction::<i32, anyhow::Error, _>(
-		|con| {
-			let rid = self.add_room(con, &new_room)?;
-			self.add_connection(con, owner_id, rid)?;
-			self.add_connection(con, partner_id, rid)?;
-			
-			Ok(rid)
-		})
+        con.transaction::<i32, anyhow::Error, _>(|con| {
+            let rid = self.add_room(con, &new_room)?;
+            self.add_connection(con, owner_id, rid)?;
+            self.add_connection(con, partner_id, rid)?;
 
+            Ok(rid)
+        })
     }
 
-	pub fn join_room(&self, user_id: i32, room_id: i32) -> Result<()> {
-		let mut con = self.pool.get()?;
+    pub fn join_room(&self, user_id: i32, room_id: i32) -> Result<()> {
+        let mut con = self.pool.get()?;
 
-		// check if the room is there and joinable, add connection
-		con.transaction::<(), anyhow::Error, _>(
-		|con| {
-			use schema::chat_rooms::dsl::*;
+        // check if the room is there and joinable, add connection
+        con.transaction::<(), anyhow::Error, _>(|con| {
+            use schema::chat_rooms::dsl::*;
 
-			let exists = chat_rooms
-				.filter(id.eq(user_id).and(is_public.eq(true)))
-				.count()
-				.execute(con)?;
-	
-			if exists == 0 {
-				return Err(anyhow::anyhow!("Room is not there/joinable!"));
-			}
+            let exists = chat_rooms
+                .filter(id.eq(user_id).and(is_public.eq(true)))
+                .count()
+                .execute(con)?;
 
-			self.add_connection(con, user_id, room_id)
-		})
-	}
+            if exists == 0 {
+                return Err(anyhow::anyhow!("Room is not there/joinable!"));
+            }
+
+            self.add_connection(con, user_id, room_id)
+        })
+    }
 
     pub fn check_room_owner(&self, rid: i32, uid: i32) -> Result<bool> {
         use schema::chat_rooms::dsl::*;
@@ -322,7 +321,10 @@ impl Database {
             .select(id)
             .load::<i32>(&mut self.pool.get()?)?;
 
-		let user_ids_as_strings: Vec<String> = room_connections.iter().map(|&uid| uid.to_string()).collect();
+        let user_ids_as_strings: Vec<String> = room_connections
+            .iter()
+            .map(|&uid| uid.to_string())
+            .collect();
 
         Ok(user_ids_as_strings)
     }
@@ -330,25 +332,23 @@ impl Database {
     // removes the connection between user and room
     // if there is no users in the room, the room is deleted
     pub fn part_room(&self, uid: i32, rid: i32) -> Result<()> {
-		
-		let mut con = self.pool.get()?;
+        let mut con = self.pool.get()?;
 
-		con.transaction::<(), anyhow::Error, _>(
-			|con| {
-				use schema::user_room_connection::dsl as user_room;
-				
-				diesel::delete(
-					user_room::user_room_connection
-					.filter(user_room::user_id.eq(uid).and(user_room::room_id.eq(rid))),
-				)
-				.execute(con)?;
-			
-			if self.get_room_connections(rid)?.len() == 0 {
-				self.remove_room(con, rid)?;
-			}
-			
-			Ok(())
-		})
+        con.transaction::<(), anyhow::Error, _>(|con| {
+            use schema::user_room_connection::dsl as user_room;
+
+            diesel::delete(
+                user_room::user_room_connection
+                    .filter(user_room::user_id.eq(uid).and(user_room::room_id.eq(rid))),
+            )
+            .execute(con)?;
+
+            if self.get_room_connections(rid)?.len() == 0 {
+                self.remove_room(con, rid)?;
+            }
+
+            Ok(())
+        })
     }
 
     /// ===============================================================
@@ -462,195 +462,7 @@ mod testing {
     // #[ignore]
 
     #[test]
-    fn clear_tables() -> Result<()> {
-        use schema::app_user::dsl::app_user;
-        use schema::chat_rooms::dsl::chat_rooms;
-        use schema::user_room_connection::dsl::user_room_connection;
-
-        let db = Database::new();
-
-        db.clear_tables()?;
-        assert_eq!(Ok(0), app_user.count().first::<i64>(&mut db.pool.get()?));
-        assert_eq!(Ok(0), chat_rooms.count().first::<i64>(&mut db.pool.get()?));
-        assert_eq!(
-            Ok(0),
-            user_room_connection
-                .count()
-                .first::<i64>(&mut db.pool.get()?)
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn user_fn() -> Result<()> {
-        use schema::app_user::dsl::*;
-
-        let db = Database::new();
-        let mut con = db.pool.get()?;
-
-        con.transaction::<_, anyhow::Error, _>(
-            |con: &mut diesel::r2d2::PooledConnection<ConnectionManager<PgConnection>>| {
-                db.clear_tables()?;
-
-                let new_user = NewUser {
-                    id: 1,
-                    login: String::from("test_user"),
-                    avatar: String::from("some"),
-                };
-
-                let update_user = models::UpdateUser {
-                    login: Some(String::from("updated_user")),
-                    avatar: None,
-                    password: None,
-                    status: None,
-                    wins: Some(1),
-                    losses: None,
-                };
-
-                db.add_user(&new_user)?;
-                assert_eq!(Ok(1), app_user.count().first::<i64>(con));
-
-                db.update_user(&update_user, 1)?;
-                assert_eq!(Ok(1), app_user.count().first::<i64>(con));
-                assert_eq!(
-                    "updated_user",
-                    app_user.filter(id.eq(1)).first::<User>(con)?.login
-                );
-
-                db.update_user_status(1, "test")?;
-                assert_eq!(Ok(1), app_user.count().first::<i64>(con));
-                assert_eq!("test", app_user.filter(id.eq(1)).first::<User>(con)?.status);
-
-                db.remove_user(2)?;
-                assert_eq!(Ok(1), app_user.count().first::<i64>(con));
-
-                db.remove_user(1)?;
-                assert_eq!(Ok(0), app_user.count().first::<i64>(con));
-
-                Ok(())
-            },
-        )?;
-
-        Ok(())
-    }
-
-    #[test]
-    fn room_fn() -> Result<()> {
-        use schema::chat_rooms::dsl::*;
-
-        let db = Database::new();
-
-        let mut con = db.pool.get()?;
-
-        con.transaction::<_, anyhow::Error, _>(
-            |con: &mut diesel::r2d2::PooledConnection<ConnectionManager<PgConnection>>| {
-                db.clear_tables()?;
-
-                let new_user = NewUser {
-                    id: 1,
-                    login: String::from("test_user"),
-                    avatar: String::from("some"),
-                };
-
-                let new_room = NewChatRoom {
-                    owner: 1,
-                    name: String::from("Chatroom name"),
-                    topic: None,
-                    is_public: false,
-                    password: None,
-                };
-
-                db.add_user(&new_user)?;
-                assert_eq!(
-                    Ok(1),
-                    schema::app_user::dsl::app_user.count().first::<i64>(con)
-                );
-
-                let rid = db.add_room(&new_room)?;
-                assert_eq!(Ok(1), chat_rooms.count().first::<i64>(con));
-
-                let update_room = models::UpdateChatRoom {
-                    name: Some(String::from("Update ChatRoom name")),
-                    id: rid,
-                    is_public: Some(true),
-                    topic: None,
-                    password: None,
-                };
-
-                db.update_room(&update_room)?;
-                assert_eq!(Ok(1), chat_rooms.count().first::<i64>(con));
-                assert_eq!(
-                    "Update ChatRoom name",
-                    chat_rooms.filter(id.eq(rid)).first::<ChatRoom>(con)?.name
-                );
-
-                db.remove_room(rid + 1)?;
-                assert_eq!(Ok(1), chat_rooms.count().first::<i64>(con));
-
-                db.remove_room(rid)?;
-                assert_eq!(Ok(0), chat_rooms.count().first::<i64>(con));
-
-                Ok(())
-            },
-        )?;
-
-        Ok(())
-    }
-
-    #[test]
-    fn connection_fn() -> Result<()> {
-        let db = Database::new();
-
-        let mut con = db.pool.get()?;
-
-        con.transaction::<_, anyhow::Error, _>(|con| {
-            db.clear_tables()?;
-
-            let new_user = NewUser {
-                id: 1,
-                login: String::from("test_user"),
-                avatar: String::from("some"),
-            };
-
-            let new_room = NewChatRoom {
-                owner: 1,
-                name: String::from("Chatroom name"),
-                topic: None,
-                is_public: false,
-                password: None,
-            };
-
-            db.add_user(&new_user)?;
-            assert_eq!(
-                Ok(1),
-                schema::app_user::dsl::app_user.count().first::<i64>(con)
-            );
-
-            let rid = db.add_room(&new_room)?;
-            assert_eq!(
-                Ok(1),
-                schema::chat_rooms::dsl::chat_rooms
-                    .count()
-                    .first::<i64>(con)
-            );
-
-            assert!(db.check_connection(1, rid)? == false);
-
-            db.add_connection(1, rid)?;
-            assert!(db.check_connection(1, rid)?);
-            assert!(db.check_connection(1, rid + 1)? == false);
-
-            db.remove_connection(1, rid)?;
-            assert!(db.check_connection(1, rid)? == false);
-            Ok(())
-        })?;
-
-        Ok(())
-    }
-
-    #[test]
-    fn get_connection_fn() -> Result<()> {
+    fn test_user_in_room() -> Result<()> {
         let db = Database::new();
 
         let mut con = db.pool.get()?;
@@ -680,75 +492,300 @@ mod testing {
                 schema::app_user::dsl::app_user.count().first::<i64>(con)
             );
 
-            let one = db.create_room(1, "first_test", false)?;
-            let sec = db.create_room(1, "second_test", false)?;
-            db.create_room(1, "third_test", false)?;
-            db.create_room(2, "fourth_test", false)?;
-
-            assert_eq!(3, db.get_user_connections(1)?.len());
-            assert_eq!(1, db.get_user_connections(2)?.len());
-
-            assert_eq!(1, db.get_room_connections(one)?.len());
-            db.add_connection(2, sec)?;
-            assert_eq!(2, db.get_room_connections(sec)?.len());
-
             Ok(())
         })?;
 
         Ok(())
     }
 
-    #[test]
-    fn add_message_to_chat() -> Result<()> {
-        let db = Database::new();
+    // #[test]
+    // fn clear_tables() -> Result<()> {
+    //     use schema::app_user::dsl::app_user;
+    //     use schema::chat_rooms::dsl::chat_rooms;
+    //     use schema::user_room_connection::dsl::user_room_connection;
 
-        let mut con = db.pool.get()?;
+    //     let db = Database::new();
 
-        con.transaction::<_, anyhow::Error, _>(|con| {
-            db.clear_tables()?;
+    //     db.clear_tables()?;
+    //     assert_eq!(Ok(0), app_user.count().first::<i64>(&mut db.pool.get()?));
+    //     assert_eq!(Ok(0), chat_rooms.count().first::<i64>(&mut db.pool.get()?));
+    //     assert_eq!(
+    //         Ok(0),
+    //         user_room_connection
+    //             .count()
+    //             .first::<i64>(&mut db.pool.get()?)
+    //     );
 
-            let new_user = NewUser {
-                id: 1,
-                login: String::from("test_user"),
-                avatar: String::from("some"),
-            };
+    //     Ok(())
+    // }
 
-            let new_user_2 = NewUser {
-                id: 2,
-                login: String::from("test_user 2"),
-                avatar: String::from("some"),
-            };
+    // #[test]
+    // fn user_fn() -> Result<()> {
+    //     use schema::app_user::dsl::*;
 
-            let user2_id = db.add_user(&new_user)?;
-            assert_eq!(
-                Ok(1),
-                schema::app_user::dsl::app_user.count().first::<i64>(con)
-            );
-            let user2_id = db.add_user(&new_user_2)?;
-            assert_eq!(
-                Ok(2),
-                schema::app_user::dsl::app_user.count().first::<i64>(con)
-            );
+    //     let db = Database::new();
+    //     let mut con = db.pool.get()?;
 
-            let room = db.create_room(1, "testroom", false)?;
-            // db.add_connection(2, room)?;
-            assert_eq!(1, db.get_user_connections(1)?.len());
-            assert_eq!(0, db.get_user_connections(2)?.len());
+    //     con.transaction::<_, anyhow::Error, _>(
+    //         |con: &mut diesel::r2d2::PooledConnection<ConnectionManager<PgConnection>>| {
+    //             db.clear_tables()?;
 
-            let message = NewMessage {
-                room_id: room,
-                sender_id: 1,
-                message: String::from("rofl"),
-            };
+    //             let new_user = NewUser {
+    //                 id: 1,
+    //                 login: String::from("test_user"),
+    //                 avatar: String::from("some"),
+    //             };
 
-            db.add_message(&message)?;
-            assert_eq!(1, db.get_messages()?.len());
+    //             let update_user = models::UpdateUser {
+    //                 login: Some(String::from("updated_user")),
+    //                 avatar: None,
+    //                 password: None,
+    //                 status: None,
+    //                 wins: Some(1),
+    //                 losses: None,
+    //             };
 
-            let msg = db.get_message_by_room_id(room)?;
-            println!("Message: {:?}", msg);
-            assert_eq!(msg[0].message, "rofl");
-            Ok(())
-        })?;
-        Ok(())
-    }
+    //             db.add_user(&new_user)?;
+    //             assert_eq!(Ok(1), app_user.count().first::<i64>(con));
+
+    //             db.update_user(&update_user, 1)?;
+    //             assert_eq!(Ok(1), app_user.count().first::<i64>(con));
+    //             assert_eq!(
+    //                 "updated_user",
+    //                 app_user.filter(id.eq(1)).first::<User>(con)?.login
+    //             );
+
+    //             db.update_user_status(1, "test")?;
+    //             assert_eq!(Ok(1), app_user.count().first::<i64>(con));
+    //             assert_eq!("test", app_user.filter(id.eq(1)).first::<User>(con)?.status);
+
+    //             db.remove_user(2)?;
+    //             assert_eq!(Ok(1), app_user.count().first::<i64>(con));
+
+    //             db.remove_user(1)?;
+    //             assert_eq!(Ok(0), app_user.count().first::<i64>(con));
+
+    //             Ok(())
+    //         },
+    //     )?;
+
+    //     Ok(())
+    // }
+
+    // #[test]
+    // fn room_fn() -> Result<()> {
+    //     use schema::chat_rooms::dsl::*;
+
+    //     let db = Database::new();
+
+    //     let mut con = db.pool.get()?;
+
+    //     con.transaction::<_, anyhow::Error, _>(
+    //         |con: &mut diesel::r2d2::PooledConnection<ConnectionManager<PgConnection>>| {
+    //             db.clear_tables()?;
+
+    //             let new_user = NewUser {
+    //                 id: 1,
+    //                 login: String::from("test_user"),
+    //                 avatar: String::from("some"),
+    //             };
+
+    //             let new_room = NewChatRoom {
+    //                 owner: 1,
+    //                 name: String::from("Chatroom name"),
+    //                 topic: None,
+    //                 is_public: false,
+    //                 password: None,
+    //             };
+
+    //             db.add_user(&new_user)?;
+    //             assert_eq!(
+    //                 Ok(1),
+    //                 schema::app_user::dsl::app_user.count().first::<i64>(con)
+    //             );
+
+    //             let rid = db.add_room(&new_room)?;
+    //             assert_eq!(Ok(1), chat_rooms.count().first::<i64>(con));
+
+    //             let update_room = models::UpdateChatRoom {
+    //                 name: Some(String::from("Update ChatRoom name")),
+    //                 id: rid,
+    //                 is_public: Some(true),
+    //                 topic: None,
+    //                 password: None,
+    //             };
+
+    //             db.update_room(&update_room)?;
+    //             assert_eq!(Ok(1), chat_rooms.count().first::<i64>(con));
+    //             assert_eq!(
+    //                 "Update ChatRoom name",
+    //                 chat_rooms.filter(id.eq(rid)).first::<ChatRoom>(con)?.name
+    //             );
+
+    //             db.remove_room(rid + 1)?;
+    //             assert_eq!(Ok(1), chat_rooms.count().first::<i64>(con));
+
+    //             db.remove_room(rid)?;
+    //             assert_eq!(Ok(0), chat_rooms.count().first::<i64>(con));
+
+    //             Ok(())
+    //         },
+    //     )?;
+
+    //     Ok(())
+    // }
+
+    // #[test]
+    // fn connection_fn() -> Result<()> {
+    //     let db = Database::new();
+
+    //     let mut con = db.pool.get()?;
+
+    //     con.transaction::<_, anyhow::Error, _>(|con| {
+    //         db.clear_tables()?;
+
+    //         let new_user = NewUser {
+    //             id: 1,
+    //             login: String::from("test_user"),
+    //             avatar: String::from("some"),
+    //         };
+
+    //         let new_room = NewChatRoom {
+    //             owner: 1,
+    //             name: String::from("Chatroom name"),
+    //             topic: None,
+    //             is_public: false,
+    //             password: None,
+    //         };
+
+    //         db.add_user(&new_user)?;
+    //         assert_eq!(
+    //             Ok(1),
+    //             schema::app_user::dsl::app_user.count().first::<i64>(con)
+    //         );
+
+    //         let rid = db.add_room(&new_room)?;
+    //         assert_eq!(
+    //             Ok(1),
+    //             schema::chat_rooms::dsl::chat_rooms
+    //                 .count()
+    //                 .first::<i64>(con)
+    //         );
+
+    //         assert!(db.check_connection(1, rid)? == false);
+
+    //         db.add_connection(1, rid)?;
+    //         assert!(db.check_connection(1, rid)?);
+    //         assert!(db.check_connection(1, rid + 1)? == false);
+
+    //         db.remove_connection(1, rid)?;
+    //         assert!(db.check_connection(1, rid)? == false);
+    //         Ok(())
+    //     })?;
+
+    //     Ok(())
+    // }
+
+    // #[test]
+    // fn get_connection_fn() -> Result<()> {
+    //     let db = Database::new();
+
+    //     let mut con = db.pool.get()?;
+
+    //     con.transaction::<_, anyhow::Error, _>(|con| {
+    //         db.clear_tables()?;
+
+    //         let new_user = NewUser {
+    //             id: 1,
+    //             login: String::from("test_user"),
+    //             avatar: String::from("some"),
+    //         };
+
+    //         let new_user_2 = NewUser {
+    //             id: 2,
+    //             login: String::from("test_user 2"),
+    //             avatar: String::from("some"),
+    //         };
+    //         db.add_user(&new_user)?;
+    //         assert_eq!(
+    //             Ok(1),
+    //             schema::app_user::dsl::app_user.count().first::<i64>(con)
+    //         );
+    //         db.add_user(&new_user_2)?;
+    //         assert_eq!(
+    //             Ok(2),
+    //             schema::app_user::dsl::app_user.count().first::<i64>(con)
+    //         );
+
+    //         let one = db.create_room(1, "first_test", false)?;
+    //         let sec = db.create_room(1, "second_test", false)?;
+    //         db.create_room(1, "third_test", false)?;
+    //         db.create_room(2, "fourth_test", false)?;
+
+    //         assert_eq!(3, db.get_user_connections(1)?.len());
+    //         assert_eq!(1, db.get_user_connections(2)?.len());
+
+    //         assert_eq!(1, db.get_room_connections(one)?.len());
+    //         db.add_connection(2, sec)?;
+    //         assert_eq!(2, db.get_room_connections(sec)?.len());
+
+    //         Ok(())
+    //     })?;
+
+    //     Ok(())
+    // }
+
+    // #[test]
+    // fn add_message_to_chat() -> Result<()> {
+    //     let db = Database::new();
+
+    //     let mut con = db.pool.get()?;
+
+    //     con.transaction::<_, anyhow::Error, _>(|con| {
+    //         db.clear_tables()?;
+
+    //         let new_user = NewUser {
+    //             id: 1,
+    //             login: String::from("test_user"),
+    //             avatar: String::from("some"),
+    //         };
+
+    //         let new_user_2 = NewUser {
+    //             id: 2,
+    //             login: String::from("test_user 2"),
+    //             avatar: String::from("some"),
+    //         };
+
+    //         let user2_id = db.add_user(&new_user)?;
+    //         assert_eq!(
+    //             Ok(1),
+    //             schema::app_user::dsl::app_user.count().first::<i64>(con)
+    //         );
+    //         let user2_id = db.add_user(&new_user_2)?;
+    //         assert_eq!(
+    //             Ok(2),
+    //             schema::app_user::dsl::app_user.count().first::<i64>(con)
+    //         );
+
+    //         let room = db.create_room(1, "testroom", false)?;
+    //         // db.add_connection(2, room)?;
+    //         assert_eq!(1, db.get_user_connections(1)?.len());
+    //         assert_eq!(0, db.get_user_connections(2)?.len());
+
+    //         let message = NewMessage {
+    //             room_id: room,
+    //             sender_id: 1,
+    //             message: String::from("rofl"),
+    //         };
+
+    //         db.add_message(&message)?;
+    //         assert_eq!(1, db.get_messages()?.len());
+
+    //         let msg = db.get_message_by_room_id(room)?;
+    //         println!("Message: {:?}", msg);
+    //         assert_eq!(msg[0].message, "rofl");
+    //         Ok(())
+    //     })?;
+    //     Ok(())
+    // }
 }

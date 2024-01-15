@@ -11,6 +11,7 @@
     "axios": "^1.4.0",
     "core-js": "^3.8.3",
     "vue": "^3.2.13",
+    "vue-native-websocket": "^2.0.15",
     "vuex": "^4.1.0"
   },
   "devDependencies": {

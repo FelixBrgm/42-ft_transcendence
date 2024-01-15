@@ -89,6 +89,7 @@ export default {
         is_public: false,
       },
      partRoomId: null,
+     messageRoomId: null,
      createRoomId: null,
      listRoomId: null,
      partnerId: null,
