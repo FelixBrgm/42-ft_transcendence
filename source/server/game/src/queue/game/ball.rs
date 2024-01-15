@@ -6,6 +6,7 @@ pub struct Ball {
     direction_x: i8,
     direction_y: i8
 }
+
 impl Ball {
     pub fn new() -> Self {
         Ball { x: 0, y: 0, direction_x: 1, direction_y: 1 }
