@@ -1,13 +1,13 @@
 use super::error::ApiError;
 use actix::prelude::*;
-// use actix_identity::Identity;
+use actix_identity::Identity;
+
 
 use crate::chat;
 use crate::db::Database;
 use actix::{Actor, Addr, StreamHandler};
 use actix_web::{get, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
-use log::{debug, error};
 use std::time::{Duration, Instant};
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
@@ -130,24 +130,30 @@ impl Handler<chat::Message> for ChatSession {
 use std::sync::atomic::{AtomicUsize, Ordering};
 static NEXT_CLIENT_ID: AtomicUsize = AtomicUsize::new(1);
 
-// add actix Identity
-// need to load all the past messages in the room
+// TODO: need to load all the past messages in the room
 #[get("/ws/{room_id}")]
 async fn server(
-    req: HttpRequest,
+	req: HttpRequest,
+	// identity: Identity,
     stream: web::Payload,
     server: web::Data<Addr<chat::ChatServer>>,
     room_id: web::Path<usize>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let rid = room_id.into_inner();
+	let uid = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+	// let uid = identity.id()?.parse::<usize>()?;
 
-    // need to check if the client is part of an existing room, if not return error message
+	if !db.check_room(rid as i32)? {
+		return Err(ApiError::BadRequest("The Room is not found.".to_owned()));
+	}
 
-    let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+	if !db.check_connection(uid as i32, rid as i32)? {
+		return Err(ApiError::BadRequest("The User didn't join the Room.".to_owned()));
+	}
 
     match ws::start(
-        ChatSession::new(client_id, rid, server.get_ref().clone()),
+        ChatSession::new(uid, rid.try_into().unwrap(), server.get_ref().clone()),
         &req,
         stream,
     ) {
