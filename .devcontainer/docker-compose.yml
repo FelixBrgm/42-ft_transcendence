@@ -22,7 +22,7 @@ services:
         - "8080:8080"
         - "2121:2121"
       volumes:
-        - ../source:/usr/src
+        - ..:/usr/src
       networks:
         - inception_network
 
