@@ -8,7 +8,7 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use models::*;
 
-use crate::db::schema::{blocked_users, friend_ship};
+use crate::db::schema::{blocked_users, friend_ship, game_match};
 
 type DbConnection =
     diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
@@ -360,5 +360,35 @@ impl Database {
             .load::<Message>(&mut self.pool.get()?)?;
 
         Ok(room_messages)
+    }
+
+    // / ===============================================================
+    // /                            GAMES
+    // / ===============================================================
+
+    pub fn add_game(&self, winner_uid: i32, looser_uid: i32) -> Result<i32> {
+        use schema::game_match::dsl::*;
+
+        let g = NewGameMatch {
+            winner: winner_uid,
+            looser: looser_uid,
+        };
+
+        let inserted_id = diesel::insert_into(game_match)
+            .values(g)
+            .returning(id)
+            .get_result::<i32>(&mut self.pool.get()?)?;
+
+        Ok(inserted_id)
+    }
+
+    pub fn get_games_by_uid(&self, uid: i32) -> Result<Vec<GameMatch>> {
+        use schema::game_match::dsl::*;
+
+        let games = game_match
+            .filter(winner.eq(uid).or(looser.eq(uid)))
+            .load(&mut self.pool.get()?)?;
+
+        Ok(games)
     }
 }
