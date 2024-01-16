@@ -108,3 +108,21 @@ pub struct Message {
     pub message: String,
     pub timestamp: NaiveDateTime,
 }
+
+// // ----------- Games --------------
+
+#[derive(Insertable, Debug, Queryable, Deserialize)]
+#[diesel(table_name = game_match)]
+pub struct NewGameMatch {
+    pub winner: i32,
+    pub looser: i32,
+}
+
+#[derive(Insertable, Debug, Queryable, Serialize)]
+#[diesel(table_name = game_match)]
+pub struct GameMatch {
+    pub id: i32,
+    pub winner: i32,
+    pub looser: i32,
+    pub timestamp: NaiveDateTime,
+}
