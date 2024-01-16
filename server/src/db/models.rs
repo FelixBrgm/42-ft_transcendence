@@ -68,7 +68,7 @@ pub struct NewChatRoom {
 #[derive(Insertable, Debug, Deserialize, Serialize, Queryable)]
 #[diesel(table_name = chat_rooms)]
 pub struct ChatRoom {
-	pub id: i32,
+    pub id: i32,
     pub user1: i32,
     pub user2: i32,
 }
