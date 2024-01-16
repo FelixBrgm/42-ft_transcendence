@@ -1,7 +1,7 @@
-mod api;
-mod chat;
 mod db;
-mod game;
+mod api;
+// mod chat;
+// mod game;
 mod oauth;
 
 use actix::Actor;
@@ -12,7 +12,8 @@ use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse
 use env_logger::Env;
 use log::info;
 
-use crate::api::{auth, room, user};
+use crate::api::auth;
+// use crate::api::{auth, room, user};
 
 /*
     find out how to handle one on one chat
@@ -26,11 +27,11 @@ async fn main() {
 
     let auth_client = oauth::setup_oauth_client();
 
-    let chat_server = chat::ChatServer::new(db.clone()).start();
+    // let chat_server = chat::ChatServer::new(db.clone()).start();
 
-    let matchmaking_server = game::matchmake::MatchmakingServer::new().start();
-    let tournament_server = game::tournament::TournamentServer::new().start();
-    let one_vs_one_server = game::one_vs_one::OneVsOneServer::new().start();
+    // let matchmaking_server = game::matchmake::MatchmakingServer::new().start();
+    // let tournament_server = game::tournament::TournamentServer::new().start();
+    // let one_vs_one_server = game::one_vs_one::OneVsOneServer::new().start();
 
     // get cookie key from enviroment
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
@@ -52,10 +53,10 @@ async fn main() {
 
         App::new()
             .app_data(web::Data::new(db.clone()))
-            .app_data(web::Data::new(chat_server.clone()))
-            .app_data(web::Data::new(matchmaking_server.clone()))
-            .app_data(web::Data::new(tournament_server.clone()))
-            .app_data(web::Data::new(one_vs_one_server.clone()))
+            // .app_data(web::Data::new(chat_server.clone()))
+            // .app_data(web::Data::new(matchmaking_server.clone()))
+            // .app_data(web::Data::new(tournament_server.clone()))
+            // .app_data(web::Data::new(one_vs_one_server.clone()))
             .app_data(web::Data::new(auth_client.clone()))
             .wrap(cors)
             .wrap(Logger::default())
@@ -70,35 +71,35 @@ async fn main() {
                     .route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!") })),
             )
             // home
-            .service(user::home)
-            .service(user::clear)
+            // .service(user::home)
+            // .service(user::clear)
             // authentication
             .service(auth::login)
             .service(auth::logout)
             .service(auth::callback)
             .service(auth::check)
             // user
-            .service(user::all)
-            .service(user::get)
-            .service(user::post)
-            .service(user::rooms)
-            // room
-            .service(room::all)
-            .service(room::get)
-            .service(room::list)
-            .service(room::messages)
-            .service(room::create)
-            .service(room::update)
-            .service(room::personal)
-            .service(room::join)
-            .service(room::part)
-            // chat
-            .service(api::chat::server)
-            //  game
-            .service(api::game::matchmaking)
-            .service(api::game::create_tournament)
-            .service(api::game::connect_tournament)
-            .service(api::game::one_vs_one)
+            // .service(user::all)
+            // .service(user::get)
+            // .service(user::post)
+            // .service(user::rooms)
+            // // room
+            // .service(room::all)
+            // .service(room::get)
+            // .service(room::list)
+            // .service(room::messages)
+            // .service(room::create)
+            // .service(room::update)
+            // .service(room::personal)
+            // .service(room::join)
+            // .service(room::part)
+            // // chat
+            // .service(api::chat::server)
+            // //  game
+            // .service(api::game::matchmaking)
+            // .service(api::game::create_tournament)
+            // .service(api::game::connect_tournament)
+            // .service(api::game::one_vs_one)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
     .bind("0.0.0.0:8080")
