@@ -42,17 +42,33 @@ pub struct User {
 
 #[derive(Insertable, Debug, Clone)]
 #[diesel(table_name = friend_ship)]
+pub struct NewFriendship {
+    pub user1: i32,
+    pub user2: i32,
+}
+
+#[derive(Insertable, Debug, Deserialize, Serialize, Queryable)]
+#[diesel(table_name = friend_ship)]
 pub struct Friendship {
+    pub id: i32,
     pub user1: i32,
     pub user2: i32,
 }
 
 // --------- Blocked -------------------
 
-#[derive(Insertable, Debug, Clone)]
+#[derive(Insertable, Debug, Deserialize, Serialize, Queryable)]
 #[diesel(table_name = blocked_users)]
 pub struct Blocked {
     pub id: i32,
+    pub user_id: i32,
+    pub blocked_user_id: i32,
+}
+
+#[derive(Insertable, Debug, Clone)]
+#[diesel(table_name = blocked_users)]
+pub struct NewBlocked {
+    pub user_id: i32,
     pub blocked_user_id: i32,
 }
 
@@ -68,7 +84,7 @@ pub struct NewChatRoom {
 #[derive(Insertable, Debug, Deserialize, Serialize, Queryable)]
 #[diesel(table_name = chat_rooms)]
 pub struct ChatRoom {
-	pub id: i32,
+    pub id: i32,
     pub user1: i32,
     pub user2: i32,
 }
