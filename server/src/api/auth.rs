@@ -117,6 +117,8 @@ async fn callback(
 
     interact_with_db(user_info, database).await?;
 
+	// add the user to the socket hashmap
+
     let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
     return Ok(HttpResponse::Found()
         .insert_header((LOCATION, frontend_url))
@@ -191,7 +193,8 @@ async fn interact_with_db(
             println!("adding user {}, {}", id, login_d);
             database.add_user(&NewUser {
                 id,
-                login: login_d,
+                intra: login_d.to_string(),
+                alias: login_d,
                 avatar,
             })?;
         }
