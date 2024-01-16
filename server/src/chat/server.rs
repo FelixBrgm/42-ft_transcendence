@@ -7,14 +7,14 @@ use crate::db::Database;
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct Message(pub String);
+pub struct ChatMessage(pub String);
 
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct Connect {
     pub id: usize,
     pub room_id: usize,
-    pub addr: Recipient<Message>,
+    pub addr: Recipient<ChatMessage>,
 }
 
 #[derive(Message)]
@@ -34,7 +34,7 @@ pub struct ClientMessage {
 
 // --------------------- CHATSERVER ------------------
 
-type Socket = Recipient<Message>;
+type Socket = Recipient<ChatMessage>;
 type UserId = usize;
 
 #[derive(Clone)]
@@ -56,7 +56,7 @@ impl ChatServer {
 
     fn send_message(&self, message: &str, recipient: &usize) {
         if let Some(socket_recipient) = self.sessions.get(recipient) {
-            let _ = socket_recipient.do_send(Message(message.to_owned()));
+            let _ = socket_recipient.do_send(ChatMessage(message.to_owned()));
         } else {
             println!(
                 "attempting to send message to {}, but couldn't find him in the session",
@@ -127,13 +127,18 @@ impl Handler<ClientMessage> for ChatServer {
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
         info!("{:?}", msg);
 
-        match self.db.add_message(&NewMessage{
-        	sender_id: msg.id as i32,
-        	room_id: msg.room_id as i32,
-        	message: msg.msg.to_string(),
+        match self.db.add_message(&NewMessage {
+            sender_id: msg.id as i32,
+            room_id: msg.room_id as i32,
+            message: msg.msg.to_string(),
         }) {
-        	Ok(_) => {},
-        	Err(e) => {println!("CHATSERVER failed to add Message to the DataBase: {}: {}", msg.id, e)},
+            Ok(_) => {}
+            Err(e) => {
+                println!(
+                    "CHATSERVER failed to add Message to the DataBase: {}: {}",
+                    msg.id, e
+                )
+            }
         };
 
         self.rooms
