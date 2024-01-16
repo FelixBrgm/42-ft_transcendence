@@ -11,24 +11,6 @@ async fn home() -> HttpResponse {
     HttpResponse::Ok().body("welcome home!")
 }
 
-//  clear
-#[get("/clear")]
-async fn clear(db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-    match db.clear_tables() {
-        Ok(_) => Ok(HttpResponse::Ok().json("database has cleared all tables!")),
-        Err(_) => Err(ApiError::InternalServerError),
-    }
-}
-
-// all the users
-#[get("/users")]
-async fn all(db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-    match db.get_users() {
-        Ok(users) => Ok(HttpResponse::Ok().json(&users)),
-        Err(_) => Err(ApiError::InternalServerError),
-    }
-}
-
 // returns the information of the user sending the request
 #[get("/user")]
 async fn get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
@@ -57,11 +39,11 @@ async fn post(
     }
 }
 
-#[get("/user/room")]
-async fn rooms(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-    let uid = identity.id()?.parse::<i32>()?;
-    match db.get_user_connections(uid) {
-        Ok(rooms) => Ok(HttpResponse::Ok().json(rooms)),
-        Err(_) => Err(ApiError::InternalServerError),
-    }
-}
+// #[get("/user/room")]
+// async fn rooms(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
+//     let uid = identity.id()?.parse::<i32>()?;
+//     match db.get_user_connections(uid) {
+//         Ok(rooms) => Ok(HttpResponse::Ok().json(rooms)),
+//         Err(_) => Err(ApiError::InternalServerError),
+//     }
+// }

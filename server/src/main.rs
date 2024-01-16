@@ -1,6 +1,6 @@
-mod db;
 mod api;
-// mod chat;
+mod chat;
+mod db;
 // mod game;
 mod oauth;
 
@@ -12,12 +12,7 @@ use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse
 use env_logger::Env;
 use log::info;
 
-use crate::api::auth;
-// use crate::api::{auth, room, user};
-
-/*
-    find out how to handle one on one chat
-*/
+use crate::api::{auth, user};
 
 #[actix_web::main]
 async fn main() {
@@ -27,7 +22,7 @@ async fn main() {
 
     let auth_client = oauth::setup_oauth_client();
 
-    // let chat_server = chat::ChatServer::new(db.clone()).start();
+    let chat_server = chat::server::ChatServer::new(db.clone()).start();
 
     // let matchmaking_server = game::matchmake::MatchmakingServer::new().start();
     // let tournament_server = game::tournament::TournamentServer::new().start();
@@ -53,7 +48,7 @@ async fn main() {
 
         App::new()
             .app_data(web::Data::new(db.clone()))
-            // .app_data(web::Data::new(chat_server.clone()))
+            .app_data(web::Data::new(chat_server.clone()))
             // .app_data(web::Data::new(matchmaking_server.clone()))
             // .app_data(web::Data::new(tournament_server.clone()))
             // .app_data(web::Data::new(one_vs_one_server.clone()))
@@ -79,22 +74,16 @@ async fn main() {
             .service(auth::callback)
             .service(auth::check)
             // user
-            // .service(user::all)
-            // .service(user::get)
-            // .service(user::post)
-            // .service(user::rooms)
+            .service(user::get)
+            .service(user::post)
+            // .service(user::rooms) // -> no db function yet
             // // room
             // .service(room::all)
             // .service(room::get)
             // .service(room::list)
             // .service(room::messages)
-            // .service(room::create)
-            // .service(room::update)
-            // .service(room::personal)
-            // .service(room::join)
-            // .service(room::part)
             // // chat
-            // .service(api::chat::server)
+            .service(api::chat::server)
             // //  game
             // .service(api::game::matchmaking)
             // .service(api::game::create_tournament)
