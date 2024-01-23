@@ -1,25 +1,45 @@
 <template>
-  <api-component></api-component>
+	<div id="app">
+    <ChatButton :showChat="showChat" @toggle-chat="toggleChat" />
+    <ChatWindow :showChat="showChat" @close-chat="closeChat" />
+			<router-view />
+	</div>
 </template>
 
 <script>
-import ApiComponent from './components/ApiComponent.vue'
+import ChatButton from './components/elements/ChatButton.vue';
+import ChatWindow from './components/elements/ChatWindow.vue';
 
 export default {
-  name: 'App',
-  components: {
-	ApiComponent
-  }
-}
+	components: {
+		ChatButton,
+		ChatWindow,
+	},
+	data() {
+		return {
+			showChat: false,
+		};
+	},
+	methods: {
+		toggleChat() {
+			this.showChat = !this.showChat;
+		},
+	},
+};
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+
+#Body{
+		min-height: 76vh;
+		display: flex;
+		flex-direction: column;
+		margin-bottom: 30px;
+	}
+
+@font-face {
+		font-family: "neuropol";
+		src: url('assets/fonts/neuropol.ttf');
 }
+
 </style>

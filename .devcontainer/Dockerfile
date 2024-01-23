@@ -3,27 +3,35 @@ FROM ubuntu:22.04
 
 # Install necessary dependencies for Node.js and Rust
 RUN apt-get update && \
-    apt-get install -y curl && \
-    apt-get install -y nodejs npm && \
-    apt-get install -y build-essential && \
-    apt-get install -y libpq-dev && \
-    apt-get install -y git && \
-    apt-get install -y pkg-config && \
-    apt-get install -y netcat && \
+    apt-get install -y \
+        curl \
+        nodejs npm \
+        build-essential \
+        libpq-dev \
+        git \
+        pkg-config \
+        netcat && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Remove conflicting package libnode-dev
+RUN apt-get purge -y libnode-dev
+
+# Install Node.js LTS version
+RUN curl -sL https://deb.nodesource.com/setup_lts.x | bash -
+RUN apt-get install -y nodejs
 
 # Install Vue CLI
 RUN npm install -g @vue/cli
 
-# Install Rust
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+# Install Rust + cleanup
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 
 USER root
 
-# Update package list and install netcat
 
 # Install diesel_cli for PostgreSQL
 RUN cargo install diesel_cli --no-default-features --features "postgres"
