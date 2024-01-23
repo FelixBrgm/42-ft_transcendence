@@ -1,0 +1,17 @@
+@keyframes neonGlow {
+	0% {
+		box-shadow: 0 0 10px 5px hsl(45, 100%, 60%);
+	}
+	25% {
+		box-shadow: 0 0 10px 5px hsl(135, 100%, 60%);
+	}
+	50% {
+		box-shadow: 0 0 10px 5px hsl(225, 100%, 60%);
+	}
+	75% {
+		box-shadow: 0 0 10px 5px hsl(315, 100%, 60%);
+	}
+	100% {
+		box-shadow: 0 0 10px 5px hsl(45, 100%, 60%);
+	}
+}
