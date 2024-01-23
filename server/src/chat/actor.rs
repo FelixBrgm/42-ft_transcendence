@@ -13,16 +13,14 @@ const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 use crate::chat::server::*;
 pub struct WsActor {
     id: usize,
-    room: usize,
     hb: Instant,
     addr: Addr<ChatServer>,
 }
 
 impl WsActor {
-    pub fn new(id: usize, room: usize, addr: Addr<ChatServer>) -> WsActor {
+    pub fn new(id: usize, addr: Addr<ChatServer>) -> WsActor {
         WsActor {
             id: id,
-            room: room,
             addr: addr,
             hb: Instant::now(),
         }
@@ -37,7 +35,6 @@ impl WsActor {
 
                 act.addr.do_send(Disconnect {
                     id: act.id,
-                    room_id: act.room,
                 });
 
                 ctx.stop();
@@ -60,7 +57,6 @@ impl Actor for WsActor {
             .send(Connect {
                 addr: addr.recipient(),
                 id: self.id,
-                room_id: self.room,
             })
             .into_actor(self)
             .then(|_res, _, ctx| {
@@ -76,7 +72,6 @@ impl Actor for WsActor {
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         self.addr.do_send(Disconnect {
             id: self.id,
-            room_id: self.room,
         });
         Running::Stop
     }
@@ -107,7 +102,6 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsActor {
             Ok(ws::Message::Text(s)) => self.addr.do_send(ClientMessage {
                 id: self.id,
                 msg: s.to_string(),
-                room_id: self.room,
             }),
             Err(e) => {
                 println!("{}: an error occured in the chat: {}", self.id, e);
