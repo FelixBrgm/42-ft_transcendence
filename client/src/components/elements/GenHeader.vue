@@ -1,0 +1,142 @@
+
+<template>
+	<header class="app-header">
+		<router-link :to="{ path: '/' }" class="title-link">
+		<div class="logo">
+			<img src="@/assets/logo.gif" alt="Logo" @click="playSound"/>
+			<h1 class="neon-text">{{ title }}</h1>
+		</div>
+		</router-link>
+		<nav>
+			<ul>
+				<li v-for="(item, index) in menuItems" :key="index">
+					<a :href="item.link" class="neon-text">{{ item.text }}</a>
+				</li>
+				<li v-if="!loggedIn">
+					<a @click="login" class="neon-text">Login</a>
+				</li>
+				<li v-if="loggedIn">
+					<a @click="logout" class="neon-text">Logout</a>
+				</li>
+			</ul>
+		</nav>
+	</header>
+</template>
+
+<script>
+import axios from 'axios';
+import { Howl } from 'howler';
+import honkSound from '@/assets/honk.mp3';
+
+export default {
+	data() {
+		return {
+			title: "Transcendence",
+			menuItems: [
+				{ text: "Home", link: "/" },
+				{ text: "Rules", link: "/rules" },
+				{ text: "Profile", link: "/profile" },
+				{ text: "About", link: "/about" },
+			],
+			loggedIn: false,
+			sound: null,
+		};
+	},
+	mounted() {
+		this.sound = new Howl({
+		src: [honkSound],
+		});
+	},
+	methods: {
+		async login() {
+			try {
+				window.location.href = 'http://127.0.0.1:8080/auth/login';
+				this.loggedIn = true;
+			} catch (error) {
+				console.error('Error Initiating login:', error);
+			}
+		},
+		async logout() {
+			try {
+				await axios.get('http://127.0.0.1:8080/auth/logout', { withCredentials: true });
+				this.loggedIn = false;
+			} catch (error) {
+				console.error('Error Logging out:', error);
+			}
+		},
+		playSound() {
+			if (this.sound) {
+				this.sound.play();
+			}
+		},
+	},
+};
+</script>
+
+
+<style scoped>
+.app-header {
+	font-family: neuropol;
+	background-color: #5c5e5f;
+	color: #fff;
+	padding: 1rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	border-radius: 20px;
+	box-shadow: 0 0 10px 5px #00f0ff; /* Initial shadow color and size */
+	animation: neonGlow 6s infinite; /* Adjust the duration as needed */
+	margin-top: 30px;
+	margin-bottom: 30px;
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+.neon-text {
+	text-shadow: 0 0 10px hsl(45, 100%, 60%), 0 0 20px hsl(45, 100%, 60%), 0 0 30px hsl(45, 100%, 60%);
+}
+
+@keyframes neonGlow {
+	0% {
+		box-shadow: 0 0 10px 5px hsl(45, 100%, 60%);
+	}
+	25% {
+		box-shadow: 0 0 10px 5px hsl(135, 100%, 60%);
+	}
+	50% {
+		box-shadow: 0 0 10px 5px hsl(225, 100%, 60%);
+	}
+	75% {
+		box-shadow: 0 0 10px 5px hsl(315, 100%, 60%);
+	}
+	100% {
+		box-shadow: 0 0 10px 5px hsl(45, 100%, 60%);
+	}
+}
+
+.logo {
+	display: flex;
+	align-items: center;
+}
+
+.logo img {
+	max-width: 70px;
+	margin-right: 1rem;
+}
+
+nav ul {
+	list-style: none;
+	display: flex;
+}
+
+nav a, .title-link {
+	text-decoration: none;
+	color: #fcfcfc;
+	margin-right: 1rem;
+	transition: color 0.3s ease;
+}
+
+nav a:hover {
+	color: #000000;
+}
+</style>
