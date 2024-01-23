@@ -1,9 +1,13 @@
 use actix::prelude::*;
 use log::{error, info};
+use rand::seq::index;
 use std::collections::{HashMap, HashSet};
 
 use crate::db::models::NewMessage;
 use crate::db::Database;
+
+type Socket = Recipient<ChatMessage>;
+type UserId = usize;
 
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -12,36 +16,30 @@ pub struct ChatMessage(pub String);
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct Connect {
-    pub id: usize,
-    pub room_id: usize,
-    pub addr: Recipient<ChatMessage>,
+    pub id: UserId,
+    pub addr: Socket,
 }
 
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct Disconnect {
-    pub id: usize,
-    pub room_id: usize,
+    pub id: UserId,
 }
 
 #[derive(Message, Debug)]
 #[rtype(result = "()")]
 pub struct ClientMessage {
-    pub id: usize,
-    pub room_id: usize,
+    pub id: UserId,
     pub msg: String,
 }
 
 // --------------------- CHATSERVER ------------------
 
-type Socket = Recipient<ChatMessage>;
-type UserId = usize;
-
 #[derive(Clone)]
 pub struct ChatServer {
     db: Database,
-    sessions: HashMap<UserId, Socket>,
-    rooms: HashMap<usize, HashSet<UserId>>,
+    sockets: HashMap<UserId, Socket>,
+    rooms: HashMap<usize, (UserId, UserId)>,
 }
 
 impl ChatServer {
@@ -49,13 +47,13 @@ impl ChatServer {
         println!("ChatServer is up.");
         ChatServer {
             db,
-            sessions: HashMap::new(),
+            sockets: HashMap::new(),
             rooms: HashMap::new(),
         }
     }
 
     fn send_message(&self, message: &str, recipient: &usize) {
-        if let Some(socket_recipient) = self.sessions.get(recipient) {
+        if let Some(socket_recipient) = self.sockets.get(recipient) {
             let _ = socket_recipient.do_send(ChatMessage(message.to_owned()));
         } else {
             println!(
@@ -74,23 +72,10 @@ impl Handler<Connect> for ChatServer {
     type Result = ();
 
     fn handle(&mut self, msg: Connect, _: &mut Context<Self>) {
-        info!("{} joined in room {}", msg.id, msg.room_id);
+        println!("{} joined", msg.id);
 
-        // insert new connectoin into rooms
-        self.rooms
-            .entry(msg.room_id)
-            .or_insert_with(HashSet::new)
-            .insert(msg.id);
-        // update everyobody in the room
-        self.rooms
-            .get(&msg.room_id)
-            .unwrap()
-            .iter()
-            .filter(|con_id| *con_id.to_owned() != msg.id)
-            .for_each(|con_id| self.send_message(&format!("{} just joined!", msg.id), con_id));
-        // add the session
-        self.sessions.insert(msg.id, msg.addr);
-        self.send_message(&format!("you just joined room {}", &msg.room_id), &msg.id);
+        self.sockets.insert(msg.id, msg.addr);
+        self.send_message(&format!("you just connected"), &msg.id);
     }
 }
 
@@ -98,24 +83,24 @@ impl Handler<Disconnect> for ChatServer {
     type Result = ();
 
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
-        info!("{} disconnected", msg.id);
+        println!("{} disconnected", msg.id);
 
-        if self.sessions.remove(&msg.id).is_some() {
-            self.rooms
-                .get(&msg.room_id)
-                .unwrap()
-                .iter()
-                .filter(|conn_id| *conn_id.to_owned() != msg.id)
-                .for_each(|user_id| {
-                    self.send_message(&format!("{} disconnected.", &msg.id), user_id)
-                });
-            if let Some(chatserver) = self.rooms.get_mut(&msg.room_id) {
-                if chatserver.len() > 1 {
-                    chatserver.remove(&msg.id);
-                } else {
-                    self.rooms.remove(&msg.room_id);
-                }
-            }
+        if self.sockets.remove(&msg.id).is_some() {
+        //     self.rooms
+        //         .get(&msg.room_id)
+        //         .unwrap()
+        //         .iter()
+        //         .filter(|conn_id| *conn_id.to_owned() != msg.id)
+        //         .for_each(|user_id| {
+        //             self.send_message(&format!("{} disconnected.", &msg.id), user_id)
+        //         });
+        //     if let Some(chatserver) = self.rooms.get_mut(&msg.room_id) {
+        //         if chatserver.len() > 1 {
+        //             chatserver.remove(&msg.id);
+        //         } else {
+        //             self.rooms.remove(&msg.room_id);
+        //         }
+        //     }
         }
     }
 }
@@ -125,27 +110,29 @@ impl Handler<ClientMessage> for ChatServer {
     type Result = ();
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
-        info!("{:?}", msg);
+        println!("{:?}", msg);
 
-        match self.db.add_message(&NewMessage {
-            sender_id: msg.id as i32,
-            room_id: msg.room_id as i32,
-            message: msg.msg.to_string(),
-        }) {
-            Ok(_) => {}
-            Err(e) => {
-                println!(
-                    "CHATSERVER failed to add Message to the DataBase: {}: {}",
-                    msg.id, e
-                )
-            }
+        let index = msg.msg.find(':');
+        if index.is_none() {
+            println!("Delimiter not found in the string.");
+            return;
+        }
+        let index = index.unwrap();
+
+        let (first_part, second_part) = msg.msg.split_at(index);
+
+        let recipient_id = first_part.parse::<usize>();
+        if recipient_id.is_err() {
+            println!("Recipient id is not valid.");
+            return;
+        }
+        let recipient_id = recipient_id.unwrap();
+
+        if self.rooms.iter().find(|room| {
+            room.1 .0 == recipient_id && room.1 .1 == msg.id
+                || room.1 .0 == msg.id && room.1 .1 == recipient_id
+        }).is_some() {
+            self.send_message(second_part, &recipient_id);
         };
-
-        self.rooms
-            .get(&msg.room_id)
-            .unwrap()
-            .iter()
-            .filter(|conn_id| *conn_id.to_owned() != msg.id)
-            .for_each(|client| self.send_message(&msg.msg, client));
     }
 }

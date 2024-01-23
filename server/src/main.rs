@@ -15,38 +15,39 @@ use log::info;
 use crate::api::{auth, user};
 
 #[actix_web::main]
-async fn main() {
-    env_logger::init();
+async fn main() { 
 
-    let db = db::Database::new();
-
-    let auth_client = oauth::setup_oauth_client();
-
-    let chat_server = chat::server::ChatServer::new(db.clone()).start();
-
-    // let matchmaking_server = game::matchmake::MatchmakingServer::new().start();
-    // let tournament_server = game::tournament::TournamentServer::new().start();
-    // let one_vs_one_server = game::one_vs_one::OneVsOneServer::new().start();
-
-    // get cookie key from enviroment
-    let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
-    let secret_key = cookie::Key::from(env_key.as_bytes());
-
-    println!(" < --- * --- >");
-
-    // Start the Actix Web server
-    let _ = HttpServer::new(move || {
-        let cors = Cors::default()
+        env_logger::init();
+        
+        let db = db::Database::new();
+        
+        let auth_client = oauth::setup_oauth_client();
+        
+        let chat_server = chat::server::ChatServer::new(db.clone()).start();
+        
+        // let matchmaking_server = game::matchmake::MatchmakingServer::new().start();
+        // let tournament_server = game::tournament::TournamentServer::new().start();
+        // let one_vs_one_server = game::one_vs_one::OneVsOneServer::new().start();
+        
+        // get cookie key from enviroment
+        let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
+        let secret_key = cookie::Key::from(env_key.as_bytes());
+        
+        println!(" < --- * --- >");
+        
+        // Start the Actix Web server
+        let _ = HttpServer::new(move || {
+            let cors = Cors::default()
             .allow_any_origin()
             .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
             .allowed_headers(vec![
                 header::CONTENT_TYPE,
                 header::AUTHORIZATION,
                 header::ACCEPT,
-            ])
-            .supports_credentials();
-
-        App::new()
+                ])
+                .supports_credentials();
+            
+            App::new()
             .app_data(web::Data::new(db.clone()))
             .app_data(web::Data::new(chat_server.clone()))
             // .app_data(web::Data::new(matchmaking_server.clone()))
@@ -58,12 +59,12 @@ async fn main() {
             .wrap(IdentityMiddleware::builder().build())
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), secret_key.clone())
-                    .cookie_secure(false)
-                    .build(),
+                .cookie_secure(false)
+                .build(),
             )
             .service(
                 web::resource("/health")
-                    .route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!") })),
+                .route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!") })),
             )
             // home
             // .service(user::home)
@@ -90,9 +91,9 @@ async fn main() {
             // .service(api::game::connect_tournament)
             // .service(api::game::one_vs_one)
             .default_service(web::to(|| HttpResponse::NotFound()))
-    })
-    .bind("0.0.0.0:8080")
-    .expect("Failed to bind to port 8080")
-    .run()
-    .await;
+        })
+        .bind("0.0.0.0:8080")
+        .expect("Failed to bind to port 8080")
+        .run()
+        .await;
 }
