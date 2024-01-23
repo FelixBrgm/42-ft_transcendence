@@ -33,3 +33,5 @@ RUN echo 'export PS1="\W> "' >> ~/.bashrc
 
 EXPOSE 4242
 EXPOSE 8080
+
+CMD ["tail", "-f", "/dev/null"]
