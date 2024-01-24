@@ -32,6 +32,7 @@ actix-cors = "0.6.4"
 actix-session = { version = "0.7.2", features = ["cookie-session"] }
 reqwest = { version = "0.11", features = ["json"] }
 derive_more = "0.99.17"
+num-traits = "0.2"
 
 # chat (removed serde and serde_json)
 env_logger = "0.10.1"
