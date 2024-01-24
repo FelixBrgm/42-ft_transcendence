@@ -9,8 +9,11 @@ pub use self::ball::Ball;
 pub use self::config::GameConfig;
 pub use self::player::Player;
 pub use crate::game::{Message, Socket, UserId};
-
-const TICK_INTERVAL: Duration = Duration::from_millis(16);
+use crate::{
+    api::game::{GameMode, Stop},
+    db::models::User,
+};
+const TICK_INTERVAL: Duration = Duration::from_millis(50);
 
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -45,8 +48,15 @@ pub struct GameOver;
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct GameResult {
-	players: [Player; 2],
-	winner: UserId,
+    players: [Player; 2],
+    winner: UserId,
+}
+
+#[derive(Message, Debug)]
+#[rtype(result = "()")]
+pub struct GameFinished {
+    pub players: [UserId; 2],
+    pub winner: UserId,
 }
 
 #[derive(Debug, Clone)]
@@ -57,10 +67,11 @@ pub struct Pong {
     config: GameConfig,
     finished: bool,
     paused: bool,
+    mode: GameMode,
 }
 
 impl Pong {
-    pub fn new(players: [Player; 2]) -> Pong {
+    pub fn new(players: [Player; 2], mode: GameMode) -> Pong {
         Pong {
             players,
             score: [0; 2],
@@ -68,6 +79,7 @@ impl Pong {
             config: GameConfig::new(),
             finished: false,
             paused: true,
+            mode,
         }
     }
 
@@ -161,11 +173,8 @@ impl Handler<UpdateScore> for Pong {
 
     fn handle(&mut self, msg: UpdateScore, ctx: &mut Self::Context) {
         self.score[msg.side] += 1;
-        self.send_to_players(Message(format!(
-            "SCORE {}:{}",
-            self.score[0], self.score[1]
-        )));
-
+        self.send_to_players(Message(format!("SCR {}:{}", self.score[0], self.score[1])));
+        println!("{}", self.score[msg.side]);
         if self.score[msg.side] >= 3 {
             ctx.notify(GameOver);
         } else {
@@ -193,6 +202,26 @@ impl Handler<GameOver> for Pong {
         self.finished = true;
         self.send_to_players(Message("END".to_owned()));
 
+        // if let GameMode::OneVsOne(_) = &self.mode {
+        //     for p in self.players.iter_mut() {
+        //         p.addr.do_send(Stop { id: p.id });
+        //     }
+        // }
+        // if let GameMode::Matchmaking(_) = &self.mode {
+        // }
+        if let GameMode::Tournament(addr) = &self.mode {
+            let mut winner = self.players[1].id;
+            if self.score[0] > self.score[1] {
+                winner = self.players[0].id;
+            }
+            addr.do_send(GameFinished {
+                players: [self.players[0].id, self.players[1].id],
+                winner,
+            })
+        }
+        for p in self.players.iter_mut() {
+            p.addr.do_send(Stop { id: p.id });
+        }
     }
 }
 
