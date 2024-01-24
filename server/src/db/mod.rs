@@ -2,6 +2,8 @@ mod migrations;
 pub mod models;
 mod schema;
 
+use std::fmt::Error;
+
 use anyhow::Result;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -136,9 +138,9 @@ impl Database {
     pub fn add_room(&self, user_1: i32, user_2: i32) -> Result<i32> {
         use schema::chat_rooms::dsl::*;
 
-		if let Some(existing_id) = self.get_room_by_users(user_1, user_2)? {
-			return Ok(existing_id.id);
-		}
+        if let Some(existing_id) = self.get_room_by_users(user_1, user_2)? {
+            return Ok(existing_id.id);
+        }
 
         let room = NewChatRoom {
             user1: user_1,
@@ -272,6 +274,16 @@ impl Database {
         Ok(())
     }
 
+    pub fn get_all_friendships(&self, user_id: i32) -> Result<Vec<(i32, i32, i32)>> {
+        use schema::friend_ship::dsl::*;
+
+        let all_users = friend_ship
+            .filter(user1.eq(user_id).or(user2.eq(user_id)))
+            .load(&mut self.pool.get()?)?;
+
+        return Ok(all_users);
+    }
+
     // / ===============================================================
     // /                            BLOCKED
     // / ===============================================================
@@ -387,23 +399,22 @@ impl Database {
 
         Ok(games)
     }
-	
-	// DEBUG
 
-	pub fn get_all_users(&self) -> Result<Vec<User>> {
-		use schema::app_user::dsl::*;
-	
-		let all_users = app_user.load::<User>(&mut self.pool.get()?)?;
-	
-		Ok(all_users)
-	}
-	
-	pub fn get_all_blocked(&self) -> Result<Vec<Blocked>> {
-		use schema::blocked_users::dsl::*;
-	
-		let all_users = blocked_users.load::<Blocked>(&mut self.pool.get()?)?;
-	
-		Ok(all_users)
-	}
+    // DEBUG
+
+    pub fn get_all_users(&self) -> Result<Vec<User>> {
+        use schema::app_user::dsl::*;
+
+        let all_users = app_user.load::<User>(&mut self.pool.get()?)?;
+
+        Ok(all_users)
+    }
+
+    pub fn get_all_blocked(&self) -> Result<Vec<Blocked>> {
+        use schema::blocked_users::dsl::*;
+
+        let all_users = blocked_users.load::<Blocked>(&mut self.pool.get()?)?;
+
+        Ok(all_users)
+    }
 }
-
