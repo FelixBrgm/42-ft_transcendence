@@ -36,6 +36,8 @@
 		background-color: #5c5e5f;
 		box-shadow: 0 0 10px 5px #00f0ff;
 		animation: neonGlow 6s infinite;
+		max-width: 1600px;
+		margin: 0 auto;
 	}
 	</style>
 	
