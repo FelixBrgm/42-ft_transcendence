@@ -52,10 +52,11 @@ pub struct GameResult {
     winner: UserId,
 }
 
-#[derive(Message)]
+#[derive(Message, Debug)]
 #[rtype(result = "()")]
 pub struct GameFinished {
-    pub players: [Player; 2],
+    pub players: [UserId; 2],
+    pub winner: UserId,
 }
 
 #[derive(Debug, Clone)]
@@ -201,15 +202,25 @@ impl Handler<GameOver> for Pong {
         self.finished = true;
         self.send_to_players(Message("END".to_owned()));
 
-        if let GameMode::OneVsOne(_) = &self.mode {
-            for p in self.players.iter_mut() {
-                p.addr.do_send(Stop { id: p.id });
+        // if let GameMode::OneVsOne(_) = &self.mode {
+        //     for p in self.players.iter_mut() {
+        //         p.addr.do_send(Stop { id: p.id });
+        //     }
+        // }
+        // if let GameMode::Matchmaking(_) = &self.mode {
+        // }
+        if let GameMode::Tournament(addr) = &self.mode {
+            let mut winner = self.players[1].id;
+            if self.score[0] > self.score[1] {
+                winner = self.players[0].id;
             }
+            addr.do_send(GameFinished {
+                players: [self.players[0].id, self.players[1].id],
+                winner,
+            })
         }
-        if let GameMode::Matchmaking(_) = &self.mode {
-            for p in self.players.iter_mut() {
-                p.addr.do_send(Stop { id: p.id });
-            }
+        for p in self.players.iter_mut() {
+            p.addr.do_send(Stop { id: p.id });
         }
     }
 }
