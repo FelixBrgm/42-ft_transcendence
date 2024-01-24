@@ -74,12 +74,14 @@ async fn main() {
             // user
             .service(user::get)
             .service(user::post)
-            // // room
-            // .service(room::list)
-            // .service(room::messages)
             // // chat
             .service(api::chat::server)
             .service(api::chat::join_chat)
+            .service(api::chat::create_friendship)
+            .service(api::chat::remove_friendship)
+            .service(api::chat::get_friends)
+            .service(api::chat::get_rooms)
+            .service(api::chat::get_messages_by_room_id)
             .service(api::chat::block_user)
             .service(api::chat::unblock_user)
             // //  game
