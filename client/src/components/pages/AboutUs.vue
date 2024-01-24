@@ -37,6 +37,8 @@
 		background-color: #5c5e5f;
 		box-shadow: 0 0 10px 5px #00f0ff;
 		animation: neonGlow 6s infinite;
+		max-width: flex, 1600px; /* Set the maximum width */
+		margin: 0 auto; /* Center the footer */
 	}
 	</style>
 	
