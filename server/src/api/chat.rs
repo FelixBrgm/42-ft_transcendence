@@ -8,8 +8,6 @@ use actix_identity::Identity;
 use actix_web::{get, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 
-use std::sync::atomic::{AtomicUsize, Ordering};
-
 #[get("/ws")]
 async fn server(
     req: HttpRequest,
