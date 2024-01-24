@@ -31,6 +31,14 @@ pub struct TournamentConnect {
 }
 #[derive(Message)]
 #[rtype(result = "()")]
+pub struct OneVsOneConnect {
+    pub opponent: UserId,
+    pub addr: Addr<crate::api::game::GameSession>,
+    pub uid: UserId,
+    pub socket: Socket,
+}
+#[derive(Message)]
+#[rtype(result = "()")]
 pub struct Create {
     pub id: UserId,
     pub size: u8,
