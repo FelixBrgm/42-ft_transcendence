@@ -13,7 +13,7 @@ pub struct GameConfig {
 impl GameConfig {
     pub fn new() -> GameConfig {
         GameConfig {
-            min_time_per_tick_ms: Duration::from_millis(100),
+            min_time_per_tick_ms: Duration::from_millis(1000),
             paddle_speed: 1000,
             ball_speed: 1000,
             height: 10000,
