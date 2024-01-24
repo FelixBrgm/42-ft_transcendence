@@ -23,7 +23,22 @@ pub struct Connect {
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct Disconnect {
-    pub id: UserId,
+	pub id: UserId,
+}
+
+#[derive(Message)]
+#[rtype(result ="()")]
+pub struct InsertRoom {
+	pub room_id: i32,
+    pub user1: UserId,
+    pub user2: UserId,
+}
+
+#[derive(Message)]
+#[rtype(result ="()")]
+pub struct BlockUser {
+    pub user_id: UserId,
+    pub blocked_id: UserId,
 }
 
 #[derive(Message, Debug)]
@@ -35,11 +50,25 @@ pub struct ClientMessage {
 
 // --------------------- CHATSERVER ------------------
 
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub struct Pair {
+    user1: UserId,
+	user2: UserId,
+}
+
+impl Pair {
+	pub fn new(user1: UserId, user2: UserId) -> Pair {
+		let (min, max) = if user1 < user2 { (user1, user2) } else { (user2, user1) };
+        Pair { user1: min, user2: max }
+	} 
+}
+
+
 #[derive(Clone)]
 pub struct ChatServer {
     db: Database,
     sockets: HashMap<UserId, Socket>,
-    rooms: HashMap<usize, (UserId, UserId)>,
+	rooms: HashMap<Pair, i32>,
 }
 
 impl ChatServer {
@@ -62,6 +91,23 @@ impl ChatServer {
             )
         }
     }
+
+	fn parse_message(&self, msg: String) -> Option<(usize, String)> {
+
+		let Some(index) = msg.find(':') else {
+			println!("Delimiter not found in the string.");
+			return None;
+		};
+
+        let (first_part, second_part) = msg.split_at(index);
+
+		let Ok(recipient_id) = first_part.parse::<usize>() else {
+			println!("Recipient id is not valid.");
+			return None;
+		};
+
+		Some((recipient_id, second_part.trim_start_matches(':').to_string()))
+	}
 }
 
 impl Actor for ChatServer {
@@ -79,60 +125,55 @@ impl Handler<Connect> for ChatServer {
     }
 }
 
+// might need to remove the rooms that have neither active users
 impl Handler<Disconnect> for ChatServer {
     type Result = ();
 
+	// let all people know that you disconnected
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
         println!("{} disconnected", msg.id);
-
-        if self.sockets.remove(&msg.id).is_some() {
-        //     self.rooms
-        //         .get(&msg.room_id)
-        //         .unwrap()
-        //         .iter()
-        //         .filter(|conn_id| *conn_id.to_owned() != msg.id)
-        //         .for_each(|user_id| {
-        //             self.send_message(&format!("{} disconnected.", &msg.id), user_id)
-        //         });
-        //     if let Some(chatserver) = self.rooms.get_mut(&msg.room_id) {
-        //         if chatserver.len() > 1 {
-        //             chatserver.remove(&msg.id);
-        //         } else {
-        //             self.rooms.remove(&msg.room_id);
-        //         }
-        //     }
-        }
+        self.sockets.remove(&msg.id);
     }
 }
 
-// TODO: make a good error handling
+
+impl Handler<InsertRoom> for ChatServer {
+	type Result = ();
+
+    fn handle(&mut self, room: InsertRoom, _: &mut Context<Self>) {
+		self.rooms.insert(Pair::new(room.user1, room.user2), room.room_id);
+		dbg!(&self.rooms);
+    }
+}
+
+impl Handler<BlockUser> for ChatServer {
+	type Result = ();
+
+    fn handle(&mut self, block: BlockUser, _: &mut Context<Self>) {
+		self.rooms.remove(&Pair::new(block.user_id, block.blocked_id));
+		dbg!(&self.rooms);
+    }
+}
+
 impl Handler<ClientMessage> for ChatServer {
     type Result = ();
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
-        println!("{:?}", msg);
 
-        let index = msg.msg.find(':');
-        if index.is_none() {
-            println!("Delimiter not found in the string.");
-            return;
-        }
-        let index = index.unwrap();
+        let Some((recipient_id, text)) = self.parse_message(msg.msg) else {
+			self.send_message("the format was invalid", &msg.id);
+			return;
+		};
 
-        let (first_part, second_part) = msg.msg.split_at(index);
+		if let Some(rid) = self.rooms.get(&Pair::new(msg.id, recipient_id)) {
+			
+			self.send_message(&text, &recipient_id);
 
-        let recipient_id = first_part.parse::<usize>();
-        if recipient_id.is_err() {
-            println!("Recipient id is not valid.");
-            return;
-        }
-        let recipient_id = recipient_id.unwrap();
-
-        if self.rooms.iter().find(|room| {
-            room.1 .0 == recipient_id && room.1 .1 == msg.id
-                || room.1 .0 == msg.id && room.1 .1 == recipient_id
-        }).is_some() {
-            self.send_message(second_part, &recipient_id);
-        };
+			let _ = self.db.add_message(&NewMessage{
+				sender_id: msg.id as i32,
+				room_id: *rid,
+				message: text,
+			});
+		};
     }
 }
