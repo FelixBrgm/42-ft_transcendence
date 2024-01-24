@@ -1,21 +1,25 @@
+use actix::Addr;
+
 use super::GameConfig;
-use crate::game::Socket;
+use crate::{api::game::GameSession, game::Socket};
 
 #[derive(Debug, Clone)]
 pub struct Player {
     pub id: usize,
     pub socket: Socket,
+    pub addr: Addr<GameSession>,
     pub position: u16,
     pub last_input: char,
 }
 
 impl Player {
-    pub fn new(id: usize, socket: Socket) -> Player {
+    pub fn new(id: usize, socket: Socket, addr: Addr<GameSession>) -> Player {
         Player {
             id,
             socket,
             position: 0,
             last_input: 'n',
+            addr,
         }
     }
 
