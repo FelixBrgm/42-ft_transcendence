@@ -32,6 +32,3 @@ async fn server(
         }
     }
 }
-
-#[get("/chat/{recipient_id}")]
-async fn join_chat

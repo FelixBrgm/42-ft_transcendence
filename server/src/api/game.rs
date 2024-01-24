@@ -3,6 +3,7 @@ use actix::prelude::*;
 // use actix_identity::Identity;
 
 use crate::db::Database;
+
 use crate::game::matchmake::MatchmakingServer;
 use crate::game::one_vs_one::OneVsOneServer;
 use crate::game::tournament::TournamentServer;
@@ -24,7 +25,7 @@ enum GameMode {
 }
 
 struct GameSession {
-	id: usize,
+    id: usize,
     hb: Instant,
     game_mode: GameMode,
     room_id: Option<UserId>,
@@ -254,8 +255,8 @@ async fn matchmaking(
     server: web::Data<Addr<MatchmakingServer>>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
+    println!("HELLO");
     let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
-
     match ws::start(
         GameSession::new_matchmaking(client_id, server.get_ref().clone()),
         &req,

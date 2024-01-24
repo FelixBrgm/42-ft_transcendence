@@ -10,7 +10,7 @@ pub use self::config::GameConfig;
 pub use self::player::Player;
 pub use crate::game::{Message, Socket, UserId};
 
-const TICK_INTERVAL: Duration = Duration::from_millis(16);
+const TICK_INTERVAL: Duration = Duration::from_millis(50);
 
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -45,8 +45,8 @@ pub struct GameOver;
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct GameResult {
-	players: [Player; 2],
-	winner: UserId,
+    players: [Player; 2],
+    winner: UserId,
 }
 
 #[derive(Debug, Clone)]
@@ -161,10 +161,7 @@ impl Handler<UpdateScore> for Pong {
 
     fn handle(&mut self, msg: UpdateScore, ctx: &mut Self::Context) {
         self.score[msg.side] += 1;
-        self.send_to_players(Message(format!(
-            "SCORE {}:{}",
-            self.score[0], self.score[1]
-        )));
+        self.send_to_players(Message(format!("SCR {}:{}", self.score[0], self.score[1])));
 
         if self.score[msg.side] >= 3 {
             ctx.notify(GameOver);
@@ -192,7 +189,6 @@ impl Handler<GameOver> for Pong {
         println!("GameOver");
         self.finished = true;
         self.send_to_players(Message("END".to_owned()));
-
     }
 }
 
