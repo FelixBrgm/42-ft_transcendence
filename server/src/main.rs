@@ -64,9 +64,9 @@ async fn main() {
             .service(
                 web::resource("/health")
                     .route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!") })),
-			)
+            )
             // authentication
-			.service(auth::fake)
+            .service(auth::fake)
             .service(auth::login)
             .service(auth::logout)
             .service(auth::callback)
