@@ -7,6 +7,9 @@
     <!-- Player and Enemy paddles -->
     <div class="player" :style="{ top: playerPosition + 'px' }"></div>
     <div class="enemy" :style="{ top: enemyPosition + 'px' }"></div>
+
+    <!-- Ball -->
+    <div class="ball" :style="{ top: ballPosition.top + 'px', left: ballPosition.left + 'px' }"></div>
   </div>
 </template>
 
@@ -14,11 +17,21 @@
 export default {
   data() {
     return {
-      playerPosition: 410, // Initial position in the middle
-      enemyPosition: 410, // Initial enemy position in the middle
-      playerMovingDirection: null, // To keep track of the player's movement direction
-      enemyMovingDirection: null, // To keep track of the enemy's movement direction
-      animationFrameId: null, // To keep track of the animation frame ID
+      playerPosition: 410,
+      enemyPosition: 410,
+      playerMovingDirection: null,
+      enemyMovingDirection: null,
+      animationFrameId: null,
+      playerScore: 0,  // Initialize player score to 0
+      enemyScore: 0,   // Initialize enemy score to 0
+      ballPosition: {
+        top: 445,
+        left: 785,
+      },
+      ballSpeed: {
+        x: 5,
+        y: 5,
+      },
     };
   },
   methods: {
@@ -79,25 +92,84 @@ export default {
 
       this.animationFrameId = requestAnimationFrame(() => this.moveEnemy()); // Smooth animation
     },
+    moveBall() {
+      const ballStepX = this.ballSpeed.x;
+      const ballStepY = this.ballSpeed.y;
+
+      // Update ball position
+      this.ballPosition.left += ballStepX;
+      this.ballPosition.top += ballStepY;
+
+      // Check for collisions with top and bottom walls
+      if (
+        this.ballPosition.top <= 0 ||
+        this.ballPosition.top + 20 >= this.$refs.gameContainer.clientHeight
+      ) {
+        this.ballSpeed.y = -this.ballSpeed.y; // Reverse the vertical direction on collision
+      }
+
+      // Check for collisions with player paddle (right side)
+      const playerCollision =
+        this.ballPosition.left + 20 >= this.$refs.gameContainer.clientWidth - 30 &&
+        this.ballPosition.top + 20 >= this.playerPosition &&
+        this.ballPosition.top <= this.playerPosition + 120;
+
+      // Check for collisions with enemy paddle (left side)
+      const enemyCollision =
+        this.ballPosition.left <= 30 &&
+        this.ballPosition.top + 20 >= this.enemyPosition &&
+        this.ballPosition.top <= this.enemyPosition + 120;
+
+      if (playerCollision || enemyCollision) {
+        // Collision with a paddle
+        this.ballSpeed.x = -this.ballSpeed.x; // Reverse the horizontal direction on collision
+        // You can add additional logic to modify the ball's speed here if needed
+      }
+
+      if (this.ballPosition.left <= 0) {
+        // Ball went out of bounds on the left side
+        this.enemyScore++;
+        this.resetBall();
+      } else if (this.ballPosition.left + 20 >= this.$refs.gameContainer.clientWidth) {
+        // Ball went out of bounds on the right side
+        this.playerScore++;
+        this.resetBall();
+      }
+
+      this.animationFrameId = requestAnimationFrame(() => this.moveBall());
+    },
+
+    resetBall() {
+      // Reset the ball position to the center
+      this.ballPosition = {
+        top: this.$refs.gameContainer.clientHeight / 2 - 10,
+        left: this.$refs.gameContainer.clientWidth / 2 - 10,
+      };
+
+      // Reset the ball speed to its initial values
+      this.ballSpeed = { x: 5, y: 5 };
+    },
   },
   updated() {
     if (this.playerMovingDirection !== null || this.enemyMovingDirection !== null) {
       this.$refs.gameContainer.focus(); // Ensure the container has focus for key events
     }
   },
+  mounted() {
+    this.moveBall();
+  },
 };
 </script>
-
 <style scoped>
 .game-container {
   position: relative;
-  width: 1600px;
+  width: 1600px; 
   height: 900px;
   margin: 0 auto; /* Center the container horizontally */
   border: 1px solid #00000;
   overflow: hidden; /* Prevent player from moving outside the container */
   border-radius: 20px; 
-  box-shadow: 0 0 10px 5px #00f0ff;
+  box-shadow: 0 0 10px 5px #00f0ff; 
   animation: neonGlow 6s infinite;
 }
 
@@ -135,5 +207,14 @@ export default {
   color: rgba(255, 255, 255, 0.8); /* Round, translucent */
   text-shadow: 0 0 10px rgba(0, 240, 255, 0.8); /* Glowing shadow */
   border-radius: 20px;
+  text-color: white;
+}
+.ball {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: #fff; /* White color for the ball */
+  border-radius: 50%;
+  box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff;
 }
 </style>
