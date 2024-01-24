@@ -84,6 +84,9 @@ async fn main() {
             // .service(room::messages)
             // // chat
             .service(api::chat::server)
+            .service(api::chat::join_chat)
+            .service(api::chat::block_user)
+            .service(api::chat::unblock_user)
             // //  game
             .service(api::game::matchmaking)
             .service(api::game::create_tournament)
