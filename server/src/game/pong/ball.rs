@@ -1,4 +1,4 @@
-use super::{GameConfig, Player, Pong, UpdateScore};
+use super::{player, GameConfig, Player, Pong, UpdateScore};
 use actix::{AsyncContext, Context};
 use rand::Rng;
 
@@ -44,40 +44,51 @@ impl Ball {
     ) {
         let distance: u16 = config.ball_speed;
 
-        if self.dir_x == Dir::Pos {
-            self.x += distance;
-        } else {
-            self.x -= distance;
-        }
-
-        // make this direction more random
-        if self.dir_y == Dir::Pos {
-            self.y += distance;
-        } else {
-            self.y -= distance;
-        }
-
-        // Check for collisions with paddles
-        for player in players.iter() {
-            if self.collides_with_paddle(player, config) {
-                self.dir_x.reverse();
+        // Movement
+        match self.dir_x {
+            Dir::Pos => {
+                if self.x + distance > config.width {
+                    self.dir_x = Dir::Neg;
+                    self.x = config.width - (distance - (config.width - self.x));
+                    if !self.collides_with_paddle(&players[1], config) {
+                        ctx.notify(UpdateScore { side: 0 });
+                        self.reset(config);
+                    }
+                } else {
+                    self.x += distance;
+                }
+            }
+            Dir::Neg => {
+                if distance > self.x {
+                    self.dir_x = Dir::Pos;
+                    self.x = distance - self.x;
+                    if !self.collides_with_paddle(&players[0], config) {
+                        ctx.notify(UpdateScore { side: 1 });
+                        self.reset(config);
+                    }
+                } else {
+                    self.x -= distance;
+                }
             }
         }
 
-        // check for collisions with the top or bottom wall
-        if self.y <= 0 || self.y >= config.height {
-            self.dir_y.reverse();
-        }
-
-        // if the ball is out of bounds
-        if self.x < 0 || self.x > config.width {
-
-        	let scoring_side = if self.x < 0 { 1 } else { 0 };
-        	ctx.notify(UpdateScore { side: scoring_side });
-
-        	self.reset(config);
-        	players[0].reset(config);
-        	players[1].reset(config);
+        match self.dir_y {
+            Dir::Pos => {
+                if self.y + distance > config.height {
+                    self.dir_y = Dir::Neg;
+                    self.y = config.height - (distance - (config.height - self.y));
+                } else {
+                    self.y += distance;
+                }
+            }
+            Dir::Neg => {
+                if distance > self.y {
+                    self.dir_y = Dir::Pos;
+                    self.y = distance - self.y;
+                } else {
+                    self.y -= distance;
+                }
+            }
         }
     }
 
@@ -92,11 +103,5 @@ impl Ball {
 
         self.dir_x = Dir::Pos;
         self.dir_y = Dir::Pos;
-
-        // // generate the ball pos in the middle third of the field
-        // self.y = rng.gen_range(config.height / 3, (2 * config.height) / 3);;
-
-        // self.dir_x = if rng.gen::<bool>() {1} else {-1};
-        // self.dir_y = if rng.gen::<bool>() {1} else {-1};
     }
 }
