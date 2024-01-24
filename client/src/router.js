@@ -5,6 +5,7 @@ import AboutUs from './components/pages/AboutUs.vue';
 import RulesPage from './components/pages/RulesPage.vue';
 import ProfilePage from './components/pages/ProfilePage.vue';
 import DevTest from './components/elements/DevTest.vue';
+import PongGame from './components/elements/PongGame.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -14,6 +15,7 @@ const router = createRouter({
   { path: '/rules', component: RulesPage, meta: { title: 'Rules' } },
   { path: '/dev', component: DevTest, meta: { title: 'Developer testing', backgroundColor: 'white'} },
   { path: '/profile',component: ProfilePage, meta: { title: 'Profile',} },
+  { path: '/pong',component: PongGame, meta: { title: 'Pong',} },
 ],
 });
 
