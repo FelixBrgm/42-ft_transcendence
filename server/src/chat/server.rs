@@ -5,9 +5,9 @@ use std::collections::{HashMap, HashSet};
 
 use crate::db::models::NewMessage;
 use crate::db::Database;
+use crate::chat::UserId;
 
 type Socket = Recipient<ChatMessage>;
-type UserId = usize;
 
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -81,7 +81,7 @@ impl ChatServer {
         }
     }
 
-    fn send_message(&self, message: &str, recipient: &usize) {
+    fn send_message(&self, message: &str, recipient: &i32) {
         if let Some(socket_recipient) = self.sockets.get(recipient) {
             let _ = socket_recipient.do_send(ChatMessage(message.to_owned()));
         } else {
@@ -92,7 +92,7 @@ impl ChatServer {
         }
     }
 
-	fn parse_message(&self, msg: String) -> Option<(usize, String)> {
+	fn parse_message(&self, msg: String) -> Option<(i32, String)> {
 
 		let Some(index) = msg.find(':') else {
 			println!("Delimiter not found in the string.");
@@ -101,7 +101,7 @@ impl ChatServer {
 
         let (first_part, second_part) = msg.split_at(index);
 
-		let Ok(recipient_id) = first_part.parse::<usize>() else {
+		let Ok(recipient_id) = first_part.parse::<i32>() else {
 			println!("Recipient id is not valid.");
 			return None;
 		};

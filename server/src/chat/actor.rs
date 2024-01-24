@@ -6,19 +6,20 @@ use actix::{Actor, Addr, StreamHandler};
 use actix_web::{get, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use std::time::{Duration, Instant};
+use crate::chat::UserId;
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
 use crate::chat::server::*;
 pub struct WsActor {
-    id: usize,
+    id: UserId,
     hb: Instant,
     addr: Addr<ChatServer>,
 }
 
 impl WsActor {
-    pub fn new(id: usize, addr: Addr<ChatServer>) -> WsActor {
+    pub fn new(id: i32, addr: Addr<ChatServer>) -> WsActor {
         WsActor {
             id: id,
             addr: addr,

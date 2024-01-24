@@ -64,11 +64,9 @@ async fn main() {
             .service(
                 web::resource("/health")
                     .route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!") })),
-            )
-            // home
-            // .service(user::home)
-            // .service(user::clear)
+			)
             // authentication
+			.service(auth::fake)
             .service(auth::login)
             .service(auth::logout)
             .service(auth::callback)
@@ -76,10 +74,7 @@ async fn main() {
             // user
             .service(user::get)
             .service(user::post)
-            // .service(user::rooms) // -> no db function yet
             // // room
-            // .service(room::all)
-            // .service(room::get)
             // .service(room::list)
             // .service(room::messages)
             // // chat
