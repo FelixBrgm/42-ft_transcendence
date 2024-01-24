@@ -16,25 +16,25 @@ use serde_json;
 #[get("/auth/fake/{uid}")]
 async fn fake(
     id: Option<Identity>,
-	uid: web::Path<i32>,
+    uid: web::Path<i32>,
     req: HttpRequest,
-	db: web::Data<Database>,
+    db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-	if id.is_some() {
+    if id.is_some() {
         println!("(login) {:?} is already logged in", id.unwrap().id());
         return Ok(HttpResponse::Found().finish());
     }
 
-	let uid = uid.into_inner();
-	db.add_user(&NewUser{
-		id: uid,
-		intra: format!("user {}", uid),
-		alias: format!("."),
-		avatar: format!("."),
-	})?;
+    let uid = uid.into_inner();
+    db.add_user(&NewUser {
+        id: uid,
+        intra: format!("user {}", uid),
+        alias: format!("."),
+        avatar: format!("."),
+    })?;
 
-	Identity::login(&req.extensions(), uid.to_string())?;
-	Ok(HttpResponse::Ok().finish())
+    Identity::login(&req.extensions(), uid.to_string())?;
+    Ok(HttpResponse::Ok().finish())
 }
 
 #[get("/auth/login")]

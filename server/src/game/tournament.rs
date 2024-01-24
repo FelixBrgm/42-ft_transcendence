@@ -125,7 +125,7 @@ impl Tournament {
             let m = Match::new(player_ids.0, player_ids.1, pong);
             round.matches.push(m);
         }
-        
+
         self.rounds.push(round);
     }
 }

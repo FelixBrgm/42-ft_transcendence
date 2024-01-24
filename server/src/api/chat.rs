@@ -4,9 +4,9 @@ use crate::chat::server::{BlockUser, ChatServer, InsertRoom};
 use crate::db::models::NewUser;
 use crate::db::Database;
 use actix::Addr;
+use actix_identity::Identity;
 use actix_web::{get, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
-use actix_identity::Identity;
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -114,7 +114,7 @@ async fn get_friends(
     db: web::Data<Database>,
     user2: web::Path<i32>,
 ) -> Result<HttpResponse, ApiError> {
-	let uid = identity.id()?.parse::<i32>()?;
+    let uid = identity.id()?.parse::<i32>()?;
     let blocked_id = user2.into_inner();
 
     if !db.check_user(blocked_id)? {
@@ -135,7 +135,7 @@ async fn get_rooms(
     identity: Identity,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-	let uid = identity.id()?.parse::<i32>()?;
+    let uid = identity.id()?.parse::<i32>()?;
 
     if !db.check_user(uid)? {
         return Err(ApiError::BadRequest(
@@ -156,7 +156,7 @@ async fn get_messages_by_room_id(
     db: web::Data<Database>,
     room_id: web::Path<i32>,
 ) -> Result<HttpResponse, ApiError> {
-	let uid = identity.id()?.parse::<i32>()?;
+    let uid = identity.id()?.parse::<i32>()?;
     let room_id = room_id.into_inner();
 
     if !db.check_user(uid)? {
@@ -179,7 +179,7 @@ async fn block_user(
     db: web::Data<Database>,
     user2: web::Path<i32>,
 ) -> Result<HttpResponse, ApiError> {
-	let uid = identity.id()?.parse::<i32>()?;
+    let uid = identity.id()?.parse::<i32>()?;
     let blocked_id = user2.into_inner();
 
     if !db.check_user(blocked_id)? {
@@ -206,7 +206,7 @@ async fn unblock_user(
     db: web::Data<Database>,
     user2: web::Path<i32>,
 ) -> Result<HttpResponse, ApiError> {
-	let uid = identity.id()?.parse::<i32>()?;
+    let uid = identity.id()?.parse::<i32>()?;
     let blocked_id = user2.into_inner();
 
     if !db.check_user(blocked_id)? {
@@ -219,4 +219,3 @@ async fn unblock_user(
 
     Ok(HttpResponse::Ok().finish())
 }
-

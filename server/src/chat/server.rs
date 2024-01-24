@@ -3,9 +3,9 @@ use log::{error, info};
 use rand::seq::index;
 use std::collections::{HashMap, HashSet};
 
+use crate::chat::UserId;
 use crate::db::models::NewMessage;
 use crate::db::Database;
-use crate::chat::UserId;
 
 type Socket = Recipient<ChatMessage>;
 
@@ -23,19 +23,19 @@ pub struct Connect {
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct Disconnect {
-	pub id: UserId,
+    pub id: UserId,
 }
 
 #[derive(Message)]
-#[rtype(result ="()")]
+#[rtype(result = "()")]
 pub struct InsertRoom {
-	pub room_id: i32,
+    pub room_id: i32,
     pub user1: UserId,
     pub user2: UserId,
 }
 
 #[derive(Message)]
-#[rtype(result ="()")]
+#[rtype(result = "()")]
 pub struct BlockUser {
     pub user_id: UserId,
     pub blocked_id: UserId,
@@ -53,22 +53,28 @@ pub struct ClientMessage {
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Pair {
     user1: UserId,
-	user2: UserId,
+    user2: UserId,
 }
 
 impl Pair {
-	pub fn new(user1: UserId, user2: UserId) -> Pair {
-		let (min, max) = if user1 < user2 { (user1, user2) } else { (user2, user1) };
-        Pair { user1: min, user2: max }
-	} 
+    pub fn new(user1: UserId, user2: UserId) -> Pair {
+        let (min, max) = if user1 < user2 {
+            (user1, user2)
+        } else {
+            (user2, user1)
+        };
+        Pair {
+            user1: min,
+            user2: max,
+        }
+    }
 }
-
 
 #[derive(Clone)]
 pub struct ChatServer {
     db: Database,
     sockets: HashMap<UserId, Socket>,
-	rooms: HashMap<Pair, i32>,
+    rooms: HashMap<Pair, i32>,
 }
 
 impl ChatServer {
@@ -92,22 +98,24 @@ impl ChatServer {
         }
     }
 
-	fn parse_message(&self, msg: String) -> Option<(i32, String)> {
-
-		let Some(index) = msg.find(':') else {
-			println!("Delimiter not found in the string.");
-			return None;
-		};
+    fn parse_message(&self, msg: String) -> Option<(i32, String)> {
+        let Some(index) = msg.find(':') else {
+            println!("Delimiter not found in the string.");
+            return None;
+        };
 
         let (first_part, second_part) = msg.split_at(index);
 
-		let Ok(recipient_id) = first_part.parse::<i32>() else {
-			println!("Recipient id is not valid.");
-			return None;
-		};
+        let Ok(recipient_id) = first_part.parse::<i32>() else {
+            println!("Recipient id is not valid.");
+            return None;
+        };
 
-		Some((recipient_id, second_part.trim_start_matches(':').to_string()))
-	}
+        Some((
+            recipient_id,
+            second_part.trim_start_matches(':').to_string(),
+        ))
+    }
 }
 
 impl Actor for ChatServer {
@@ -129,29 +137,30 @@ impl Handler<Connect> for ChatServer {
 impl Handler<Disconnect> for ChatServer {
     type Result = ();
 
-	// let all people know that you disconnected
+    // let all people know that you disconnected
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
         println!("{} disconnected", msg.id);
         self.sockets.remove(&msg.id);
     }
 }
 
-
 impl Handler<InsertRoom> for ChatServer {
-	type Result = ();
+    type Result = ();
 
     fn handle(&mut self, room: InsertRoom, _: &mut Context<Self>) {
-		self.rooms.insert(Pair::new(room.user1, room.user2), room.room_id);
-		dbg!(&self.rooms);
+        self.rooms
+            .insert(Pair::new(room.user1, room.user2), room.room_id);
+        dbg!(&self.rooms);
     }
 }
 
 impl Handler<BlockUser> for ChatServer {
-	type Result = ();
+    type Result = ();
 
     fn handle(&mut self, block: BlockUser, _: &mut Context<Self>) {
-		self.rooms.remove(&Pair::new(block.user_id, block.blocked_id));
-		dbg!(&self.rooms);
+        self.rooms
+            .remove(&Pair::new(block.user_id, block.blocked_id));
+        dbg!(&self.rooms);
     }
 }
 
@@ -159,21 +168,19 @@ impl Handler<ClientMessage> for ChatServer {
     type Result = ();
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
-
         let Some((recipient_id, text)) = self.parse_message(msg.msg) else {
-			self.send_message("the format was invalid", &msg.id);
-			return;
-		};
+            self.send_message("the format was invalid", &msg.id);
+            return;
+        };
 
-		if let Some(rid) = self.rooms.get(&Pair::new(msg.id, recipient_id)) {
-			
-			self.send_message(&text, &recipient_id);
+        if let Some(rid) = self.rooms.get(&Pair::new(msg.id, recipient_id)) {
+            self.send_message(&text, &recipient_id);
 
-			let _ = self.db.add_message(&NewMessage{
-				sender_id: msg.id as i32,
-				room_id: *rid,
-				message: text,
-			});
-		};
+            let _ = self.db.add_message(&NewMessage {
+                sender_id: msg.id as i32,
+                room_id: *rid,
+                message: text,
+            });
+        };
     }
 }

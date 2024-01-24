@@ -1,12 +1,12 @@
 use actix::prelude::*;
 use actix_identity::Identity;
 
+use crate::chat::UserId;
 use crate::db::Database;
 use actix::{Actor, Addr, StreamHandler};
 use actix_web::{get, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use std::time::{Duration, Instant};
-use crate::chat::UserId;
 
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
@@ -34,9 +34,7 @@ impl WsActor {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
                 println!("ChatServer: Websocket CLient hearbeat failed, disconnecting!");
 
-                act.addr.do_send(Disconnect {
-                    id: act.id,
-                });
+                act.addr.do_send(Disconnect { id: act.id });
 
                 ctx.stop();
 
@@ -71,9 +69,7 @@ impl Actor for WsActor {
     }
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
-        self.addr.do_send(Disconnect {
-            id: self.id,
-        });
+        self.addr.do_send(Disconnect { id: self.id });
         Running::Stop
     }
 }
