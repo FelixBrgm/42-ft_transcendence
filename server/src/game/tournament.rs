@@ -8,6 +8,7 @@ use crate::game::pong;
 use crate::game::pong::{Player, Pong};
 use crate::game::{ClientMessage, Connect, Disconnect, Socket, UserId};
 
+use super::pong::GameFinished;
 use super::{Create, TournamentConnect};
 
 #[derive(Clone)]
@@ -58,21 +59,21 @@ impl Tournament {
         }
     }
 
-    pub fn add_player(&mut self, player: Player) {
+    pub fn add_player(&mut self, player: Player, ctx: &mut Context<TournamentServer>) {
         println!("{} added to the tournament", player.id);
         if let None = self.players.iter().find(|p| p.id == player.id) {
             self.players.push(player);
         }
         if self.players.len() == self.size as usize {
-            self.start();
+            self.start(ctx);
         }
     }
 
-    pub fn start(&mut self) {
+    pub fn start(&mut self, ctx: &mut Context<TournamentServer>) {
         println!("starting tournament");
     }
 
-    pub fn start_round(&mut self) {
+    pub fn start_round(&mut self, ctx: &mut Context<TournamentServer>) {
         println!("starting round");
         let mut round = Round::new();
         if self.rounds.len() == 0 {
@@ -82,12 +83,15 @@ impl Tournament {
                 let player_ids = (p1.id, p2.id);
 
                 println!("starting new game between {:?}", player_ids);
-                let pong = Pong::new([p1, p2]).start();
+                let pong = Pong::new(
+                    [p1, p2],
+                    crate::api::game::GameMode::Tournament(ctx.address()),
+                )
+                .start();
 
                 let m = Match::new(player_ids.0, player_ids.1, pong);
                 round.matches.push(m);
             }
-            
         } else {
         }
     }
@@ -108,6 +112,14 @@ impl TournamentServer {
     }
 }
 
+impl Handler<GameFinished> for TournamentServer {
+    type Result = ();
+
+    fn handle(&mut self, msg: GameFinished, ctx: &mut Context<Self>) {
+        // for p in player
+    }
+}
+
 impl Actor for TournamentServer {
     type Context = Context<Self>;
 }
@@ -115,9 +127,9 @@ impl Actor for TournamentServer {
 impl Handler<TournamentConnect> for TournamentServer {
     type Result = ();
 
-    fn handle(&mut self, msg: TournamentConnect, _: &mut Context<Self>) {
+    fn handle(&mut self, msg: TournamentConnect, ctx: &mut Context<Self>) {
         if let Some(t) = self.tournaments.get_mut(&msg.tournament_id) {
-            t.add_player(Player::new(msg.uid, msg.socket));
+            t.add_player(Player::new(msg.uid, msg.socket, msg.addr), ctx);
         }
     }
 }
@@ -125,7 +137,7 @@ impl Handler<TournamentConnect> for TournamentServer {
 impl Handler<Create> for TournamentServer {
     type Result = ();
 
-    fn handle(&mut self, msg: Create, _: &mut Context<Self>) {
+    fn handle(&mut self, msg: Create, ctx: &mut Context<Self>) {
         let tournament = Tournament::new(msg.id, msg.size);
         self.tournaments.insert(msg.id, tournament);
     }

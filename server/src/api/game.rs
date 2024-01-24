@@ -17,14 +17,14 @@ use std::time::{Duration, Instant};
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(1);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
-#[derive(Clone)]
-enum GameMode {
+#[derive(Clone, Debug)]
+pub enum GameMode {
     OneVsOne(Addr<OneVsOneServer>),
     Matchmaking(Addr<MatchmakingServer>),
     Tournament(Addr<TournamentServer>),
 }
 
-struct GameSession {
+pub struct GameSession {
     id: usize,
     hb: Instant,
     game_mode: GameMode,
@@ -33,7 +33,7 @@ struct GameSession {
 
 #[derive(Message)]
 #[rtype(result = "()")]
-struct Stop {
+pub struct Stop {
     pub id: usize,
 }
 
@@ -75,7 +75,7 @@ impl GameSession {
         let id = self.id;
         ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
-                let addr = ctx.address().do_send(Stop { id: id });
+                let addr = ctx.notify(Stop { id: id });
             }
             ctx.ping(b"PING");
         });
@@ -93,6 +93,7 @@ impl Actor for GameSession {
         match &self.game_mode {
             GameMode::OneVsOne(one_vs_one_server) => {
                 let msg = game::Connect {
+                    addr: ctx.address(),
                     socket: addr.recipient(),
                     id: self.id,
                 };
@@ -110,6 +111,7 @@ impl Actor for GameSession {
             }
             GameMode::Matchmaking(matchmaking_server) => {
                 let msg = game::Connect {
+                    addr: ctx.address(),
                     socket: addr.recipient(),
                     id: self.id,
                 };
@@ -129,6 +131,7 @@ impl Actor for GameSession {
                 let tournament_connect = game::TournamentConnect {
                     socket: addr.recipient(),
                     uid: self.id,
+                    addr: ctx.address(),
                     tournament_id: self.room_id.unwrap(),
                 };
                 tournament_server
