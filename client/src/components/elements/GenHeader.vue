@@ -76,20 +76,18 @@ export default {
 
 <style scoped>
 .app-header {
-	font-family: neuropol;
-	background-color: #5c5e5f;
-	color: #fff;
-	padding: 1rem;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	border-radius: 20px;
-	box-shadow: 0 0 10px 5px #00f0ff; /* Initial shadow color and size */
-	animation: neonGlow 6s infinite; /* Adjust the duration as needed */
-	margin-top: 30px;
-	margin-bottom: 30px;
-	margin-left: 20px;
-	margin-right: 20px;
+  font-family: neuropol;
+  background-color: #5c5e5f;
+  color: #fff;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 20px;
+  box-shadow: 0 0 10px 5px #00f0ff;
+  animation: neonGlow 6s infinite;
+  margin: 30px auto; /* Centering the header */
+  max-width: 1600px;
 }
 
 .neon-text {
