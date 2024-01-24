@@ -1,5 +1,5 @@
 -- Your SQL goes here
-	CREATE TABLE chat_rooms (
+CREATE TABLE friend_ship(
     id SERIAL PRIMARY KEY,
     user1 INT NOT NULL,
     user2 INT NOT NULL,

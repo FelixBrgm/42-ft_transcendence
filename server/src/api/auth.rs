@@ -13,6 +13,30 @@ use reqwest;
 use serde::Deserialize;
 use serde_json;
 
+#[get("/auth/fake/{uid}")]
+async fn fake(
+    id: Option<Identity>,
+    uid: web::Path<i32>,
+    req: HttpRequest,
+    db: web::Data<Database>,
+) -> Result<HttpResponse, ApiError> {
+    if id.is_some() {
+        println!("(login) {:?} is already logged in", id.unwrap().id());
+        return Ok(HttpResponse::Found().finish());
+    }
+
+    let uid = uid.into_inner();
+    db.add_user(&NewUser {
+        id: uid,
+        intra: format!("user {}", uid),
+        alias: format!("."),
+        avatar: format!("."),
+    })?;
+
+    Identity::login(&req.extensions(), uid.to_string())?;
+    Ok(HttpResponse::Ok().finish())
+}
+
 #[get("/auth/login")]
 async fn login(
     id: Option<Identity>,
@@ -117,6 +141,8 @@ async fn callback(
 
     interact_with_db(user_info, database).await?;
 
+    // add the user to the socket hashmap
+
     let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
     return Ok(HttpResponse::Found()
         .insert_header((LOCATION, frontend_url))
@@ -191,7 +217,8 @@ async fn interact_with_db(
             println!("adding user {}, {}", id, login_d);
             database.add_user(&NewUser {
                 id,
-                login: login_d,
+                intra: login_d.to_string(),
+                alias: login_d,
                 avatar,
             })?;
         }
