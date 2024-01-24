@@ -55,13 +55,12 @@ export default {
 </script>
 
 <style scoped>
-/* Add your own styles for the chat window */
 .chat-window {
 	position: fixed;
 	bottom: 20px;
 	right: 100px;
 	left: 80px;
-	width: calc(100% - 160px); /* Adjust the calculation based on your preferences */
+	width: calc(100% - 160px);
 	margin: 10px;
 	border-radius: 10px;
 	background-color: #727475;
@@ -133,10 +132,10 @@ export default {
 }
 
 .send-button {
-  padding: 15px; /* Increase button padding */
-  font-size: 14px; /* Increase button font size */
-  margin-top: 0; /* Remove margin-top */
-  margin-left: 0; /* Remove margin-left */
+  padding: 15px; 
+  font-size: 14px;
+  margin-top: 0;
+  margin-left: 0;
   font-family: neuropol;
 }
 
