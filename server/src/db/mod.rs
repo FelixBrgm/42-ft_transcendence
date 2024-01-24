@@ -132,17 +132,13 @@ impl Database {
         Ok(room_count > 0)
     }
 
-    // Add a new Room, if it doesn't exists with those users yet
+    // Add a new Room, if it doesn't exists with those users yet and return its id
     pub fn add_room(&self, user_1: i32, user_2: i32) -> Result<i32> {
         use schema::chat_rooms::dsl::*;
 
-        if self.check_room_by_user(user_1, user_2)? {
-            return Err(anyhow::anyhow!(
-                "Room already exists with users {} and {}",
-                user_1,
-                user_2
-            ));
-        }
+		if let Some(existing_id) = self.get_room_by_users(user_1, user_2)? {
+			return Ok(existing_id.id);
+		}
 
         let room = NewChatRoom {
             user1: user_1,
@@ -391,4 +387,23 @@ impl Database {
 
         Ok(games)
     }
+	
+	// DEBUG
+
+	pub fn get_all_users(&self) -> Result<Vec<User>> {
+		use schema::app_user::dsl::*;
+	
+		let all_users = app_user.load::<User>(&mut self.pool.get()?)?;
+	
+		Ok(all_users)
+	}
+	
+	pub fn get_all_blocked(&self) -> Result<Vec<Blocked>> {
+		use schema::blocked_users::dsl::*;
+	
+		let all_users = blocked_users.load::<Blocked>(&mut self.pool.get()?)?;
+	
+		Ok(all_users)
+	}
 }
+
