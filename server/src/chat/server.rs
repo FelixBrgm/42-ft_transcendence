@@ -1,7 +1,7 @@
 use actix::prelude::*;
-use log::{error, info};
-use rand::seq::index;
-use std::collections::{HashMap, HashSet};
+
+
+use std::collections::{HashMap};
 
 use crate::db::models::NewMessage;
 use crate::db::Database;

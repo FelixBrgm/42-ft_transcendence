@@ -1,9 +1,9 @@
 use actix::prelude::*;
-use actix_identity::Identity;
 
-use crate::db::Database;
+
+
 use actix::{Actor, Addr, StreamHandler};
-use actix_web::{get, web, HttpRequest, HttpResponse};
+
 use actix_web_actors::ws;
 use std::time::{Duration, Instant};
 

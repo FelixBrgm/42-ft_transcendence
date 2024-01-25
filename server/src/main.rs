@@ -9,8 +9,8 @@ use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse, HttpServer};
-use env_logger::Env;
-use log::info;
+
+
 
 use crate::api::{auth, user};
 

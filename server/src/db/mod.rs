@@ -2,18 +2,14 @@ mod migrations;
 pub mod models;
 mod schema;
 
-use std::fmt::Error;
-
 use anyhow::Result;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use models::*;
 
-use crate::db::schema::{blocked_users, friend_ship, game_match};
-
-type DbConnection =
-    diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+// type DbConnection =
+//     diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
 
 #[derive(Clone)]
 pub struct Database {
@@ -109,6 +105,7 @@ impl Database {
     //     /// ===============================================================
 
     // Check if Room exits by id
+    #[allow(dead_code)]
     pub fn check_room_by_id(&self, room_id: i32) -> Result<bool> {
         use schema::chat_rooms::dsl::*;
 
@@ -121,6 +118,7 @@ impl Database {
     }
 
     // Check if Room exists by users
+    #[allow(dead_code)]
     pub fn check_room_by_user(&self, user_1: i32, user_2: i32) -> Result<bool> {
         use schema::chat_rooms::dsl::*;
 
@@ -156,6 +154,7 @@ impl Database {
     }
 
     // Get a room by id
+    #[allow(dead_code)]
     pub fn get_room_by_id(&self, room_id: i32) -> Result<ChatRoom> {
         use schema::chat_rooms::dsl::*;
 
@@ -196,6 +195,7 @@ impl Database {
     }
 
     // Remove the room from the chat_rooms table by id
+    #[allow(dead_code)]
     pub fn remove_room(&self, room_id: i32) -> Result<()> {
         use schema::chat_rooms::dsl::*;
 
@@ -374,6 +374,7 @@ impl Database {
     // /                            GAMES
     // / ===============================================================
 
+    #[allow(dead_code)]
     pub fn add_game(&self, winner_uid: i32, looser_uid: i32) -> Result<i32> {
         use schema::game_match::dsl::*;
 
@@ -390,6 +391,7 @@ impl Database {
         Ok(inserted_id)
     }
 
+    #[allow(dead_code)]
     pub fn get_games_by_uid(&self, uid: i32) -> Result<Vec<GameMatch>> {
         use schema::game_match::dsl::*;
 
@@ -402,6 +404,7 @@ impl Database {
 
     // DEBUG
 
+    #[allow(dead_code)]
     pub fn get_all_users(&self) -> Result<Vec<User>> {
         use schema::app_user::dsl::*;
 
@@ -410,6 +413,7 @@ impl Database {
         Ok(all_users)
     }
 
+    #[allow(dead_code)]
     pub fn get_all_blocked(&self) -> Result<Vec<Blocked>> {
         use schema::blocked_users::dsl::*;
 

@@ -1,7 +1,7 @@
 use super::error::ApiError;
 use crate::chat::actor::WsActor;
 use crate::chat::server::{BlockUser, ChatServer, InsertRoom};
-use crate::db::models::NewUser;
+
 use crate::db::Database;
 use actix::Addr;
 use actix_web::{get, web, HttpRequest, HttpResponse};
@@ -17,7 +17,7 @@ async fn server(
     // identity: Identity,
     stream: web::Payload,
     server: web::Data<Addr<ChatServer>>,
-    db: web::Data<Database>,
+    _db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let uid = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
     // let uid = identity.id()?.parse::<usize>()?;
@@ -33,7 +33,7 @@ async fn server(
 
 #[get("/chat/{recipient_id}")]
 async fn join_chat(
-    req: HttpRequest,
+    _req: HttpRequest,
     // identity: Identity,
     chat_server: web::Data<Addr<ChatServer>>,
     db: web::Data<Database>,
@@ -70,7 +70,7 @@ async fn join_chat(
 
 #[get("/add_friend/{friend_id}")]
 async fn create_friendship(
-    req: HttpRequest,
+    _req: HttpRequest,
     // identity: Identity,
     db: web::Data<Database>,
     user2: web::Path<usize>,
@@ -91,7 +91,7 @@ async fn create_friendship(
 
 #[get("/remove_friend/{friend_id}")]
 async fn remove_friendship(
-    req: HttpRequest,
+    _req: HttpRequest,
     // identity: Identity,
     db: web::Data<Database>,
     user2: web::Path<usize>,
@@ -112,7 +112,7 @@ async fn remove_friendship(
 
 #[get("/get_friends")]
 async fn get_friends(
-    req: HttpRequest,
+    _req: HttpRequest,
     // identity: Identity,
     db: web::Data<Database>,
     user2: web::Path<usize>,
@@ -134,7 +134,7 @@ async fn get_friends(
 
 #[get("/rooms")]
 async fn get_rooms(
-    req: HttpRequest,
+    _req: HttpRequest,
     // identity: Identity,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
@@ -154,7 +154,7 @@ async fn get_rooms(
 
 #[get("/messages/{room_id}")]
 async fn get_messages_by_room_id(
-    req: HttpRequest,
+    _req: HttpRequest,
     // identity: Identity,
     db: web::Data<Database>,
     room_id: web::Path<usize>,
@@ -176,7 +176,7 @@ async fn get_messages_by_room_id(
 
 #[get("/block/{recipient_id}")]
 async fn block_user(
-    req: HttpRequest,
+    _req: HttpRequest,
     // identity: Identity,
     chat_server: web::Data<Addr<ChatServer>>,
     db: web::Data<Database>,
@@ -203,9 +203,9 @@ async fn block_user(
 
 #[get("/unblock/{recipient_id}")]
 async fn unblock_user(
-    req: HttpRequest,
+    _req: HttpRequest,
     // identity: Identity,
-    chat_server: web::Data<Addr<ChatServer>>,
+    _chat_server: web::Data<Addr<ChatServer>>,
     db: web::Data<Database>,
     user2: web::Path<usize>,
 ) -> Result<HttpResponse, ApiError> {

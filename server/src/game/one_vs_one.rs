@@ -1,9 +1,9 @@
 use actix::prelude::*;
-use log::{error, info};
+
 use std::collections::HashMap;
 
 use crate::game::pong;
-use crate::game::{ClientMessage, Connect, Disconnect, Socket, UserId};
+use crate::game::{ClientMessage, Disconnect, UserId};
 // use crate::db::Database;
 use crate::game::pong::{Player, Pong};
 
@@ -107,7 +107,7 @@ impl Handler<Disconnect> for OneVsOneServer {
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
         println!("{} disconnected", msg.id);
 
-        if let Some((ids, pong)) = self
+        if let Some((_ids, pong)) = self
             .pong_instances
             .iter()
             .find(|(ids, _)| ids.0 == msg.id || ids.1 == msg.id)
@@ -126,7 +126,7 @@ impl Handler<ClientMessage> for OneVsOneServer {
     type Result = ();
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
-        if let Some((ids, pong)) = self
+        if let Some((_ids, pong)) = self
             .pong_instances
             .iter()
             .find(|(ids, _)| ids.0 == msg.id || ids.1 == msg.id)

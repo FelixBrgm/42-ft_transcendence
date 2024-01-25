@@ -3,16 +3,13 @@ mod config;
 mod player;
 
 use actix::prelude::*;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 pub use self::ball::Ball;
 pub use self::config::GameConfig;
 pub use self::player::Player;
-pub use crate::game::{Message, Socket, UserId};
-use crate::{
-    api::game::{GameMode, Stop},
-    db::models::User,
-};
+use crate::api::game::{GameMode, Stop};
+pub use crate::game::{Message, UserId};
 const TICK_INTERVAL: Duration = Duration::from_millis(50);
 
 #[derive(Message)]
@@ -48,8 +45,8 @@ pub struct GameOver;
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct GameResult {
-    players: [Player; 2],
-    winner: UserId,
+    _players: [Player; 2],
+    _winner: UserId,
 }
 
 #[derive(Message, Debug)]
@@ -150,7 +147,7 @@ impl Handler<Tick> for Pong {
 impl Handler<CountDown> for Pong {
     type Result = ();
 
-    fn handle(&mut self, msg: CountDown, ctx: &mut Self::Context) {
+    fn handle(&mut self, _msg: CountDown, ctx: &mut Self::Context) {
         self.paused = true;
 
         let delay = 3;
@@ -198,7 +195,7 @@ impl Handler<GameOver> for Pong {
     type Result = ();
 
     // TODO maybe call GameOver with and Enum that determines why or who won
-    fn handle(&mut self, _: GameOver, ctx: &mut Self::Context) {
+    fn handle(&mut self, _: GameOver, _ctx: &mut Self::Context) {
         println!("GameOver");
         self.finished = true;
         self.send_to_players(Message("END".to_owned()));
@@ -229,7 +226,7 @@ impl Handler<GameOver> for Pong {
 impl Handler<PlayerInput> for Pong {
     type Result = ();
 
-    fn handle(&mut self, input: PlayerInput, ctx: &mut Self::Context) {
+    fn handle(&mut self, input: PlayerInput, _ctx: &mut Self::Context) {
         if self.players[0].id == input.id {
             self.players[0].last_input = input.cmd;
         } else {

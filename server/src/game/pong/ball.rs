@@ -1,20 +1,11 @@
-use super::{player, GameConfig, Player, Pong, UpdateScore};
+use super::{GameConfig, Player, Pong, UpdateScore};
 use actix::{AsyncContext, Context};
-use rand::Rng;
+
 
 #[derive(Debug, Clone, PartialEq)]
 enum Dir {
     Pos,
     Neg,
-}
-
-impl Dir {
-    pub fn reverse(&self) {
-        match self {
-            Dir::Pos => Dir::Neg,
-            Dir::Neg => Dir::Pos,
-        };
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -39,7 +30,7 @@ impl Ball {
         &mut self,
         config: &GameConfig,
         players: &mut [Player; 2],
-        score: &mut [u8; 2],
+        _score: &mut [u8; 2],
         ctx: &mut Context<Pong>,
     ) {
         let distance: u16 = config.ball_speed;
@@ -97,7 +88,7 @@ impl Ball {
     }
 
     pub fn reset(&mut self, config: &GameConfig) {
-        let mut rng = rand::thread_rng();
+        let _rng = rand::thread_rng();
         self.x = config.width / 2;
         self.y = config.height / 2;
 

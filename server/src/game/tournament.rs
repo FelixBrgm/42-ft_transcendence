@@ -1,13 +1,13 @@
 use crate::api::game::Stop;
 use actix::prelude::*;
-use log::{error, info};
+
 use num_traits::pow;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+
 // use crate::db::Database;
 use crate::game::pong::{Player, Pong};
-use crate::game::{pong, tournament, Message};
-use crate::game::{ClientMessage, Connect, Disconnect, Socket, UserId};
+use crate::game::Message;
+use crate::game::{ClientMessage, Disconnect, UserId};
 
 use super::pong::GameFinished;
 use super::{Create, TournamentConnect};
@@ -17,16 +17,16 @@ struct Match {
     player1: usize,
     player2: usize,
     pub winner: Option<usize>,
-    instance: Addr<Pong>,
+    _instance: Addr<Pong>,
 }
 
 impl Match {
-    pub fn new(player1: usize, player2: usize, instance: Addr<Pong>) -> Self {
+    pub fn new(player1: usize, player2: usize, _instance: Addr<Pong>) -> Self {
         Match {
             player1,
             player2,
             winner: None,
-            instance,
+            _instance,
         }
     }
 }
@@ -44,16 +44,16 @@ impl Round {
 
 #[derive(Clone, Debug)]
 pub struct Tournament {
-    uid: UserId,
+    _uid: UserId,
     size: u8,
     players: Vec<Player>,
     rounds: Vec<Round>,
 }
 
 impl Tournament {
-    pub fn new(uid: UserId, size: u8) -> Self {
+    pub fn new(_uid: UserId, size: u8) -> Self {
         Tournament {
-            uid,
+            _uid,
             size,
             players: vec![],
             rounds: vec![],
@@ -125,7 +125,7 @@ impl Tournament {
             let m = Match::new(player_ids.0, player_ids.1, pong);
             round.matches.push(m);
         }
-        
+
         self.rounds.push(round);
     }
 }
@@ -148,7 +148,7 @@ impl TournamentServer {
 impl Handler<GameFinished> for TournamentServer {
     type Result = ();
 
-    fn handle(&mut self, msg: GameFinished, ctx: &mut Context<Self>) {
+    fn handle(&mut self, msg: GameFinished, _ctx: &mut Context<Self>) {
         // After game is finished
         println!("{:?}", msg);
 
@@ -200,7 +200,7 @@ impl Handler<TournamentConnect> for TournamentServer {
 impl Handler<Create> for TournamentServer {
     type Result = ();
 
-    fn handle(&mut self, msg: Create, ctx: &mut Context<Self>) {
+    fn handle(&mut self, msg: Create, _ctx: &mut Context<Self>) {
         println!(
             "Tournament created with id {} and a size of {}.",
             msg.id, msg.size
@@ -213,7 +213,7 @@ impl Handler<Create> for TournamentServer {
 impl Handler<Disconnect> for TournamentServer {
     type Result = ();
 
-    fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {}
+    fn handle(&mut self, _msg: Disconnect, _: &mut Context<Self>) {}
 }
 
 impl Handler<ClientMessage> for TournamentServer {
