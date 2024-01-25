@@ -13,7 +13,6 @@ async fn server(
     identity: Identity,
     stream: web::Payload,
     server: web::Data<Addr<ChatServer>>,
-    db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let uid = identity.id()?.parse::<i32>()?;
 
@@ -28,7 +27,6 @@ async fn server(
 
 #[get("/chat/{recipient_id}")]
 async fn join_chat(
-    req: HttpRequest,
     identity: Identity,
     chat_server: web::Data<Addr<ChatServer>>,
     db: web::Data<Database>,
@@ -62,10 +60,8 @@ async fn join_chat(
     Ok(HttpResponse::Ok().finish())
 }
 
-
 #[get("/rooms")]
 async fn get_rooms(
-    req: HttpRequest,
     identity: Identity,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
@@ -85,7 +81,6 @@ async fn get_rooms(
 
 #[get("/messages/{room_id}")]
 async fn get_messages_by_room_id(
-    req: HttpRequest,
     identity: Identity,
     db: web::Data<Database>,
     room_id: web::Path<i32>,

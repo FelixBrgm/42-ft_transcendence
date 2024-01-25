@@ -9,14 +9,11 @@ use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse, HttpServer};
-use env_logger::Env;
-use log::info;
 
-use crate::api::{auth, user, friend, block};
+use crate::api::{auth, block, friend, user};
 
 #[actix_web::main]
 async fn main() {
-    env_logger::init();
 
     let db = db::Database::new();
 
@@ -74,16 +71,16 @@ async fn main() {
             // user
             .service(user::get)
             .service(user::post)
-			.service(user::find)
-			// friend
+            .service(user::find)
+            // friend
             .service(friend::add)
             .service(friend::remove)
             .service(friend::list)
             .service(friend::check)
-			// block
+            // block
             .service(block::add)
             .service(block::remove)
-			.service(block::check)
+            .service(block::check)
             // chat
             .service(api::chat::server)
             .service(api::chat::join_chat)
