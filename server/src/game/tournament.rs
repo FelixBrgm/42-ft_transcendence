@@ -1,13 +1,10 @@
 use crate::api::game::Stop;
+use crate::game::pong::{Player, Pong};
+use crate::game::Message;
+use crate::game::{ClientMessage, Disconnect, UserId};
 use actix::prelude::*;
-use log::{error, info};
 use num_traits::pow;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-// use crate::db::Database;
-use crate::game::pong::{Player, Pong};
-use crate::game::{pong, tournament, Message};
-use crate::game::{ClientMessage, Connect, Disconnect, Socket, UserId};
 
 use super::pong::GameFinished;
 use super::{Create, TournamentConnect};

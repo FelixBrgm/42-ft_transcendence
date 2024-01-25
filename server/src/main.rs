@@ -9,15 +9,11 @@ use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse, HttpServer};
-use env_logger::Env;
-use log::info;
 
-use crate::api::{auth, user};
+use crate::api::{auth, block, friend, user};
 
 #[actix_web::main]
 async fn main() {
-    env_logger::init();
-
     let db = db::Database::new();
 
     let auth_client = oauth::setup_oauth_client();
@@ -74,16 +70,21 @@ async fn main() {
             // user
             .service(user::get)
             .service(user::post)
-            // // chat
+            .service(user::find)
+            // friend
+            .service(friend::add)
+            .service(friend::remove)
+            .service(friend::list)
+            .service(friend::check)
+            // block
+            .service(block::add)
+            .service(block::remove)
+            .service(block::check)
+            // chat
             .service(api::chat::server)
             .service(api::chat::join_chat)
-            .service(api::chat::create_friendship)
-            .service(api::chat::remove_friendship)
-            .service(api::chat::get_friends)
             .service(api::chat::get_rooms)
             .service(api::chat::get_messages_by_room_id)
-            .service(api::chat::block_user)
-            .service(api::chat::unblock_user)
             // //  game
             .service(api::game::matchmaking)
             .service(api::game::create_tournament)

@@ -2,15 +2,11 @@ mod migrations;
 pub mod models;
 mod schema;
 
-use std::fmt::Error;
-
 use anyhow::Result;
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use models::*;
-
-use crate::db::schema::{blocked_users, friend_ship, game_match};
 
 type DbConnection =
     diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
