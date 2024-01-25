@@ -2,8 +2,8 @@ use actix::prelude::*;
 use std::collections::HashMap;
 
 use crate::game::pong;
-use crate::game::{ClientMessage, Connect, Disconnect, UserId};
 use crate::game::pong::{Player, Pong};
+use crate::game::{ClientMessage, Connect, Disconnect, UserId};
 
 #[derive(Clone)]
 pub struct MatchmakingServer {

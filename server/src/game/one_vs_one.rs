@@ -2,8 +2,8 @@ use actix::prelude::*;
 use std::collections::HashMap;
 
 use crate::game::pong;
-use crate::game::{ClientMessage, Disconnect, UserId};
 use crate::game::pong::{Player, Pong};
+use crate::game::{ClientMessage, Disconnect, UserId};
 
 use super::OneVsOneConnect;
 

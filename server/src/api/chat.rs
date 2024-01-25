@@ -61,10 +61,7 @@ async fn join_chat(
 }
 
 #[get("/rooms")]
-async fn get_rooms(
-    identity: Identity,
-    db: web::Data<Database>,
-) -> Result<HttpResponse, ApiError> {
+async fn get_rooms(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     let uid = identity.id()?.parse::<i32>()?;
 
     if !db.check_user(uid)? {
