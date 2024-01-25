@@ -3,3 +3,5 @@ pub mod chat;
 mod error;
 pub mod game;
 pub mod user;
+pub mod friend;
+pub mod block;
