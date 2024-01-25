@@ -7,7 +7,6 @@ use actix_web::{get, web, HttpRequest, HttpResponse};
 
 #[get("/block/{blocked_id}")]
 async fn add(
-    req: HttpRequest,
     identity: Identity,
     chat_server: web::Data<Addr<ChatServer>>,
     db: web::Data<Database>,
@@ -34,7 +33,6 @@ async fn add(
 
 #[get("/block/check/{blocked_id}")]
 async fn remove(
-    req: HttpRequest,
     identity: Identity,
     db: web::Data<Database>,
     blocked: web::Path<i32>,
@@ -55,7 +53,6 @@ async fn remove(
 
 #[get("/block/check/{blocked_id}")]
 async fn check(
-    req: HttpRequest,
     identity: Identity,
     db: web::Data<Database>,
     blocked: web::Path<i32>,
@@ -70,8 +67,7 @@ async fn check(
     }
 
     match db.check_blocked(uid, blocked_id)? {
-		true => Ok(HttpResponse::Ok().body("User is blocked")),
+        true => Ok(HttpResponse::Ok().body("User is blocked")),
         false => Ok(HttpResponse::Ok().body("User is not blocked")),
-	}
+    }
 }
-

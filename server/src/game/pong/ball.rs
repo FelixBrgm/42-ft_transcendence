@@ -1,4 +1,4 @@
-use super::{player, GameConfig, Player, Pong, UpdateScore};
+use super::{GameConfig, Player, Pong, UpdateScore};
 use actix::{AsyncContext, Context};
 use rand::Rng;
 

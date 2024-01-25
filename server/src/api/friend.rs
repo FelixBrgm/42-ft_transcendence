@@ -3,10 +3,8 @@ use crate::db::Database;
 use actix_identity::Identity;
 use actix_web::{get, web, HttpRequest, HttpResponse};
 
-
 #[get("/friend/add/{friend_id}")]
 async fn add(
-    req: HttpRequest,
     identity: Identity,
     db: web::Data<Database>,
     friend: web::Path<i32>,
@@ -27,7 +25,6 @@ async fn add(
 
 #[get("/friend/remove/{friend_id}")]
 async fn remove(
-    req: HttpRequest,
     identity: Identity,
     db: web::Data<Database>,
     friend: web::Path<i32>,
@@ -48,7 +45,6 @@ async fn remove(
 
 #[get("/friend/list")]
 async fn list(
-    req: HttpRequest,
     identity: Identity,
     db: web::Data<Database>,
     friend: web::Path<i32>,
@@ -70,7 +66,6 @@ async fn list(
 
 #[get("/friend/check/{friend_id}")]
 async fn check(
-    req: HttpRequest,
     identity: Identity,
     db: web::Data<Database>,
     friend: web::Path<i32>,
@@ -85,7 +80,7 @@ async fn check(
     }
 
     match db.check_friendship(uid, friend_id)? {
-		true => Ok(HttpResponse::Ok().body("User is a friend")),
+        true => Ok(HttpResponse::Ok().body("User is a friend")),
         false => Ok(HttpResponse::Ok().body("User is not a friend")),
-	}
+    }
 }
