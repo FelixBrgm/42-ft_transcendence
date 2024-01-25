@@ -133,7 +133,6 @@ impl Handler<Connect> for ChatServer {
     }
 }
 
-// might need to remove the rooms that have neither active users
 impl Handler<Disconnect> for ChatServer {
     type Result = ();
 
@@ -141,6 +140,23 @@ impl Handler<Disconnect> for ChatServer {
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
         println!("{} disconnected", msg.id);
         self.sockets.remove(&msg.id);
+
+        let rooms_copy: HashMap<Pair, i32> = self.rooms.clone();
+
+        for (pair, room_id) in rooms_copy.iter() {
+
+			if pair.user1 == msg.id || pair.user2 == msg.id {
+				let other_user_id = if pair.user1 == msg.id { pair.user2 } else { pair.user1 };
+				self.send_message(&format!("you just disconnected"), &other_user_id )
+			}
+
+            if self.sockets.contains_key(&pair.user1) || self.sockets.contains_key(&pair.user2) {
+                continue;
+            }
+
+            println!("Removing room {} with users {:?} and {:?}", room_id, pair.user1, pair.user1);
+            self.rooms.remove(pair);
+        }
     }
 }
 
