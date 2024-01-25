@@ -14,7 +14,6 @@ use crate::api::{auth, block, friend, user};
 
 #[actix_web::main]
 async fn main() {
-
     let db = db::Database::new();
 
     let auth_client = oauth::setup_oauth_client();

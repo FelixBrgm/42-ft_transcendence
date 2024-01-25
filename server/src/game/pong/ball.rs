@@ -99,9 +99,19 @@ impl Ball {
     pub fn reset(&mut self, config: &GameConfig) {
         let mut rng = rand::thread_rng();
         self.x = config.width / 2;
-        self.y = config.height / 2;
 
-        self.dir_x = Dir::Pos;
-        self.dir_y = Dir::Pos;
+        let min_y = config.height / 4;
+        self.y = rng.gen_range(min_y..min_y * 3);
+
+        self.dir_x = if rng.gen_bool(0.5) {
+            Dir::Pos
+        } else {
+            Dir::Neg
+        };
+        self.dir_y = if rng.gen_bool(0.5) {
+            Dir::Pos
+        } else {
+            Dir::Neg
+        };
     }
 }
