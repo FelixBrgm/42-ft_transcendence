@@ -1,6 +1,5 @@
 use super::error::ApiError;
 use actix::prelude::*;
-// use actix_identity::Identity;
 
 use crate::db::Database;
 
@@ -79,7 +78,7 @@ impl GameSession {
         let id = self.id;
         ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
-                let addr = ctx.notify(Stop { id: id });
+                ctx.notify(Stop { id: id });
             }
             ctx.ping(b"PING");
         });
@@ -261,7 +260,6 @@ async fn matchmaking(
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<MatchmakingServer>>,
-    db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     println!("HELLO");
     let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
@@ -280,10 +278,7 @@ async fn matchmaking(
 
 #[get("/game/create_tournament/{size}")]
 async fn create_tournament(
-    req: HttpRequest,
-    stream: web::Payload,
     server: web::Data<Addr<TournamentServer>>,
-    db: web::Data<Database>,
     size: web::Path<u8>,
 ) -> Result<HttpResponse, ApiError> {
     let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
@@ -314,7 +309,6 @@ async fn connect_tournament(
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<TournamentServer>>,
-    db: web::Data<Database>,
     room_id: web::Path<UserId>,
 ) -> Result<HttpResponse, ApiError> {
     let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
@@ -336,7 +330,6 @@ async fn one_vs_one(
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<OneVsOneServer>>,
-    db: web::Data<Database>,
     opponent_uid: web::Path<UserId>,
 ) -> Result<HttpResponse, ApiError> {
     let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);

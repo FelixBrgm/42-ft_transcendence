@@ -3,16 +3,14 @@ mod config;
 mod player;
 
 use actix::prelude::*;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 pub use self::ball::Ball;
 pub use self::config::GameConfig;
 pub use self::player::Player;
-pub use crate::game::{Message, Socket, UserId};
-use crate::{
-    api::game::{GameMode, Stop},
-    db::models::User,
-};
+use crate::api::game::{GameMode, Stop};
+pub use crate::game::{Message, UserId};
+
 const TICK_INTERVAL: Duration = Duration::from_millis(50);
 
 #[derive(Message)]

@@ -1,11 +1,9 @@
 use actix::prelude::*;
-use log::{error, info};
 use std::collections::HashMap;
 
 use crate::game::pong;
-use crate::game::{ClientMessage, Connect, Disconnect, Socket, UserId};
-// use crate::db::Database;
 use crate::game::pong::{Player, Pong};
+use crate::game::{ClientMessage, Disconnect, UserId};
 
 use super::OneVsOneConnect;
 

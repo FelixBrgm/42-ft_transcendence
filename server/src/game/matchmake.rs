@@ -1,12 +1,9 @@
 use actix::prelude::*;
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 
-use crate::api::game::Stop;
 use crate::game::pong;
-use crate::game::{ClientMessage, Connect, Disconnect, Socket, UserId};
-// use crate::db::Database;
 use crate::game::pong::{Player, Pong};
+use crate::game::{ClientMessage, Connect, Disconnect, UserId};
 
 #[derive(Clone)]
 pub struct MatchmakingServer {
@@ -76,7 +73,7 @@ impl Handler<Disconnect> for MatchmakingServer {
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
         println!("{} disconnected", msg.id);
 
-        if let Some((ids, pong)) = self
+        if let Some((_, pong)) = self
             .pong_instances
             .iter()
             .find(|(ids, _)| ids.0 == msg.id || ids.1 == msg.id)
