@@ -14,11 +14,11 @@ impl GameConfig {
     pub fn new() -> GameConfig {
         GameConfig {
             min_time_per_tick_ms: Duration::from_millis(1000),
-            paddle_speed: 1000,
-            ball_speed: 1000,
-            height: 1600,
-            width: 900,
-            paddle_length: 2000,
+            paddle_speed: 5,
+            ball_speed: 4,
+            height: 900,
+            width: 1600,
+            paddle_length: 120,
         }
     }
 }
