@@ -1,6 +1,6 @@
 NAME:=transcendence 
 
-all: $(NAME)
+all: $(NAME) up
 
 $(NAME):
 	echo Not implemented yet
@@ -31,6 +31,7 @@ http:
 re: down up
 
 up:
+	@echo "hehe just kiiiidding"
 	cd .devcontainer && docker-compose up -d
 
 down:

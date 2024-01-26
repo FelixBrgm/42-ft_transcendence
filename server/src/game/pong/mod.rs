@@ -11,7 +11,7 @@ pub use self::player::Player;
 use crate::api::game::{GameMode, Stop};
 pub use crate::game::{Message, UserId};
 
-const TICK_INTERVAL: Duration = Duration::from_millis(50);
+const TICK_INTERVAL: Duration = Duration::from_millis(5);
 
 #[derive(Message)]
 #[rtype(result = "()")]
