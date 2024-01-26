@@ -5,161 +5,141 @@
     <div class="score-counter">{{ playerScore }} - {{ enemyScore }}</div>
 
     <!-- Player and Enemy paddles -->
-    <div class="player" :style="{ top: playerPosition + 'px' }"></div>
-    <div class="enemy" :style="{ top: enemyPosition + 'px' }"></div>
+    <div class="rightPaddle" :style="{ top: rightPosition + 'px' }"></div>
+    <div class="leftPaddle" :style="{ top: leftPosition + 'px' }"></div>
+
 
     <!-- Ball -->
     <div class="ball" :style="{ top: ballPosition.top + 'px', left: ballPosition.left + 'px' }"></div>
+    <div class="start-button" tabindex="0" role="button" @click="startGame" :style="{ pointerEvents: startButtonEnabled ? 'auto' : 'none' }" v-html="textvalue"></div>
   </div>
-</template>
+</template> 
 
 <script>
-export default {
+
+export default { 
   data() {
     return {
-      playerPosition: 410,
-      enemyPosition: 410,
-      playerMovingDirection: null,
-      enemyMovingDirection: null,
-      animationFrameId: null,
+      textvalue: "Start Game", 
+      startButtonEnabled: true,
+      rightPosition: 450, 
+      leftPosition: 450,
       playerScore: 0,  // Initialize player score to 0
       enemyScore: 0,   // Initialize enemy score to 0
       ballPosition: {
-        top: 445,
-        left: 785,
+        left: 800,
+        top: 450,
       },
-      ballSpeed: {
-        x: 5,
-        y: 5,
-      },
+      isYou: false, 
+      websocket: null,
     };
   },
   methods: {
     handleKeyPress(event) {
-      if (event.key === 'ArrowUp' && this.playerMovingDirection !== 'up') {
-        event.preventDefault(); // Prevent default browser scrolling behavior
-        this.playerMovingDirection = 'up';
-        this.movePlayer();
-      } else if (event.key === 'ArrowDown' && this.playerMovingDirection !== 'down') {
-        event.preventDefault(); // Prevent default browser scrolling behavior
-        this.playerMovingDirection = 'down';
-        this.movePlayer();
-      } else if (event.key === 'w' && this.enemyMovingDirection !== 'up') {
-        event.preventDefault(); // Prevent default browser scrolling behavior
-        this.enemyMovingDirection = 'up';
-        this.moveEnemy();
-      } else if (event.key === 's' && this.enemyMovingDirection !== 'down') {
-        event.preventDefault(); // Prevent default browser scrolling behavior
-        this.enemyMovingDirection = 'down';
-        this.moveEnemy();
+      // Check for the key code of the 'Up' arrow key (key code 38)
+      if (event.keyCode === 38) {
+        // Send "u" to the backend
+         this.websocket.send("u"); 
+         console.log('Key pressed:', event.keyCode);
+      }
+      if (event.keyCode === 40) {
+        // Send "d" to the backend
+        this.websocket.send('d');
       }
     },
-    handleKeyRelease(event) {
-      event.preventDefault(); // Prevent default browser scrolling behavior
-      if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-        this.playerMovingDirection = null; // Stop the player movement on key release
-      } else if (event.key === 'w' || event.key === 's') {
-        this.enemyMovingDirection = null; // Stop the enemy movement on key release
+    handleKeyRelease(event) { 
+      // Check for the key code of the 'Up' arrow key (key code 38)
+      if (event.keyCode === 38 || event.keyCode === 40) {
+        // Send "n" to the backend
+        this.websocket.send('n');
       }
 
-      cancelAnimationFrame(this.animationFrameId); // Cancel the animation frame
     },
-    movePlayer() {
-      const playerStep = 15; // Adjust the step size as needed
-
-      if (this.playerMovingDirection === 'up' && this.playerPosition > 60) {
-        this.playerPosition -= playerStep;
-      } else if (
-        this.playerMovingDirection === 'down' &&
-        this.playerPosition < this.$refs.gameContainer.clientHeight - 60
-      ) {
-        this.playerPosition += playerStep;
+    handleWebSocketMessage(message) {
+      const parts = message.split(' ');
+      if (parts[0] == 'FORMAT:' && parts[1] == '{YOU}') {
+        this.isYou = true;
+      } 
+      if(parts[0] == 'SCR')
+      {
+        const rest = parts[1].split(':')
+        if (rest[0] > rest[1])
+        {this.textvalue = "YOU WON"}
+        else{this.textvalue = "HEHE YOU LOOSE"} 
+        this.playerScore = rest[0];
+        this.enemyScore = rest[1];
+      }
+      if(parts[0] == 'Starting')
+      {
+        this.textvalue += "<br>Starting game in 3 Seconds";  
+      } 
+      if(parts[0] == 'END')
+      {
+      this.startButtonEnabled = true;
+      }
+      if(parts[0] == 'POS')
+      {
+        this.textvalue = "";
+        this.leftPosition = 840 - parts[1];
+        this.rightPosition = 840 - parts[2];
+        this.ballPosition.left = parts[3];
+        this.ballPosition.top = 900 - parts[4];  
       }
 
-      this.animationFrameId = requestAnimationFrame(() => this.movePlayer()); // Smooth animation
+        // Update the colors based on the isYou property
+        this.updatePaddleColors();
+      },
+      updatePaddleColors() {
+        const playerPaddle = this.$refs.gameContainer.querySelector('.rightPaddle');
+        const enemyPaddle = this.$refs.gameContainer.querySelector('.leftPaddle');
+
+        if (this.isYou) {
+          // You are the left paddle (player)
+          playerPaddle.style.backgroundColor = 'red';
+          enemyPaddle.style.backgroundColor = 'yellow';
+          enemyPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
+          playerPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red'; 
+        } else {
+          // You are the right paddle (enemy)
+          playerPaddle.style.backgroundColor = 'yellow';
+          enemyPaddle.style.backgroundColor = 'red';
+          playerPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
+          enemyPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red';
+        }
+      },
+        startGame() {
+      // Connect to WebSocket when the button is clicked
+      this.websocket = new WebSocket('ws://localhost:8080/game/matchmake');
+      this.startButtonEnabled = false;
+      this.textvalue = "Waiting for game";
+      // Handle WebSocket events
+      this.websocket.addEventListener('open', (event) => {
+        console.log('WebSocket connection opened:', event);
+      });
+
+      this.websocket.addEventListener('message', (event) => {
+        console.log('WebSocket message received:', event.data);
+        this.handleWebSocketMessage(event.data);
+      });
+
+      this.websocket.addEventListener('close', (event) => {
+        console.log('WebSocket connection closed:', event); 
+      });
+
+      this.websocket.addEventListener('error', (event) => {
+        console.error('WebSocket error:', event);
+      });
     },
-    moveEnemy() {
-      const enemyStep = 15; // Adjust the step size as needed
 
-      if (this.enemyMovingDirection === 'up' && this.enemyPosition > 60) {
-        this.enemyPosition -= enemyStep;
-      } else if (
-        this.enemyMovingDirection === 'down' &&
-        this.enemyPosition < this.$refs.gameContainer.clientHeight - 60
-      ) {
-        this.enemyPosition += enemyStep;
-      }
-
-      this.animationFrameId = requestAnimationFrame(() => this.moveEnemy()); // Smooth animation
-    },
-    moveBall() {
-      const ballStepX = this.ballSpeed.x;
-      const ballStepY = this.ballSpeed.y;
-
-      // Update ball position
-      this.ballPosition.left += ballStepX;
-      this.ballPosition.top += ballStepY;
-
-      // Check for collisions with top and bottom walls
-      if (
-        this.ballPosition.top <= 0 ||
-        this.ballPosition.top + 20 >= this.$refs.gameContainer.clientHeight
-      ) {
-        this.ballSpeed.y = -this.ballSpeed.y; // Reverse the vertical direction on collision
-      }
-
-      // Check for collisions with player paddle (right side)
-      const playerCollision =
-        this.ballPosition.left + 20 >= this.$refs.gameContainer.clientWidth - 30 &&
-        this.ballPosition.top + 20 >= this.playerPosition &&
-        this.ballPosition.top <= this.playerPosition + 120;
-
-      // Check for collisions with enemy paddle (left side)
-      const enemyCollision =
-        this.ballPosition.left <= 30 &&
-        this.ballPosition.top + 20 >= this.enemyPosition &&
-        this.ballPosition.top <= this.enemyPosition + 120;
-
-      if (playerCollision || enemyCollision) {
-        // Collision with a paddle
-        this.ballSpeed.x = -this.ballSpeed.x; // Reverse the horizontal direction on collision
-        // You can add additional logic to modify the ball's speed here if needed
-      }
-
-      if (this.ballPosition.left <= 0) {
-        // Ball went out of bounds on the left side
-        this.enemyScore++;
-        this.resetBall();
-      } else if (this.ballPosition.left + 20 >= this.$refs.gameContainer.clientWidth) {
-        // Ball went out of bounds on the right side
-        this.playerScore++;
-        this.resetBall();
-      }
-
-      this.animationFrameId = requestAnimationFrame(() => this.moveBall());
-    },
-
-    resetBall() {
-      // Reset the ball position to the center
-      this.ballPosition = {
-        top: this.$refs.gameContainer.clientHeight / 2 - 10,
-        left: this.$refs.gameContainer.clientWidth / 2 - 10,
-      };
-
-      // Reset the ball speed to its initial values
-      this.ballSpeed = { x: 5, y: 5 };
-    },
   },
   updated() {
-    if (this.playerMovingDirection !== null || this.enemyMovingDirection !== null) {
-      this.$refs.gameContainer.focus(); // Ensure the container has focus for key events
-    }
   },
   mounted() {
-    this.moveBall();
   },
 };
 </script>
+
+
 <style scoped>
 .game-container {
   position: relative;
@@ -174,29 +154,27 @@ export default {
 }
 
 
-.player {
-    position: absolute;
-    width: 30px;
-    height: 120px;
-    background-color: hsl(45, 100%, 60%); /* Same color as the text */
-    box-shadow: 0 0 10px hsl(45, 100%, 60%), 0 0 20px hsl(45, 100%, 60%), 0 0 30px hsl(45, 100%, 60%);
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    border-radius: 20px;
+.rightPaddle {
+  position: absolute;
+  width: 30px;
+  height: 120px;
+  box-shadow: 0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 20px;
 }
 
-.enemy {
-    position: absolute;
-    width: 30px;
-    height: 120px;
-    background-color: red; /* Red color for the enemy */
-    box-shadow: 0 0 10px red, 0 0 20px red, 0 0 30px red;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    border-radius: 20px;
-}	
+.leftPaddle {
+  position: absolute;
+  width: 30px;
+  height: 120px;
+  box-shadow: 0 0 10px red, 0 0 20px red, 0 0 30px red;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 20px;
+}
 .score-counter {
   position: absolute;
   top: 20px;
@@ -217,4 +195,24 @@ export default {
   border-radius: 50%;
   box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff;
 }
+.start-button {
+  height: 100px;
+  font-size: 35px;
+  font-family: 'neuropol', sans-serif;
+  color: white;
+  background-color: transparent;
+  text-align: center;
+  display: flex; 
+  align-items: center;
+  justify-content: center;
+  margin: 50vh auto 0;
+  box-shadow: none;
+  cursor: pointer; /* Add pointer cursor */
+}
+
+
+.start-button:focus {
+  outline: none; /* Remove default focus outline */
+}
+
 </style>

@@ -1,21 +1,17 @@
 <template>
   <div v-show="showChat" class="chat-window">
     <div class="card">
-      <div class="app-main">
-        <div class="chat-sidebar">
-          <div v-for="(room, index) in chatRooms" :key="index" @click="joinRoom(room.room_id)" class="room-item">
-            {{ room.room_name }}
-          </div>
-        </div>
+      <div class="card-header">
+        Chat Room
+      </div>
+      <main class="app-main">
         <div class="chat-container">
           <div class="chat-box">
-            <!-- Existing chat box content -->
             <div class="card-body" style="height: 300px; overflow-y: auto; padding: 10px;" id="chatBox">
               <div v-for="(message, index) in messages" :key="index" class="mb-2" :class="{ 'text-right': message.sender === 'User', 'text-left': message.sender === 'Bot' }">
                 <strong>{{ message.sender }}:</strong> {{ message.text }}
               </div>
             </div>
-            <!-- Existing chat input and send button -->
             <div class="card-footer">
               <div class="input-container">
                 <input type="text" v-model="newMessage" @keyup.enter="sendMessage" class="form-control" placeholder="Type your message...">
@@ -24,7 +20,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   </div>
 </template>
@@ -37,14 +33,10 @@ export default {
 	data() {
 		return {
 			messages: [
-			{ sender: 'User', text: 'Hello!' },
-			{ sender: 'Bot', text: 'Hi there!' },
+				{ sender: 'User', text: 'Hello!' },
+				{ sender: 'Bot', text: 'Hi there!' },
 			],
 			newMessage: '',
-			chatRooms: [
-			{ room_id: 1, room_name: 'Room 1' },
-			{ room_id: 2, room_name: 'Room 2' },
-			],
 		};
 	},
 	methods: {
@@ -58,10 +50,6 @@ export default {
 		closeChat() {
 			this.$emit('close-chat');
 		},
-		joinRoom(roomId) {
-		// Implement logic to join the selected room
-		console.log('Joining room:', roomId);
-		},
 	},
 };
 </script>
@@ -71,20 +59,22 @@ export default {
 	position: fixed;
 	bottom: 20px;
 	right: 100px;
-	width: calc(50%px);
-	border-radius: 20px;
+	left: 80px;
+	width: calc(100% - 160px);
+	margin: 10px;
+	border-radius: 10px;
 	background-color: #727475;
 	color: white; 
 	font-family: neuropol;
 	box-shadow: 0 0 10px 5px #00f0ff;
 	animation: neonGlow 6s infinite;
-} 
+}
 
 .card-header {
-	padding-top: 10px; 
+	padding-top: 10px;
 	margin-left: 20px;
 	flex: auto;
-} 
+}
 
 .text-right {
 	text-align: right;
@@ -107,6 +97,11 @@ export default {
 	cursor: pointer;
 	font-size: 18px;
 }
+.app-main {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
 
 .chat-container {
 	justify-content: center;
@@ -116,9 +111,9 @@ export default {
 
 .chat-box {
 	border: 1px solid #ccc;
-	padding: 20px;																											
-	overflow-x: auto;
-	border-radius: 20px;
+	padding: 20px;
+	box-sizing: border-box;
+	overflow-y: auto; /* Enable vertical scroll if the content exceeds the box height */
 }
 
 .input-container {
@@ -146,31 +141,6 @@ export default {
 
 .send-button:hover {
 	color: black;
-}
-.app-main {
-  display: flex;
-  align-items: stretch;
-    border-radius: 20px;
-}
-
-.chat-sidebar {
-  width: 150px;
-  padding: 20px;
-  background-color: #333;
-  color: white;
-  overflow-y: auto;
-  border-radius: 20px;
-}
-
-.room-item {
-  cursor: pointer;
-  padding: 10px;
-  margin-bottom: 10px;
-  transition: background-color 0.3s;
-}
-
-.room-item:hover {
-  background-color: #555;
 }
 
 </style>
