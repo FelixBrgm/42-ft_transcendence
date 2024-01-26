@@ -9,24 +9,16 @@ use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse, HttpServer};
-use env_logger::Env;
-use log::info;
 
-use crate::api::{auth, room, user};
-
-/*
-    find out how to handle one on one chat
-*/
+use crate::api::{auth, block, friend, user};
 
 #[actix_web::main]
 async fn main() {
-    env_logger::init();
-
     let db = db::Database::new();
 
     let auth_client = oauth::setup_oauth_client();
 
-    let chat_server = chat::ChatServer::new(db.clone()).start();
+    let chat_server = chat::server::ChatServer::new(db.clone()).start();
 
     let matchmaking_server = game::matchmake::MatchmakingServer::new().start();
     let tournament_server = game::tournament::TournamentServer::new().start();
@@ -69,32 +61,31 @@ async fn main() {
                 web::resource("/health")
                     .route(web::get().to(|| async { HttpResponse::Ok().json("I am alive!") })),
             )
-            // home
-            .service(user::home)
-            .service(user::clear)
             // authentication
+            .service(auth::fake)
             .service(auth::login)
             .service(auth::logout)
             .service(auth::callback)
             .service(auth::check)
             // user
-            .service(user::all)
             .service(user::get)
             .service(user::post)
-            .service(user::rooms)
-            // room
-            .service(room::all)
-            .service(room::get)
-            .service(room::list)
-            .service(room::messages)
-            .service(room::create)
-            .service(room::update)
-            .service(room::personal)
-            .service(room::join)
-            .service(room::part)
+            .service(user::find)
+            // friend
+            .service(friend::add)
+            .service(friend::remove)
+            .service(friend::list)
+            .service(friend::check)
+            // block
+            .service(block::add)
+            .service(block::remove)
+            .service(block::check)
             // chat
             .service(api::chat::server)
-            //  game
+            .service(api::chat::join_chat)
+            .service(api::chat::get_rooms)
+            .service(api::chat::get_messages_by_room_id)
+            // //  game
             .service(api::game::matchmaking)
             .service(api::game::create_tournament)
             .service(api::game::connect_tournament)
