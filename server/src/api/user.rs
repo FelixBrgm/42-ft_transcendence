@@ -11,25 +11,6 @@ async fn home() -> HttpResponse {
     HttpResponse::Ok().body("welcome home!")
 }
 
-//  clear
-#[get("/clear")]
-async fn clear(db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-    match db.clear_tables() {
-        Ok(_) => Ok(HttpResponse::Ok().json("database has cleared all tables!")),
-        Err(_) => Err(ApiError::InternalServerError),
-    }
-}
-
-// all the users
-#[get("/users")]
-async fn all(db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-    match db.get_users() {
-        Ok(users) => Ok(HttpResponse::Ok().json(&users)),
-        Err(_) => Err(ApiError::InternalServerError),
-    }
-}
-
-// returns the information of the user sending the request
 #[get("/user")]
 async fn get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     let id = identity.id()?;
@@ -40,7 +21,6 @@ async fn get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse
     }
 }
 
-// who is allowed to update the user(identity or the game/chat server/frontend-> user, probably both
 #[post("/user")]
 async fn post(
     identity: Identity,
@@ -57,11 +37,16 @@ async fn post(
     }
 }
 
-#[get("/user/room")]
-async fn rooms(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-    let uid = identity.id()?.parse::<i32>()?;
-    match db.get_user_connections(uid) {
-        Ok(rooms) => Ok(HttpResponse::Ok().json(rooms)),
+#[post("/user/user_id")]
+async fn find(
+    _: Identity,
+    user: web::Path<i32>,
+    db: web::Data<Database>,
+) -> Result<HttpResponse, ApiError> {
+    let user = user.into_inner();
+
+    match db.get_user_by_id(user) {
+        Ok(user) => Ok(HttpResponse::Ok().json(user)),
         Err(_) => Err(ApiError::InternalServerError),
     }
 }

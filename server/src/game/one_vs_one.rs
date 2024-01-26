@@ -1,15 +1,15 @@
 use actix::prelude::*;
-use log::{error, info};
 use std::collections::HashMap;
 
 use crate::game::pong;
-use crate::game::{UserId, Socket, Connect, Disconnect, ClientMessage};
-// use crate::db::Database;
 use crate::game::pong::{Player, Pong};
+use crate::game::{ClientMessage, Disconnect, UserId};
+
+use super::OneVsOneConnect;
 
 #[derive(Clone)]
 pub struct OneVsOneServer {
-    queue: Vec<Player>,
+    queue: Vec<(Player, UserId)>,
     pong_instances: HashMap<(UserId, UserId), Addr<Pong>>,
 }
 
@@ -22,46 +22,80 @@ impl OneVsOneServer {
         }
     }
 
-    fn is_player_stored(&self, player_id: UserId) -> bool {
-        self.is_player_in_queue(player_id) || self.is_player_in_instance(player_id)
+    pub fn try_connect(
+        &mut self,
+        player: Player,
+        opponent_uid: UserId,
+        ctx: &mut Context<OneVsOneServer>,
+    ) {
+        let player_id = player.id;
+        // Check if Challange already exists
+        match self.queue.iter().position(|q| q.1 == player.id) {
+            Some(q) => {
+                // if yes then start game
+                let opponent = self.queue.remove(q);
+                println!("starting new 1v1 game");
+                let pong = Pong::new(
+                    [player, opponent.0],
+                    crate::api::game::GameMode::OneVsOne(ctx.address()),
+                )
+                .start();
+                self.pong_instances.insert((player_id, opponent_uid), pong);
+            }
+            None => {
+                // If not add to queye
+                self.queue.push((player, opponent_uid));
+            }
+        }
     }
 
-    fn is_player_in_queue(&self, player_id: UserId) -> bool {
-        self.queue.iter().any(|player| player.id == player_id)
-    }
+    // fn is_player_stored(&self, player_id: UserId) -> bool {
+    //     self.is_player_in_queue(player_id) || self.is_player_in_instance(player_id)
+    // }
 
-    fn is_player_in_instance(&self, player_id: UserId) -> bool {
-        self.pong_instances
-            .keys()
-            .any(|(id1, id2)| *id1 == player_id || *id2 == player_id)
-    }
+    // fn is_player_in_queue(&self, player_id: UserId) -> bool {
+    //     self.queue.iter().any(|player| player.0.id == player_id)
+    // }
+
+    // fn is_player_in_instance(&self, player_id: UserId) -> bool {
+    //     self.pong_instances
+    //         .keys()
+    //         .any(|(id1, id2)| *id1 == player_id || *id2 == player_id)
+    // }
 }
 
 impl Actor for OneVsOneServer {
     type Context = Context<Self>;
 }
 
-impl Handler<Connect> for OneVsOneServer {
+impl Handler<OneVsOneConnect> for OneVsOneServer {
     type Result = ();
 
-    fn handle(&mut self, msg: Connect, _: &mut Context<Self>) {
-        if !self.is_player_stored(msg.id) {
-            println!("{} added to the queue", msg.id);
-            self.queue.push(Player::new(msg.id, msg.socket));
-        }
+    fn handle(&mut self, msg: OneVsOneConnect, ctx: &mut Context<Self>) {
+        let player = Player::new(msg.uid, msg.socket, msg.addr);
+        self.try_connect(player, msg.opponent, ctx);
 
-        if self.queue.len() >= 2 {
-            let p1 = self.queue.remove(0);
-            let p2 = self.queue.remove(0);
-            let player_ids = (p1.id, p2.id);
+        // if !self.is_player_stored(msg.id) {
+        //     println!("{} added to the queue", msg.id);
+        //     self.queue.push(Player::new(msg.id, msg.socket, msg.addr));
+        // }
 
-            println!("starting new game between {:?}", player_ids);
-            let pong = Pong::new([p1, p2]).start();
+        // if self.queue.len() >= 2 {
+        //     let p1 = self.queue.remove(0);
+        //     let p2 = self.queue.remove(0);
+        //     let player_ids = (p1.id, p2.id);
 
-            if !self.is_player_stored(player_ids.0) && !self.is_player_stored(player_ids.1) {
-                self.pong_instances.insert(player_ids, pong);
-            }
-        }
+        //     println!("starting new game between {:?}", player_ids);
+        //     let pong = Pong::new(
+        //         [p1, p2],
+        //         crate::api::game::GameMode::OneVsOne(ctx.address()),
+        //     )
+        //     .start();
+
+        //     if !self.is_player_stored(player_ids.0) && !self.is_player_stored(player_ids.1) {
+        //         self.pong_instances.insert(player_ids, pong);
+        //     }
+        // }
     }
 }
 
@@ -82,7 +116,7 @@ impl Handler<Disconnect> for OneVsOneServer {
 
         self.pong_instances
             .retain(|ids, _| ids.0 != msg.id && ids.1 != msg.id);
-        self.queue.retain(|player| player.id != msg.id);
+        self.queue.retain(|player| player.0.id != msg.id);
     }
 }
 
@@ -90,7 +124,6 @@ impl Handler<ClientMessage> for OneVsOneServer {
     type Result = ();
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
-
         if let Some((ids, pong)) = self
             .pong_instances
             .iter()

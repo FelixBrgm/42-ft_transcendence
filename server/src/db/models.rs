@@ -4,19 +4,20 @@ use diesel::{AsChangeset, Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 
 // ----------- Users  -----------------
+
 #[derive(Insertable, Debug, Clone)]
 #[diesel(table_name = app_user)]
 pub struct NewUser {
     pub id: i32,
-    pub login: String,
+    pub intra: String,
+    pub alias: String,
     pub avatar: String,
 }
 
 #[derive(Queryable, PartialEq, AsChangeset, Debug, Clone, Default, Deserialize)]
 #[diesel(table_name = app_user)]
 pub struct UpdateUser {
-    // pub id: i32,
-    pub login: Option<String>,
+    pub alias: Option<String>,
     pub avatar: Option<String>,
     pub password: Option<Vec<u8>>,
     pub status: Option<String>,
@@ -28,7 +29,8 @@ pub struct UpdateUser {
 #[diesel(table_name = app_user)]
 pub struct User {
     pub id: i32,
-    pub login: String,
+    pub intra: String,
+    pub alias: String,
     pub avatar: String,
     pub password: Option<Vec<u8>>,
     pub status: String,
@@ -36,40 +38,58 @@ pub struct User {
     pub losses: i32,
 }
 
-// ----------- Rooms -----------------
+// --------- Friends -------------------
 
-#[derive(Insertable, Debug, Deserialize)]
+#[derive(Insertable, Debug, Clone)]
+#[diesel(table_name = friend_ship)]
+pub struct NewFriendship {
+    pub user1: i32,
+    pub user2: i32,
+}
+
+#[derive(Insertable, Debug, Deserialize, Serialize, Queryable)]
+#[diesel(table_name = friend_ship)]
+pub struct Friendship {
+    pub id: i32,
+    pub user1: i32,
+    pub user2: i32,
+}
+
+// --------- Blocked -------------------
+
+#[derive(Insertable, Debug, Deserialize, Serialize, Queryable)]
+#[diesel(table_name = blocked_users)]
+pub struct Blocked {
+    pub id: i32,
+    pub user_id: i32,
+    pub blocked_user_id: i32,
+}
+
+#[derive(Insertable, Debug, Clone)]
+#[diesel(table_name = blocked_users)]
+pub struct NewBlocked {
+    pub user_id: i32,
+    pub blocked_user_id: i32,
+}
+
+// --------- Rooms ---------------------
+
+#[derive(Insertable, Debug, Clone)]
 #[diesel(table_name = chat_rooms)]
 pub struct NewChatRoom {
-    pub owner: Option<i32>,
-    pub name: String,
-    pub topic: Option<String>,
-    pub is_public: bool,
-    pub password: Option<Vec<u8>>,
+    pub user1: i32,
+    pub user2: i32,
 }
 
-#[derive(AsChangeset, Debug, Deserialize)]
-#[diesel(table_name = chat_rooms)]
-pub struct UpdateChatRoom {
-    pub id: i32,
-    pub name: Option<String>,
-    pub topic: Option<String>,
-    pub is_public: Option<bool>,
-    pub password: Option<Option<Vec<u8>>>,
-}
-
-#[derive(Serialize, Queryable, Debug)]
+#[derive(Insertable, Debug, Deserialize, Serialize, Queryable)]
 #[diesel(table_name = chat_rooms)]
 pub struct ChatRoom {
     pub id: i32,
-    pub owner: i32,
-    pub name: String,
-    pub topic: Option<String>,
-    pub is_public: bool,
-    pub password: Option<Vec<u8>>,
+    pub user1: i32,
+    pub user2: i32,
 }
 
-// ----------- Messages --------------
+// // ----------- Messages --------------
 
 #[derive(Insertable, Debug, Queryable, Deserialize)]
 #[diesel(table_name = chat_messages)]
@@ -79,29 +99,30 @@ pub struct NewMessage {
     pub message: String,
 }
 
-#[derive(Serialize, Debug, Queryable)]
+#[derive(Insertable, Debug, Queryable, Serialize)]
 #[diesel(table_name = chat_messages)]
 pub struct Message {
     pub id: i32,
-    pub sender_id: i32,
     pub room_id: i32,
+    pub sender_id: i32,
     pub message: String,
     pub timestamp: NaiveDateTime,
 }
 
-// ----------- Connection ----------
+// // ----------- Games --------------
 
-#[derive(Insertable, Debug, Queryable)]
-#[diesel(table_name = user_room_connection)]
-pub struct UserRoomConnection {
-    pub user_id: i32,
-    pub room_id: i32,
+#[derive(Insertable, Debug, Queryable, Deserialize)]
+#[diesel(table_name = game_match)]
+pub struct NewGameMatch {
+    pub winner: i32,
+    pub looser: i32,
 }
 
 #[derive(Insertable, Debug, Queryable, Serialize)]
-#[diesel(table_name = user_room_connection)]
-pub struct UserRoomQuery {
-    id: i32,
-    pub user_id: i32,
-    pub room_id: i32,
+#[diesel(table_name = game_match)]
+pub struct GameMatch {
+    pub id: i32,
+    pub winner: i32,
+    pub looser: i32,
+    pub timestamp: NaiveDateTime,
 }
