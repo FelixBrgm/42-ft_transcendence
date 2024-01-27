@@ -17,7 +17,7 @@ const router = createRouter({
 		{ path: '/rules', component: RulesPage, meta: { title: 'Rules' } },
 		{ path: '/dev', component: DevTest, meta: { title: 'Developer testing', backgroundColor: 'white' } },
 		{ path: '/profile', component: ProfilePage, meta: { title: 'Profile', } },
-		{ path: '/pong', component: PongGame, meta: { title: 'Pong', } },
+		{ path: '/pong', component: PongGame, meta: { title: 'Pong', } }, 
 	],
 });
 
