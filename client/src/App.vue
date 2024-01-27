@@ -1,8 +1,8 @@
 <template>
 	<div id="app">
-    <ChatButton :showChat="showChat" @toggle-chat="toggleChat" />
-    <ChatWindow :showChat="showChat" @close-chat="closeChat" />
-			<router-view />
+		<ChatButton :showChat="showChat" @toggle-chat="toggleChat" />
+		<ChatWindow :showChat="showChat" @close-chat="closeChat" />
+		<router-view />
 	</div>
 </template>
 
@@ -29,17 +29,15 @@ export default {
 </script>
 
 <style>
-
-#Body{
-		min-height: 76vh;
-		display: flex;
-		flex-direction: column;
-		margin-bottom: 30px;
-	}
-
-@font-face {
-		font-family: "neuropol";
-		src: url('assets/fonts/neuropol.ttf');
+#Body {
+	min-height: 76vh;
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 30px;
 }
 
+@font-face {
+	font-family: "neuropol";
+	src: url('assets/fonts/neuropol.ttf');
+}
 </style>

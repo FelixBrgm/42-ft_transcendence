@@ -6,25 +6,40 @@ import RulesPage from './components/pages/RulesPage.vue';
 import ProfilePage from './components/pages/ProfilePage.vue';
 import DevTest from './components/elements/DevTest.vue';
 import PongGame from './components/elements/PongGame.vue';
+import LoginPage from './components/pages/LoginPage';
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-  { path: '/', component: HomePage, meta: { title: 'Transcendence' }},
-  { path: '/about', component: AboutUs, meta: { title: 'About Us' } },
-  { path: '/rules', component: RulesPage, meta: { title: 'Rules' } },
-  { path: '/dev', component: DevTest, meta: { title: 'Developer testing', backgroundColor: 'white'} },
-  { path: '/profile',component: ProfilePage, meta: { title: 'Profile',} },
-  { path: '/pong',component: PongGame, meta: { title: 'Pong',} },
-],
+    { path: '/', component: HomePage, meta: { title: 'Transcendence' } },
+    { path: '/login', component: LoginPage },
+    { path: '/about', component: AboutUs, meta: { title: 'About Us' } },
+    { path: '/rules', component: RulesPage, meta: { title: 'Rules' } },
+    { path: '/dev', component: DevTest, meta: { title: 'Developer testing', backgroundColor: 'white' } },
+    { path: '/profile', component: ProfilePage, meta: { title: 'Profile', } },
+    { path: '/pong', component: PongGame, meta: { title: 'Pong', } },
+  ],
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
+  (from);
   document.title = to.meta.title || 'Default Title';
-  
-  if (to.meta.backgroundColor) {document.body.style.backgroundColor = to.meta.backgroundColor;} 
-  else { document.body.style.backgroundColor = 'black';}
-  next();
+  if (to.meta.backgroundColor) { document.body.style.backgroundColor = to.meta.backgroundColor; }
+  else { document.body.style.backgroundColor = 'black'; }
+
+  if (to.path !== "/login" && auth.user == null) {
+    return '/login';
+  }
+
+  return true;
 });
 
 export default router;
+
+
+// Login storing
+import { reactive } from 'vue'
+
+export const auth = reactive({
+  user: null
+})
