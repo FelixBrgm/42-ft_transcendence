@@ -51,7 +51,6 @@ export default {
 		sendMessage() {
 			if (this.newMessage.trim() === '') return;
 			this.messages.push({ sender: 'User', text: this.newMessage });
-			// Simulate a bot response (you can replace this with actual backend communication)
 			this.messages.push({ sender: 'Bot', text: 'I got your message!' });
 			this.newMessage = '';
 		},
@@ -68,17 +67,18 @@ export default {
 
 <style scoped>
 .chat-window {
-	position: fixed;
-	bottom: 20px;
-	right: 100px;
-	width: calc(50%px);
-	border-radius: 20px;
-	background-color: #727475;
-	color: white; 
-	font-family: neuropol;
-	box-shadow: 0 0 10px 5px #00f0ff;
-	animation: neonGlow 6s infinite;
-} 
+  position: fixed;
+  bottom: 20px;
+  right: 100px;
+  width: calc(50% - 20px);
+  border-radius: 20px;
+  background-color: #727475;
+  color: white; 
+  font-family: neuropol;
+  box-shadow: 0 0 10px 5px #00f0ff;
+  animation: neonGlow 6s infinite;
+  z-index: 9999;
+}
 
 .card-header {
 	padding-top: 10px; 
@@ -108,28 +108,16 @@ export default {
 	font-size: 18px;
 }
 
-.chat-container {
-	justify-content: center;
-	align-items: center;
-	padding: 20px;
-}
 
-.chat-box {
-	border: 1px solid #ccc;
-	padding: 20px;																											
-	overflow-x: auto;
-	border-radius: 20px;
-}
-
-.input-container {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end; /* Align to the right */
-  font-family: neuropol;
+.chat-box { 
+  padding: 20px;
+  overflow-x: auto;
+  border-radius: 20px;
+  flex: 1; /* Make the chat-box take up all available space */
 }
 
 .form-control {
-  flex: 1; /* Take up remaining space in the container */
+  flex: 1;
   margin-right: 10px; /* Add some space between input and button */
   height: 40px; /* Adjust the height as needed */
   font-size: 14px; /* Adjust the font size as needed */
@@ -137,10 +125,9 @@ export default {
 }
 
 .send-button {
+  border-radius: 20px;
   padding: 15px; 
   font-size: 14px;
-  margin-top: 0;
-  margin-left: 0;
   font-family: neuropol;
 }
 
@@ -150,7 +137,6 @@ export default {
 .app-main {
   display: flex;
   align-items: stretch;
-    border-radius: 20px;
 }
 
 .chat-sidebar {
@@ -167,6 +153,7 @@ export default {
   padding: 10px;
   margin-bottom: 10px;
   transition: background-color 0.3s;
+  border-radius: 20px; 
 }
 
 .room-item:hover {
