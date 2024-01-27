@@ -12,12 +12,7 @@
 				<li v-for="(item, index) in menuItems" :key="index">
 					<a :href="item.link" class="neon-text">{{ item.text }}</a>
 				</li>
-				<li v-if="!loggedIn">
-					<a @click="login" class="neon-text">Login</a>
-				</li>
-				<li v-if="loggedIn">
-					<a @click="logout" class="neon-text">Logout</a>
-				</li>
+				<a @click="logout" class="neon-text">Logout</a>
 			</ul>
 		</nav>
 	</header>
@@ -38,7 +33,6 @@ export default {
 				{ text: "Profile", link: "/profile" },
 				{ text: "About", link: "/about" },
 			],
-			loggedIn: false,
 			sound: null,
 		};
 	},
@@ -48,18 +42,9 @@ export default {
 		});
 	},
 	methods: {
-		async login() {
-			try {
-				window.location.href = 'http://127.0.0.1:8080/auth/login';
-				this.loggedIn = true;
-			} catch (error) {
-				console.error('Error Initiating login:', error);
-			}
-		},
 		async logout() {
 			try {
 				await axios.get('http://127.0.0.1:8080/auth/logout', { withCredentials: true });
-				this.loggedIn = false;
 			} catch (error) {
 				console.error('Error Logging out:', error);
 			}
