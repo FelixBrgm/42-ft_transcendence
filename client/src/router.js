@@ -12,7 +12,7 @@ const router = createRouter({
 	history: createWebHistory(),
 	routes: [
 		{ path: '/', component: HomePage, meta: { title: 'Transcendence' } },
-		{ path: '/login', component: LoginPage },
+		{ path: '/login', component: LoginPage , meta: { title: 'Login' } },
 		{ path: '/about', component: AboutUs, meta: { title: 'About Us' } },
 		{ path: '/rules', component: RulesPage, meta: { title: 'Rules' } },
 		{ path: '/dev', component: DevTest, meta: { title: 'Developer testing', backgroundColor: 'white' } },
