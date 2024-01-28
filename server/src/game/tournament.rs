@@ -10,8 +10,7 @@ use num_traits::pow;
 use std::collections::HashMap;
 
 use crate::db::Database;
-use super::pong::GameFinished;
-use super::{Create, TournamentConnect};
+
 
 #[derive(Clone, Debug)]
 struct Match {
