@@ -7,6 +7,7 @@ import ProfilePage from './components/pages/ProfilePage.vue';
 import DevTest from './components/elements/DevTest.vue';
 import PongGame from './components/elements/PongGame.vue';
 import LoginPage from './components/pages/LoginPage';
+import axios from 'axios';
 
 const router = createRouter({
 	history: createWebHistory(),
@@ -21,7 +22,7 @@ const router = createRouter({
 	],
 });
 
-router.beforeEach((to, from) => {
+router.beforeEach(async (to, from) => {
 	console.log(to);
 	(from);
 	document.title = to.meta.title || 'Default Title';
@@ -29,16 +30,21 @@ router.beforeEach((to, from) => {
 	else { document.body.style.backgroundColor = 'black'; }
 
 	if (to.path === '/logged_in') {
-		auth.logged_in = true;
+		const response = await axios.get('http://127.0.0.1:8080/user', {
+			withCredentials: true,
+		});
+		auth.user = response.data;
+		console.log(auth.user);
 		return '/';
 	}
-	if (to.path !== "/login" && auth.logged_in == false) {
-		return '/login';
-	}
-	if (to.path === "/login" && auth.logged_in) {
-		return true;
+
+	if (to.path === "/login" && auth.user != null) {
+		return '/';
 	}
 
+	if (to.path !== "/login" && auth.user == null) {
+		return '/login';
+	}
 
 	return true;
 });
@@ -51,5 +57,4 @@ import { reactive } from 'vue'
 
 export const auth = reactive({
 	user: null,
-	logged_in: false,
 })
