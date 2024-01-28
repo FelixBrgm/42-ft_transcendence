@@ -1,6 +1,8 @@
 use actix::prelude::*;
+use tungstenite::protocol::frame::coding::Data;
 use std::collections::HashMap;
 
+use crate::db::Database;
 use crate::game::pong;
 use crate::game::pong::{Player, Pong};
 use crate::game::{ClientMessage, Disconnect, UserId};
@@ -9,14 +11,16 @@ use super::OneVsOneConnect;
 
 #[derive(Clone)]
 pub struct OneVsOneServer {
+	db: Database,
     queue: Vec<(Player, UserId)>,
     pong_instances: HashMap<(UserId, UserId), Addr<Pong>>,
 }
 
 impl OneVsOneServer {
-    pub fn new() -> OneVsOneServer {
+    pub fn new(db: Database) -> OneVsOneServer {
         println!("OneVsOneServer is up.");
         OneVsOneServer {
+			db,
             queue: vec![],
             pong_instances: HashMap::new(),
         }

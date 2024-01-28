@@ -20,9 +20,9 @@ async fn main() {
 
     let chat_server = chat::server::ChatServer::new(db.clone()).start();
 
-    let matchmaking_server = game::matchmake::MatchmakingServer::new().start();
-    let tournament_server = game::tournament::TournamentServer::new().start();
-    let one_vs_one_server = game::one_vs_one::OneVsOneServer::new().start();
+    let matchmaking_server = game::matchmake::MatchmakingServer::new(db.clone()).start();
+    let tournament_server = game::tournament::TournamentServer::new(db.clone()).start();
+    let one_vs_one_server = game::one_vs_one::OneVsOneServer::new(db.clone()).start();
 
     // get cookie key from enviroment
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");

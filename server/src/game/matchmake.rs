@@ -1,20 +1,23 @@
 use actix::prelude::*;
 use std::collections::HashMap;
 
+use crate::db::Database;
 use crate::game::pong;
 use crate::game::pong::{Player, Pong};
 use crate::game::{ClientMessage, Connect, Disconnect, UserId};
 
 #[derive(Clone)]
 pub struct MatchmakingServer {
+	db: Database,
     queue: Vec<Player>,
     pong_instances: HashMap<(UserId, UserId), Addr<Pong>>,
 }
 
 impl MatchmakingServer {
-    pub fn new() -> MatchmakingServer {
+    pub fn new(db: Database) -> MatchmakingServer {
         println!("MatchmakingServer is up.");
         MatchmakingServer {
+			db,
             queue: vec![],
             pong_instances: HashMap::new(),
         }
