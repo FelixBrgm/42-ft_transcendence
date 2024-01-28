@@ -1,7 +1,7 @@
 use super::error::ApiError;
 use crate::db::Database;
 use actix_identity::Identity;
-use actix_web::{get, web, HttpRequest, HttpResponse};
+use actix_web::{get, web, HttpResponse};
 
 #[get("/friend/add/{friend_id}")]
 async fn add(

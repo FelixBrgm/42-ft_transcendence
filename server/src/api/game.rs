@@ -2,8 +2,6 @@ use super::error::ApiError;
 use actix::prelude::*;
 use actix_identity::Identity;
 
-use crate::db::Database;
-
 use crate::game::matchmake::MatchmakingServer;
 use crate::game::one_vs_one::OneVsOneServer;
 use crate::game::tournament::TournamentServer;
@@ -251,9 +249,6 @@ impl Handler<game::Message> for GameSession {
         ctx.text(msg.0);
     }
 }
-
-use std::sync::atomic::{AtomicUsize, Ordering};
-static NEXT_CLIENT_ID: AtomicUsize = AtomicUsize::new(1);
 
 //  -------------------------- GAME ENDPOINTS ----------------------------
 #[get("/game/matchmake")]
