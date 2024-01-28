@@ -1,5 +1,6 @@
 use super::error::ApiError;
 use actix::prelude::*;
+use actix_identity::Identity;
 
 use crate::db::Database;
 
@@ -257,12 +258,16 @@ static NEXT_CLIENT_ID: AtomicUsize = AtomicUsize::new(1);
 //  -------------------------- GAME ENDPOINTS ----------------------------
 #[get("/game/matchmake")]
 async fn matchmaking(
+    identity: Identity,
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<MatchmakingServer>>,
 ) -> Result<HttpResponse, ApiError> {
     println!("HELLO");
-    let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+    // let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+    let client_id = identity.id()?.parse::<i32>()?;
+    let client_id = client_id as usize;
+
     match ws::start(
         GameSession::new_matchmaking(client_id, server.get_ref().clone()),
         &req,
@@ -278,10 +283,13 @@ async fn matchmaking(
 
 #[get("/game/create_tournament/{size}")]
 async fn create_tournament(
+    identity: Identity,
     server: web::Data<Addr<TournamentServer>>,
     size: web::Path<u8>,
 ) -> Result<HttpResponse, ApiError> {
-    let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+    // let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+    let client_id = identity.id()?.parse::<i32>()?;
+    let client_id = client_id as usize;
     let size = size.into_inner();
     if !(size == 2
         || size == 4
@@ -306,13 +314,16 @@ async fn create_tournament(
 
 #[get("/game/connect_tournament/{tournament_id}")]
 async fn connect_tournament(
+    identity: Identity,
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<TournamentServer>>,
     room_id: web::Path<UserId>,
 ) -> Result<HttpResponse, ApiError> {
-    let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
-
+    // let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+    let client_id = identity.id()?.parse::<i32>()?;
+    let client_id = client_id as usize;
+    
     match ws::start(
         GameSession::new_tournament(client_id, server.get_ref().clone(), room_id.into_inner()),
         &req,
@@ -328,12 +339,15 @@ async fn connect_tournament(
 #[get("/game/one_vs_one/{opponent_uid}")]
 async fn one_vs_one(
     req: HttpRequest,
+    identity: Identity,
     stream: web::Payload,
     server: web::Data<Addr<OneVsOneServer>>,
     opponent_uid: web::Path<UserId>,
 ) -> Result<HttpResponse, ApiError> {
-    let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
-
+    // let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+    let client_id = identity.id()?.parse::<i32>()?;
+    let client_id = client_id as usize;
+    
     match ws::start(
         GameSession::new_one_vs_one(
             client_id,
