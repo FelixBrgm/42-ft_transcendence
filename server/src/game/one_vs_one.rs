@@ -1,17 +1,16 @@
 use actix::prelude::*;
-use tungstenite::protocol::frame::coding::Data;
 use std::collections::HashMap;
 
 use crate::db::Database;
 use crate::game::pong;
-use crate::game::pong::{Player, Pong};
+use crate::game::pong::{GameResult, Player, Pong};
 use crate::game::{ClientMessage, Disconnect, UserId};
 
 use super::OneVsOneConnect;
 
 #[derive(Clone)]
 pub struct OneVsOneServer {
-	db: Database,
+    db: Database,
     queue: Vec<(Player, UserId)>,
     pong_instances: HashMap<(UserId, UserId), Addr<Pong>>,
 }
@@ -20,7 +19,7 @@ impl OneVsOneServer {
     pub fn new(db: Database) -> OneVsOneServer {
         println!("OneVsOneServer is up.");
         OneVsOneServer {
-			db,
+            db,
             queue: vec![],
             pong_instances: HashMap::new(),
         }
@@ -137,5 +136,13 @@ impl Handler<ClientMessage> for OneVsOneServer {
                 pong.do_send(pong::PlayerInput { id: msg.id, cmd: c });
             }
         }
+    }
+}
+
+impl Handler<GameResult> for OneVsOneServer {
+    type Result = ();
+
+    fn handle(&mut self, msg: GameResult, ctx: &mut Context<Self>) {
+        let _ = self.db.insert_game(msg.winner as i32, msg.looser as i32);
     }
 }
