@@ -1,13 +1,13 @@
+use super::pong::GameFinished;
+use super::{Create, TournamentConnect};
 use crate::api::game::Stop;
-use crate::game::pong::{Player, Pong};
+
+use crate::game::pong::{Player, PlayerInput, Pong};
 use crate::game::Message;
 use crate::game::{ClientMessage, Disconnect, UserId};
 use actix::prelude::*;
 use num_traits::pow;
 use std::collections::HashMap;
-
-use super::pong::GameFinished;
-use super::{Create, TournamentConnect};
 
 #[derive(Clone, Debug)]
 struct Match {
@@ -189,7 +189,11 @@ impl Handler<TournamentConnect> for TournamentServer {
 
     fn handle(&mut self, msg: TournamentConnect, ctx: &mut Context<Self>) {
         if let Some(t) = self.tournaments.get_mut(&msg.tournament_id) {
+            println!("2");
             t.try_connect(Player::new(msg.uid, msg.socket, msg.addr), ctx);
+        } else {
+            println!("3");
+            msg.addr.do_send(Stop { id: msg.uid });
         }
     }
 }
@@ -218,14 +222,34 @@ impl Handler<ClientMessage> for TournamentServer {
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
         println!("tournament message: {}", msg.msg);
-        // if let Some((ids, pong)) = self
-        //     .pong_instances
-        //     .iter()
-        //     .find(|(ids, _)| ids.0 == msg.id || ids.1 == msg.id)
-        // {
-        //     if let Some(c) = msg.msg.chars().last() {
-        //         pong.do_send(pong::PlayerInput { id: msg.id, cmd: c });
-        //     }
-        // }
+
+        let res = self.tournaments.iter().find(|t| {
+            t.1.rounds
+                .last()
+                .unwrap()
+                .matches
+                .iter()
+                .any(|m| m.player1 == msg.id || m.player2 == msg.id)
+        });
+
+        let Some(tournament) = res else {
+            return;
+        };
+
+        let Some(m) = tournament.1.rounds.last() else {
+            return;
+        };
+
+        let Some(m) = m
+            .matches
+            .iter()
+            .find(|m| m.player1 == msg.id || m.player2 == msg.id)
+        else {
+            return;
+        };
+
+        if let Some(c) = msg.msg.chars().last() {
+            m.instance.do_send(PlayerInput { id: msg.id, cmd: c });
+        }
     }
 }
