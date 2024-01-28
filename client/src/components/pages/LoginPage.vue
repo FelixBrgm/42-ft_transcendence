@@ -26,17 +26,6 @@ export default {
 	},
 	methods: {
 		async login() {
-			// Perform OAuth2 verification
-			// const response = await axios.get('http://127.0.0.1:8080/auth/login', {
-			//     // Your OAuth2 credentials go here
-			// });
-			// if (response.data.access_token) {
-			//     auth.user = response.data.access_token; // Set the user value in router.js
-			//     console.log("Logged in");
-			// } else {
-			//     console.log("Failed to log in");
-			// }
-
 		try {
 			window.location.href = 'http://127.0.0.1:8080/auth/login';
 		} catch (error) {
