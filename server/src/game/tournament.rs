@@ -6,6 +6,7 @@ use actix::prelude::*;
 use num_traits::pow;
 use std::collections::HashMap;
 
+use crate::db::Database;
 use super::pong::GameFinished;
 use super::{Create, TournamentConnect};
 
@@ -129,14 +130,16 @@ impl Tournament {
 
 #[derive(Clone)]
 pub struct TournamentServer {
+	db: Database,
     tournaments: HashMap<usize, Tournament>,
 }
 
 // implement TournamentServer logic -> what information do i need from the requesting client
 impl TournamentServer {
-    pub fn new() -> TournamentServer {
+    pub fn new(db: Database) -> TournamentServer {
         println!("TournamentServer is up.");
         TournamentServer {
+			db,
             tournaments: HashMap::new(),
         }
     }
@@ -184,8 +187,6 @@ impl Actor for TournamentServer {
 
 impl Handler<TournamentConnect> for TournamentServer {
     type Result = ();
-
-    // Called for each round
 
     fn handle(&mut self, msg: TournamentConnect, ctx: &mut Context<Self>) {
         if let Some(t) = self.tournaments.get_mut(&msg.tournament_id) {

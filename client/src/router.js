@@ -7,21 +7,22 @@ import ProfilePage from './components/pages/ProfilePage.vue';
 import DevTest from './components/elements/DevTest.vue';
 import PongGame from './components/elements/PongGame.vue';
 import LoginPage from './components/pages/LoginPage';
+import axios from 'axios';
 
 const router = createRouter({
 	history: createWebHistory(),
 	routes: [
 		{ path: '/', component: HomePage, meta: { title: 'Transcendence' } },
-		{ path: '/login', component: LoginPage , meta: { title: 'Login' } },
+		{ path: '/login', component: LoginPage, meta: { title: 'Login' } },
 		{ path: '/about', component: AboutUs, meta: { title: 'About Us' } },
 		{ path: '/rules', component: RulesPage, meta: { title: 'Rules' } },
 		{ path: '/dev', component: DevTest, meta: { title: 'Developer testing', backgroundColor: 'white' } },
 		{ path: '/profile', component: ProfilePage, meta: { title: 'Profile', } },
-		{ path: '/pong', component: PongGame, meta: { title: 'Pong', } }, 
+		{ path: '/pong', component: PongGame, meta: { title: 'Pong', } },
 	],
 });
 
-router.beforeEach((to, from) => {
+router.beforeEach(async (to, from) => {
 	(from);
 	document.title = to.meta.title || 'Default Title';
 	if (to.meta.backgroundColor) { document.body.style.backgroundColor = to.meta.backgroundColor; }
@@ -29,17 +30,23 @@ router.beforeEach((to, from) => {
 
 	console.log(auth);
 	console.log(to);
+	// on reload should be saved in cookies or sth
 	if (to.path === '/logged_in') {
-		auth.logged_in = true;
+		const response = await axios.get('http://127.0.0.1:8080/user', {
+			withCredentials: true,
+		});
+		auth.user = response.data;
+		console.log(auth.user);
 		return '/';
 	}
-	if (to.path !== "/login" && auth.logged_in == false) {
-		return '/login';
-	}
-	if (to.path === "/login" && auth.logged_in) {
-		return true;
+
+	if (to.path === "/login" && auth.user != null) {
+		return '/';
 	}
 
+	if (to.path !== "/login" && auth.user == null) {
+		return '/login';
+	}
 
 	return true;
 });
@@ -52,5 +59,4 @@ import { reactive } from 'vue'
 
 export const auth = reactive({
 	user: null,
-	logged_in: false,
 })
