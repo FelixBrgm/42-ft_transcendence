@@ -3,7 +3,7 @@ use crate::chat::server::{BlockUser, ChatServer};
 use crate::db::Database;
 use actix::Addr;
 use actix_identity::Identity;
-use actix_web::{get, web, HttpRequest, HttpResponse};
+use actix_web::{get, web, HttpResponse};
 
 #[get("/block/{blocked_id}")]
 async fn add(

@@ -8,15 +8,6 @@ enum Dir {
     Neg,
 }
 
-impl Dir {
-    pub fn reverse(&self) {
-        match self {
-            Dir::Pos => Dir::Neg,
-            Dir::Neg => Dir::Pos,
-        };
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Ball {
     pub x: u16,

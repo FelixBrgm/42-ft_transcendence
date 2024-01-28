@@ -95,7 +95,7 @@ impl Handler<ClientMessage> for MatchmakingServer {
     type Result = ();
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
-        if let Some((ids, pong)) = self
+        if let Some((_, pong)) = self
             .pong_instances
             .iter()
             .find(|(ids, _)| ids.0 == msg.id || ids.1 == msg.id)
@@ -110,7 +110,7 @@ impl Handler<ClientMessage> for MatchmakingServer {
 impl Handler<GameResult> for MatchmakingServer {
     type Result = ();
 
-    fn handle(&mut self, msg: GameResult, ctx: &mut Context<Self>) {
+    fn handle(&mut self, msg: GameResult, _: &mut Context<Self>) {
         let _ = self.db.insert_game(msg.winner as i32, msg.looser as i32);
     }
 }

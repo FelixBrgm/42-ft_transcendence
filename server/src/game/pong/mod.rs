@@ -3,7 +3,7 @@ mod config;
 mod player;
 
 use actix::prelude::*;
-use std::{str::MatchIndices, time::Duration};
+use std::time::Duration;
 
 pub use self::ball::Ball;
 pub use self::config::GameConfig;

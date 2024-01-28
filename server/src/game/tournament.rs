@@ -203,7 +203,7 @@ impl Handler<TournamentConnect> for TournamentServer {
 impl Handler<Create> for TournamentServer {
     type Result = ();
 
-    fn handle(&mut self, msg: Create, ctx: &mut Context<Self>) {
+    fn handle(&mut self, msg: Create, _: &mut Context<Self>) {
         println!(
             "Tournament created with id {} and a size of {}.",
             msg.id, msg.size
