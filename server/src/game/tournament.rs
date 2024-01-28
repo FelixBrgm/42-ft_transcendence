@@ -1,8 +1,7 @@
-use super::pong::GameFinished;
 use super::{Create, TournamentConnect};
 use crate::api::game::Stop;
 
-use crate::game::pong::{Player, PlayerInput, Pong};
+use crate::game::pong::{GameResult, Player, PlayerInput, Pong};
 use crate::game::Message;
 use crate::game::{ClientMessage, Disconnect, UserId};
 use actix::prelude::*;
@@ -10,7 +9,6 @@ use num_traits::pow;
 use std::collections::HashMap;
 
 use crate::db::Database;
-
 
 #[derive(Clone, Debug)]
 struct Match {
@@ -132,7 +130,7 @@ impl Tournament {
 
 #[derive(Clone)]
 pub struct TournamentServer {
-	db: Database,
+    db: Database,
     tournaments: HashMap<usize, Tournament>,
 }
 
@@ -141,17 +139,16 @@ impl TournamentServer {
     pub fn new(db: Database) -> TournamentServer {
         println!("TournamentServer is up.");
         TournamentServer {
-			db,
+            db,
             tournaments: HashMap::new(),
         }
     }
 }
 
-impl Handler<GameFinished> for TournamentServer {
+impl Handler<GameResult> for TournamentServer {
     type Result = ();
 
-    fn handle(&mut self, msg: GameFinished, ctx: &mut Context<Self>) {
-        // After game is finished
+    fn handle(&mut self, msg: GameResult, ctx: &mut Context<Self>) {
         println!("{:?}", msg);
 
         let tournament = self
@@ -164,7 +161,7 @@ impl Handler<GameFinished> for TournamentServer {
                     .unwrap()
                     .matches
                     .iter()
-                    .any(|m| m.player1 == msg.players[0] || m.player2 == msg.players[0])
+                    .any(|m| m.player1 == msg.winner || m.player2 == msg.winner)
             })
             .unwrap();
 
@@ -176,10 +173,12 @@ impl Handler<GameFinished> for TournamentServer {
             .unwrap()
             .matches
             .iter_mut()
-            .find(|m| m.player1 == msg.players[0] || m.player2 == msg.players[0])
+            .find(|m| m.player1 == msg.winner || m.player2 == msg.winner)
             .unwrap();
 
         m.winner = Some(msg.winner);
+
+        let _ = self.db.insert_game(msg.winner as i32, msg.looser as i32);
     }
 }
 

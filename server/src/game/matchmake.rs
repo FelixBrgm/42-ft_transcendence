@@ -3,12 +3,12 @@ use std::collections::HashMap;
 
 use crate::db::Database;
 use crate::game::pong;
-use crate::game::pong::{Player, Pong};
+use crate::game::pong::{GameResult, Player, Pong};
 use crate::game::{ClientMessage, Connect, Disconnect, UserId};
 
 #[derive(Clone)]
 pub struct MatchmakingServer {
-	db: Database,
+    db: Database,
     queue: Vec<Player>,
     pong_instances: HashMap<(UserId, UserId), Addr<Pong>>,
 }
@@ -17,7 +17,7 @@ impl MatchmakingServer {
     pub fn new(db: Database) -> MatchmakingServer {
         println!("MatchmakingServer is up.");
         MatchmakingServer {
-			db,
+            db,
             queue: vec![],
             pong_instances: HashMap::new(),
         }
@@ -104,5 +104,13 @@ impl Handler<ClientMessage> for MatchmakingServer {
                 pong.do_send(pong::PlayerInput { id: msg.id, cmd: c });
             }
         }
+    }
+}
+
+impl Handler<GameResult> for MatchmakingServer {
+    type Result = ();
+
+    fn handle(&mut self, msg: GameResult, ctx: &mut Context<Self>) {
+        let _ = self.db.insert_game(msg.winner as i32, msg.looser as i32);
     }
 }

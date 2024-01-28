@@ -8,17 +8,12 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use models::*;
 
-type DbConnection =
-    diesel::r2d2::PooledConnection<diesel::r2d2::ConnectionManager<diesel::PgConnection>>;
+type DbConnection = diesel::r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 #[derive(Clone)]
 pub struct Database {
     pub pool: Pool<ConnectionManager<PgConnection>>,
 }
-
-// TODO NOTES
-// finish the friendship anf block function function
-// the new functions are untested and remember if you need a transaction, you need to use the same connection
 
 impl Database {
     pub fn new() -> Self {
@@ -370,7 +365,52 @@ impl Database {
     // /                            GAMES
     // / ===============================================================
 
-    pub fn add_game(&self, winner_uid: i32, looser_uid: i32) -> Result<i32> {
+    pub fn update_user_wins_or_losses(
+        &self,
+        uid: i32,
+        is_win: bool,
+        conn: &mut DbConnection,
+    ) -> Result<()> {
+        use schema::app_user::dsl::*;
+
+        let user = app_user.find(uid).first::<User>(conn)?;
+
+        let mut updated_user = UpdateUser {
+            ..Default::default()
+        };
+
+        if is_win {
+            updated_user.wins = Some(user.wins + 1);
+        } else {
+            updated_user.losses = Some(user.losses + 1);
+        }
+
+        diesel::update(app_user.find(uid))
+            .set(&updated_user)
+            .execute(conn)?;
+
+        Ok(())
+    }
+
+    pub fn insert_game(&self, winner_uid: i32, looser_uid: i32) -> Result<()> {
+        let mut con = self.pool.get()?;
+
+        con.transaction::<_, anyhow::Error, _>(|con: &mut DbConnection| {
+            self.add_game(winner_uid, looser_uid, con)?;
+            self.update_user_wins_or_losses(winner_uid, true, con)?;
+            self.update_user_wins_or_losses(looser_uid, false, con)?;
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    pub fn add_game(
+        &self,
+        winner_uid: i32,
+        looser_uid: i32,
+        conn: &mut DbConnection,
+    ) -> Result<i32> {
         use schema::game_match::dsl::*;
 
         let g = NewGameMatch {
@@ -381,7 +421,7 @@ impl Database {
         let inserted_id = diesel::insert_into(game_match)
             .values(g)
             .returning(id)
-            .get_result::<i32>(&mut self.pool.get()?)?;
+            .get_result::<i32>(conn)?;
 
         Ok(inserted_id)
     }

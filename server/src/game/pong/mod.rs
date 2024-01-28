@@ -3,7 +3,7 @@ mod config;
 mod player;
 
 use actix::prelude::*;
-use std::time::Duration;
+use std::{str::MatchIndices, time::Duration};
 
 pub use self::ball::Ball;
 pub use self::config::GameConfig;
@@ -42,18 +42,10 @@ pub struct GameStart;
 #[rtype(result = "()")]
 pub struct GameOver;
 
-// send game result to he hosting server
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct GameResult {
-    players: [Player; 2],
-    winner: UserId,
-}
-
 #[derive(Message, Debug)]
 #[rtype(result = "()")]
-pub struct GameFinished {
-    pub players: [UserId; 2],
+pub struct GameResult {
+    pub looser: UserId,
     pub winner: UserId,
 }
 
@@ -201,18 +193,27 @@ impl Handler<GameOver> for Pong {
         self.finished = true;
         self.send_to_players(Message("END".to_owned()));
 
-		// update the db
+        // update the db
 
-        if let GameMode::Tournament(addr) = &self.mode {
-            let mut winner = self.players[1].id;
-            if self.score[0] > self.score[1] {
-                winner = self.players[0].id;
+        let (winner, looser) = if self.score[0] > self.score[1] {
+            (self.players[0].id, self.players[1].id)
+        } else {
+            (self.players[1].id, self.players[0].id)
+        };
+        let res = GameResult { winner, looser };
+
+        match &self.mode {
+            GameMode::Matchmaking(addr) => {
+                addr.do_send(res);
             }
-            addr.do_send(GameFinished {
-                players: [self.players[0].id, self.players[1].id],
-                winner,
-            })
+            GameMode::OneVsOne(addr) => {
+                addr.do_send(res);
+            }
+            GameMode::Tournament(addr) => {
+                addr.do_send(res);
+            }
         }
+
         for p in self.players.iter_mut() {
             p.addr.do_send(Stop { id: p.id });
         }
