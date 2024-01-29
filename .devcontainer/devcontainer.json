@@ -18,5 +18,9 @@
 			]
 		}
 	},
-	"workspaceFolder": "/workspaces/42-ft_transcendence"
+	"workspaceFolder": "/workspaces/42-ft_transcendence",
+	"mounts": [
+		"source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
+		"source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
+	]
 }
