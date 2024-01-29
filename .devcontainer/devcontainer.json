@@ -1,14 +1,19 @@
 {
 	"name": "ft_transcendence",
-	"dockerFile": "./Dockerfile",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "your_app",
 	"forwardPorts": [4242, 4242],
-	"settings": {
-		"terminal.integrated.shell.linux": "/bin/bash",
+	"customizations":{
+		"vscode": {
+			"settings": {
+				"terminal.integrated.shell.linux": "/bin/bash"
+			},
+			"extensions": [
+					"rust-lang.rust-analyzer",
+					"octref.vetur",
+					"PKief.material-icon-theme"
+				]
+		}
 	},
-	"extensions": [
-		"rust-lang.rust-analyzer",
-		"octref.vetur",
-		"PKief.material-icon-theme"
-	],
 	"workspaceFolder": "/workspaces/42-ft_transcendence"
 }
