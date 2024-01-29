@@ -253,15 +253,15 @@ impl Handler<game::Message> for GameSession {
 //  -------------------------- GAME ENDPOINTS ----------------------------
 #[get("/game/matchmake")]
 async fn matchmaking(
-    identity: Identity,
+    // identity: Identity,
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<MatchmakingServer>>,
 ) -> Result<HttpResponse, ApiError> {
     println!("HELLO");
-    // let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
-    let client_id = identity.id()?.parse::<i32>()?;
-    let client_id = client_id as usize;
+    let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+    // let client_id = identity.id()?.parse::<i32>()?;
+    // let client_id = client_id as usize;
 
     match ws::start(
         GameSession::new_matchmaking(client_id, server.get_ref().clone()),
