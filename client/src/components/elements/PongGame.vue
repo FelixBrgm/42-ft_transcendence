@@ -52,6 +52,7 @@ export default {
       const parts = message.split(' ');
       if (parts[0] == 'FORMAT:' && parts[1] == '{YOU}') {
         this.isYou = true;
+        this.startButtonEnabled = false;
       } 
       if(parts[0] == 'SCR')
       {
@@ -115,8 +116,8 @@ export default {
       },
         startGame() {
       // Connect to WebSocket when the button is clicked
-      this.websocket = new WebSocket('ws://localhost:8080/game/matchmake');
       this.startButtonEnabled = false;
+      this.websocket = new WebSocket('ws://localhost:8080/game/matchmake');
       this.textvalue = "Waiting for game";
       // Handle WebSocket events
       this.websocket.addEventListener('open', (event) => {
@@ -225,3 +226,5 @@ export default {
 }
 
 </style>
+
+ws.addEventListener('open', onWebSocketOpen);
