@@ -5,7 +5,7 @@ import AboutUs from './components/pages/AboutUs.vue';
 import RulesPage from './components/pages/RulesPage.vue';
 import ProfilePage from './components/pages/ProfilePage.vue';
 import DevTest from './components/elements/DevTest.vue';
-import PongGame from './components/elements/PongGame.vue';
+import PongGame from './components/pages/GamePage.vue';
 import LoginPage from './components/pages/LoginPage';
 import axios from 'axios';
 
@@ -21,7 +21,7 @@ const router = createRouter({
 		{ path: '/pong', component: PongGame, meta: { title: 'Pong', } },
 	],
 });
-
+ 
 router.beforeEach(async (to, from, next) => {
 	console.log(to);
 	(from);
