@@ -253,7 +253,7 @@ impl Handler<game::Message> for GameSession {
 //  -------------------------- GAME ENDPOINTS ----------------------------
 #[get("/game/matchmake")]
 async fn matchmaking(
-    // identity: Identity,
+    identity: Identity,
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<MatchmakingServer>>,
