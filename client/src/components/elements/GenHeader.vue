@@ -12,11 +12,11 @@
 				<li v-for="(item, index) in menuItems" :key="index">
 					<a :href="item.link" class="neon-text">{{ item.text }}</a>
 				</li>
-				<a @click="logout" class="neon-text">Logout</a>
+				<a v-on:click="logout" class="neon-text">Logout</a>
 			</ul>
 		</nav>
 	</header>
-</template>
+</template> 
 
 <script>
 import axios from 'axios';
@@ -45,6 +45,7 @@ export default {
 		async logout() {
 			try {
 				await axios.get('http://127.0.0.1:8080/auth/logout', { withCredentials: true });
+				this.$router.push('/login');
 			} catch (error) {
 				console.error('Error Logging out:', error);
 			}
@@ -73,8 +74,9 @@ export default {
   animation: neonGlow 6s infinite;
   margin: 30px auto; /* Centering the header */
   max-width: 1600px;
+  min-width: 950px; 
 }
-
+ 
 .neon-text {
 	text-shadow: 0 0 10px hsl(45, 100%, 60%), 0 0 20px hsl(45, 100%, 60%), 0 0 30px hsl(45, 100%, 60%);
 }

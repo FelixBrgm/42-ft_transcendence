@@ -1,5 +1,5 @@
-// src/router.js
 import { createRouter, createWebHistory } from 'vue-router';
+import store from './store';
 import HomePage from './components/pages/HomePage.vue';
 import AboutUs from './components/pages/AboutUs.vue';
 import RulesPage from './components/pages/RulesPage.vue';
@@ -22,39 +22,39 @@ const router = createRouter({
 	],
 });
 
-router.beforeEach(async (to, from) => {
+router.beforeEach(async (to, from, next) => {
 	console.log(to);
 	(from);
 	document.title = to.meta.title || 'Default Title';
-	if (to.meta.backgroundColor) { document.body.style.backgroundColor = to.meta.backgroundColor; }
-	else { document.body.style.backgroundColor = 'black'; }
 
-	if (to.path === '/logged_in') {
-		const response = await axios.get('http://127.0.0.1:8080/user', {
-			withCredentials: true,
-		});
-		auth.user = response.data;
-		console.log(auth.user);
-		return '/';
+	if (to.meta.backgroundColor) {
+		document.body.style.backgroundColor = to.meta.backgroundColor;
+	} else { 
+		document.body.style.backgroundColor = 'black';
 	}
 
-	if (to.path === "/login" && auth.user != null) {
-		return '/';
+	if (to.path === '/logged_in' && !store.state.auth.user) {
+		try {
+			const response = await axios.get('http://127.0.0.1:8080/user', {
+				withCredentials: true,
+			});
+			store.commit('auth/setUser', response.data);
+			console.log(store.state.auth.user);
+			next('/');
+		} catch (error) {
+			console.error('Error fetching user data:', error);
+			next('/login');
+		}
 	}
 
-	if (to.path !== "/login" && auth.user == null) {
-		return '/login';
+	if (to.path === "/login" && store.state.auth.user != null) {
+		next('/');
 	}
-
-	return true;
+	else if (to.meta.requiresAuth && store.state.auth.user == null) {
+		next('/login');
+	} else {
+		next();
+	}
 });
 
 export default router;
-
-
-// Login storing
-import { reactive } from 'vue'
-
-export const auth = reactive({
-	user: null,
-})

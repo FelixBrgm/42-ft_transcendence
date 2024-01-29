@@ -2,7 +2,7 @@
 	<div id="app">
 		<GenHeader />
 		<div id="Body">
-		<Body class="body">
+		<div class="body">
 			<div>
 				<h1 style="font-size: 1.7em;">Official Pong Tournament Rules and Regulations</h1>
 				<div>
@@ -39,8 +39,8 @@
 				</div>
 				<p style="font-size: 1.2em;">Remember, Pong is more than just a game; it's a way of life. Embrace the absurdity with a straight face, and may the Pong gods smile upon you. Good luck, and may your paddles be forever swift and your bounces be eternally unpredictable.</p>
 			</div>
-		</Body>
 		</div>
+		</div> 
 		<GenFooter />
 	</div>
 	</template>
