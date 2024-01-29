@@ -11,11 +11,13 @@
     "@vue/cli-plugin-eslint": "^5.0.8",
     "@vue/compiler-sfc": "^3.2.29",
     "axios": "^1.6.5",
+    "bootstrap": "^5.3.2",
     "core-js": "^3.8.3",
     "howler": "^2.2.4",
     "html-webpack-plugin": "^5.6.0",
     "vue": "^3.2.26",
-    "vue-router": "^4.2.5"
+    "vue-router": "^4.2.5",
+    "vuex": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",

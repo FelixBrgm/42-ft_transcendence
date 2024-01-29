@@ -2,7 +2,7 @@
 	<div id="app">
 		<GenHeader />
 		<div id="Body">
-		<PongGame/>
+			
 		</div>
 		<GenFooter />
 	</div>
@@ -11,13 +11,11 @@
 <script>
 	import GenHeader from "@/components/elements/GenHeader.vue";
 	import GenFooter from "@/components/elements/GenFooter.vue";
-	import PongGame from "@/components/elements/PongGame.vue";
 	
 	export default {
 	components: {
 		GenHeader,
 		GenFooter,
-		PongGame,
 	},
 	};
 </script>
@@ -38,6 +36,6 @@
 		animation: neonGlow 6s infinite;
 		color: white;
 		max-width: 1600px; /* Set the maximum width */
-		argin: 0 auto; /* Center the footer */
+		margin: 0 auto; /* Center the footer */
 	}
 </style>

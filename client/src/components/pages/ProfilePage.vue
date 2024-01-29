@@ -2,9 +2,9 @@
 	<div id="app">
 		<GenHeader />
 		<div id="Body">
-		<Body class="body">
+		<div class="body">
 			<h1>TEST</h1>
-		</Body>
+		</div>
 		</div>
 		<GenFooter />
 	</div>
