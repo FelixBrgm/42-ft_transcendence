@@ -30,10 +30,9 @@ export default {
   methods: {
     playGame() {
       const websocket = new WebSocket('ws://localhost:8080/game/matchmake');
-
-    websocket.addEventListener('open', () => {
-      this.$router.push("/game"); 
-    });
+      websocket.addEventListener('open', () => {
+      this.$router.push("/pong"); 
+      });
   },
   },
 };
