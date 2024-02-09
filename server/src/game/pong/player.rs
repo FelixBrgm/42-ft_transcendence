@@ -1,7 +1,8 @@
 use actix::Addr;
 
 use super::GameConfig;
-use crate::{api::game::GameSession, game::Socket};
+use crate::game::actor::GameSession;
+use crate::game::Socket;
 
 #[derive(Debug, Clone)]
 pub struct Player {

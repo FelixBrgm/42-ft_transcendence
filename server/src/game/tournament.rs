@@ -1,9 +1,11 @@
 use super::{Create, TournamentConnect};
-use crate::api::game::Stop;
+use crate::game::actor::Stop;
 
+use crate::game::actor::GameMode;
 use crate::game::pong::{GameResult, Player, PlayerInput, Pong};
 use crate::game::Message;
 use crate::game::{ClientMessage, Disconnect, UserId};
+
 use actix::prelude::*;
 use num_traits::pow;
 use std::collections::HashMap;
@@ -114,11 +116,7 @@ impl Tournament {
             ));
 
             println!("starting new game between {:?}", player_ids);
-            let pong = Pong::new(
-                [p1, p2],
-                crate::api::game::GameMode::Tournament(ctx.address()),
-            )
-            .start();
+            let pong = Pong::new([p1, p2], GameMode::Tournament(ctx.address())).start();
 
             let m = Match::new(player_ids.0, player_ids.1, pong);
             round.matches.push(m);
