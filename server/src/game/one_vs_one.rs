@@ -2,6 +2,7 @@ use actix::prelude::*;
 use std::collections::HashMap;
 
 use crate::db::Database;
+use crate::game::actor::GameMode;
 use crate::game::pong;
 use crate::game::pong::{GameResult, Player, Pong};
 use crate::game::{ClientMessage, Disconnect, UserId};
@@ -38,11 +39,8 @@ impl OneVsOneServer {
                 // if yes then start game
                 let opponent = self.queue.remove(q);
                 println!("starting new 1v1 game");
-                let pong = Pong::new(
-                    [player, opponent.0],
-                    crate::api::game::GameMode::OneVsOne(ctx.address()),
-                )
-                .start();
+                let pong =
+                    Pong::new([player, opponent.0], GameMode::OneVsOne(ctx.address())).start();
                 self.pong_instances.insert((player_id, opponent_uid), pong);
             }
             None => {

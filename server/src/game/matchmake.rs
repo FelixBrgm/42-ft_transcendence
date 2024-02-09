@@ -2,6 +2,7 @@ use actix::prelude::*;
 use std::collections::HashMap;
 
 use crate::db::Database;
+use crate::game::actor::GameMode;
 use crate::game::pong;
 use crate::game::pong::{GameResult, Player, Pong};
 use crate::game::{ClientMessage, Connect, Disconnect, UserId};
@@ -57,11 +58,7 @@ impl Handler<Connect> for MatchmakingServer {
             let player_ids = (p1.id, p2.id);
 
             println!("starting new game between {:?}", player_ids);
-            let pong = Pong::new(
-                [p1, p2],
-                crate::api::game::GameMode::Matchmaking(ctx.address()),
-            )
-            .start();
+            let pong = Pong::new([p1, p2], GameMode::Matchmaking(ctx.address())).start();
 
             if !self.is_player_stored(player_ids.0) && !self.is_player_stored(player_ids.1) {
                 self.pong_instances.insert(player_ids, pong);

@@ -235,6 +235,7 @@ async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpRespo
     println!("logging out user");
 
     database.update_user_status(id.id()?.parse()?, "offline")?;
+    println!("gets here");
     id.logout();
     Ok(HttpResponse::Found()
         .insert_header((LOCATION, "/"))

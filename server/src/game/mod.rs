@@ -1,5 +1,5 @@
+pub mod actor;
 pub mod matchmake;
-
 pub mod one_vs_one;
 mod pong;
 pub mod tournament;
@@ -17,7 +17,7 @@ pub struct Message(pub String);
 #[rtype(result = "()")]
 pub struct Connect {
     pub id: UserId,
-    pub addr: Addr<crate::api::game::GameSession>,
+    pub addr: Addr<crate::game::actor::GameSession>,
     pub socket: Socket,
 }
 
@@ -25,7 +25,7 @@ pub struct Connect {
 #[rtype(result = "()")]
 pub struct TournamentConnect {
     pub tournament_id: UserId,
-    pub addr: Addr<crate::api::game::GameSession>,
+    pub addr: Addr<crate::game::actor::GameSession>,
     pub uid: UserId,
     pub socket: Socket,
 }
@@ -33,7 +33,7 @@ pub struct TournamentConnect {
 #[rtype(result = "()")]
 pub struct OneVsOneConnect {
     pub opponent: UserId,
-    pub addr: Addr<crate::api::game::GameSession>,
+    pub addr: Addr<crate::game::actor::GameSession>,
     pub uid: UserId,
     pub socket: Socket,
 }

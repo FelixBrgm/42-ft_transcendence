@@ -8,7 +8,7 @@ use std::time::Duration;
 pub use self::ball::Ball;
 pub use self::config::GameConfig;
 pub use self::player::Player;
-use crate::api::game::{GameMode, Stop};
+use crate::game::actor::{GameMode, Stop};
 pub use crate::game::{Message, UserId};
 
 const TICK_INTERVAL: Duration = Duration::from_millis(5);
