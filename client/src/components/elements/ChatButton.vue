@@ -1,19 +1,13 @@
 <template>
-  <div @click="toggleChat" class="fixed-bottom" style="right: 28px; bottom: 120px;">
-    <div v-if="!showChat" class="chat-button btn btn-primary">
+  <div @click="toggleChat" style="position: fixed; right: 150px; bottom: 120px;">
+    <div class="chat-button">
       <img src="@/assets/comment.png" alt="Comment" class="comment-icon" />
-    </div>
-    <div v-else class="chat-button btn btn-danger">
-      <img src="@/assets/cross.png" alt="Cross" class="cross-icon" />
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  props: {
-    showChat: Boolean,
-  },
   methods: {
     toggleChat() {
       this.$emit('toggle-chat');
@@ -28,12 +22,8 @@ export default {
   height: 30px;
 }
 
-.cross-icon {
-  width: 25px;
-  height: 25px;
-}
-
 .chat-button {
+  background-color: #00f0ff; /* Change this to the desired color */
   box-shadow: 0 0 10px 5px #00f0ff;
   animation: neonGlow 6s infinite;
   border-radius: 50%;
@@ -43,7 +33,9 @@ export default {
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  position: relative;
+  margin-left: auto; 
 }
 
 /* Add your custom styles here */
-</style>
+</style>  

@@ -79,6 +79,7 @@ export default {
  
 .neon-text {
 	text-shadow: 0 0 10px hsl(45, 100%, 60%), 0 0 20px hsl(45, 100%, 60%), 0 0 30px hsl(45, 100%, 60%);
+	cursor: pointer;
 }
 
 @keyframes neonGlow {
