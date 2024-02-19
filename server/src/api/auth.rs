@@ -6,6 +6,7 @@ use actix_identity::Identity;
 use actix_session::Session;
 use actix_web::get;
 use actix_web::http::header::LOCATION;
+use actix_web::http::header;
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse};
 use oauth2::basic::BasicClient;
 use oauth2::{CsrfToken, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
@@ -143,10 +144,10 @@ async fn callback(
 
     // add the user to the socket hashmap
 
-    let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
-    return Ok(HttpResponse::Found()
-        .insert_header((LOCATION, frontend_url))
-        .finish());
+	let inend_url = std::env::var("INEND_URL").expect("INEND_URL must be set");
+	return Ok(HttpResponse::Found()
+		.insert_header((LOCATION, inend_url))
+		.finish());
 }
 
 fn extract_code_and_state(
@@ -232,15 +233,9 @@ async fn interact_with_db(
 
 #[get("/auth/logout")]
 async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpResponse, ApiError> {
-    println!("logging out user");
-
     database.update_user_status(id.id()?.parse()?, "offline")?;
-    println!("gets here");
     id.logout();
-    let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
-    return Ok(HttpResponse::Found()
-        .insert_header((LOCATION, frontend_url))
-        .finish());
+	Ok(HttpResponse::Ok().json("User logged out!"))
 }
 
 // ************************************************************ \\
