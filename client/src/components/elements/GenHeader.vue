@@ -22,6 +22,8 @@
 import axios from 'axios';
 import { Howl } from 'howler';
 import honkSound from '@/assets/honk.mp3';
+import store from '../../store';
+
 
 export default {
 	data() {
@@ -45,6 +47,7 @@ export default {
 		async logout() {
 			try {
 				await axios.get('http://127.0.0.1:8080/auth/logout', { withCredentials: true });
+				store.state.auth.user = null;
 				this.$router.push('/login');
 			} catch (error) {
 				console.error('Error Logging out:', error);
