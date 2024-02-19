@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import store from './store';
 import HomePage from './components/pages/HomePage.vue';
 import AboutUs from './components/pages/AboutUs.vue';
 import RulesPage from './components/pages/RulesPage.vue';
@@ -7,7 +6,6 @@ import ProfilePage from './components/pages/ProfilePage.vue';
 import DevTest from './components/elements/DevTest.vue';
 import PongGame from './components/pages/GamePage.vue';
 import LoginPage from './components/pages/LoginPage';
-import axios from 'axios';
 
 const router = createRouter({
 	history: createWebHistory(),
@@ -21,40 +19,36 @@ const router = createRouter({
 		{ path: '/pong', component: PongGame, meta: { title: 'Pong', } },
 	],
 });
- 
-router.beforeEach(async (to, from, next) => {
-	console.log(to);
-	(from);
-	document.title = to.meta.title || 'Default Title';
 
-	if (to.meta.backgroundColor) {
-		document.body.style.backgroundColor = to.meta.backgroundColor;
-	} else { 
-		document.body.style.backgroundColor = 'black';
-	}
+// import store from './store';
+// import axios from 'axios';
+// router.beforeEach(async (to, from, next) => {
+//     console.log(to, from);
 
-	if (to.path === '/logged_in' && !store.state.auth.user) {
-		try {
-			const response = await axios.get('http://127.0.0.1:8080/user', {
-				withCredentials: true,
-			});
-			store.commit('auth/setUser', response.data);
-			console.log(store.state.auth.user);
-			next('/');
-		} catch (error) {
-			console.error('Error fetching user data:', error);
-			next('/login');
-		}
-	}
+//     document.body.style.backgroundColor = to.meta.backgroundColor || 'black';
 
-	if (to.path === "/login" && store.state.auth.user != null) {
-		next('/');
-	}
-	else if (to.meta.requiresAuth && store.state.auth.user == null) {
-		next('/login');
-	} else {
-		next();
-	}
-});
+//     if (!store.state.auth.user && to.path != "/login") {
+//         try {
+//             const response = await axios.get('http://127.0.0.1:8080/user', {
+//                 withCredentials: true,
+//             });
+//             store.commit('auth/setUser', response.data);
+//             console.log(store.state.auth.user);
+//         } catch (error) {
+//             console.error('Error fetching user data:', error);
+// 			return next('/login');
+//         }
+//     }
+	
+// 	if (to.path === "/login" && store.state.auth.user != null) {
+//         return next('/');
+//     }
+    
+// 	if (to.meta.requiresAuth && !store.state.auth.user) {
+//         return next('/login');
+//     }
 
-export default router;
+//     next();
+// });
+
+export default router; 
