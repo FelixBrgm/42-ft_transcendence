@@ -21,6 +21,7 @@
 <script>
 import GenHeader from "@/components/elements/GenHeader.vue";
 import GenFooter from "@/components/elements/GenFooter.vue";
+import axios from 'axios';
 
 export default {
   components: {
@@ -29,16 +30,19 @@ export default {
   },
   methods: {
     playGame() {
-      const websocket = new WebSocket('ws://localhost:8080/game/matchmake');
-      websocket.addEventListener('open', () => {
-      this.$router.push("/pong"); 
-      });
-  },
+      axios.get('http://localhost:8080/game/matchmake', { withCredentials: true })
+        .then(() => {
+          this.$router.push("/pong");
+        })
+        .catch(error => {
+          console.error('Error occurred while initiating game:', error);
+        });
+    },
   },
 };
-</script>
+</script> 
  
-<style>
+<style> 
 @import "./../functions/neonglow.css";
 
 .body {
@@ -60,6 +64,7 @@ export default {
   margin-bottom: 20px;
   box-shadow: 0 0 10px 5px #00f0ff;
   animation: neonGlow 6s infinite;
+  cursor: pointer;
 }
 
 </style>
