@@ -46,9 +46,9 @@ async fn login(
     // If user is already logged in redirect to frontend
     if id.is_some() {
         println!("(login) {:?} is already logged in", id.unwrap().id());
-        let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
+        let inend_url = std::env::var("INEND_URL").expect("INEND_URL must be set");
         return Ok(HttpResponse::Found()
-            .insert_header((LOCATION, frontend_url))
+            .insert_header((LOCATION, inend_url))
             .finish());
     }
 
@@ -93,9 +93,9 @@ async fn callback(
     // If user is already logged in redirect to frontend
     if id.is_some() {
         println!("(callback) {:?} is already logged in", id.unwrap().id());
-        let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
+        let inend_url = std::env::var("INEND_URL").expect("INEND_URL must be set");
         return Ok(HttpResponse::Found()
-            .insert_header((LOCATION, frontend_url))
+            .insert_header((LOCATION, inend_url))
             .finish());
     }
 
@@ -237,9 +237,10 @@ async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpRespo
     database.update_user_status(id.id()?.parse()?, "offline")?;
     println!("gets here");
     id.logout();
-    Ok(HttpResponse::Found()
-        .insert_header((LOCATION, "/"))
-        .finish())
+    let frontend_url = std::env::var("FRONTEND_URL").expect("FRONTEND_URL must be set");
+    return Ok(HttpResponse::Found()
+        .insert_header((LOCATION, frontend_url))
+        .finish());
 }
 
 // ************************************************************ \\
