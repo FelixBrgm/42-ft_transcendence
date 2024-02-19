@@ -34,7 +34,7 @@ async fn main() {
     let _ = HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_origin()
-            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
             .allowed_headers(vec![
                 header::CONTENT_TYPE,
                 header::AUTHORIZATION,
