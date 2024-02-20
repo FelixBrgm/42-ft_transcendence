@@ -120,7 +120,9 @@ export default {
       // Connect to WebSocket when the button is clicked
       this.startButtonEnabled = false;
       const userId = store.state.auth.user.id;
-      this.websocket = new WebSocket('ws://localhost:8080/game/matchmake/' + userId);
+      const token = store.state.auth.user.password;
+      const websocketUrl = `ws://localhost:8080/game/matchmake/?id=${userId}&token=${token}`;
+      this.websocket = new WebSocket(websocketUrl);
       this.textvalue = "Waiting for game";
       // Handle WebSocket events
       this.websocket.addEventListener('open', (event) => {
@@ -136,6 +138,7 @@ export default {
         console.log('WebSocket connection closed:', event); 
       });
 
+	// handle if websocket connection failed
       this.websocket.addEventListener('error', (event) => {
         console.error('WebSocket error:', event);
       });

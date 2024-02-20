@@ -9,7 +9,8 @@ diesel::table! {
         alias -> Varchar,
         #[max_length = 255]
         avatar -> Varchar,
-        password -> Nullable<Bytea>,
+        #[max_length = 255]
+        password -> Varchar,
         #[max_length = 255]
         status -> Varchar,
         wins -> Int4,
