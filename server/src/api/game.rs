@@ -3,25 +3,35 @@ use actix::prelude::*;
 use actix_identity::Identity;
 use actix_web::{get, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
+use serde::Deserialize;
 
 use crate::game::actor::GameSession;
 use crate::game::matchmake::MatchmakingServer;
 use crate::game::one_vs_one::OneVsOneServer;
 use crate::game::tournament::TournamentServer;
 use crate::game::{self, UserId};
+use crate::db::Database;
 
+#[derive(Deserialize)]
+struct Info {
+    id: usize,
+	token: String,
+}
 
-#[get("/game/matchmake/{client_id}")]
+#[get("/game/matchmake/")]
 async fn matchmaking(
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<MatchmakingServer>>,
-	client_id: web::Path<usize>,
+	info: web::Query<Info>,
+	db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-    let client_id = client_id.into_inner();
 
+    if !db.check_user_token(info.id as i32, &info.token)? {
+        return Err(ApiError::Unauthorized);
+    }
     match ws::start(
-        GameSession::new_matchmaking(client_id, server.get_ref().clone()),
+        GameSession::new_matchmaking(info.id, server.get_ref().clone()),
         &req,
         stream,
     ) {

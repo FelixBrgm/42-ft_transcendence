@@ -6,7 +6,6 @@ use actix_identity::Identity;
 use actix_session::Session;
 use actix_web::get;
 use actix_web::http::header::LOCATION;
-use actix_web::http::header;
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse};
 use oauth2::basic::BasicClient;
 use oauth2::{CsrfToken, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
@@ -14,29 +13,29 @@ use reqwest;
 use serde::Deserialize;
 use serde_json;
 
-#[get("/auth/fake/{uid}")]
-async fn fake(
-    id: Option<Identity>,
-    uid: web::Path<i32>,
-    req: HttpRequest,
-    db: web::Data<Database>,
-) -> Result<HttpResponse, ApiError> {
-    if id.is_some() {
-        println!("(login) {:?} is already logged in", id.unwrap().id());
-        return Ok(HttpResponse::Found().finish());
-    }
+// #[get("/auth/fake/{uid}")]
+// async fn fake(
+//     id: Option<Identity>,
+//     uid: web::Path<i32>,
+//     req: HttpRequest,
+//     db: web::Data<Database>,
+// ) -> Result<HttpResponse, ApiError> {
+//     if id.is_some() {
+//         println!("(login) {:?} is already logged in", id.unwrap().id());
+//         return Ok(HttpResponse::Found().finish());
+//     }
 
-    let uid = uid.into_inner();
-    db.add_user(&NewUser {
-        id: uid,
-        intra: format!("user {}", uid),
-        alias: format!("."),
-        avatar: format!("."),
-    })?;
+//     let uid = uid.into_inner();
+//     db.add_user(&NewUser {
+//         id: uid,
+//         intra: format!("user {}", uid),
+//         alias: format!("."),
+//         avatar: format!("."),
+//     })?;
 
-    Identity::login(&req.extensions(), uid.to_string())?;
-    Ok(HttpResponse::Ok().finish())
-}
+//     Identity::login(&req.extensions(), uid.to_string())?;
+//     Ok(HttpResponse::Ok().finish())
+// }
 
 #[get("/auth/login")]
 async fn login(
@@ -143,7 +142,6 @@ async fn callback(
     interact_with_db(user_info, database).await?;
 
     // add the user to the socket hashmap
-
 	let inend_url = std::env::var("INEND_URL").expect("INEND_URL must be set");
 	return Ok(HttpResponse::Found()
 		.insert_header((LOCATION, inend_url))
@@ -202,13 +200,22 @@ async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError> {
     Ok((intra_id, intra_login, intra_avatar))
 }
 
+use rand::RngCore;
+use rand::thread_rng;
+use hex;
+
 async fn interact_with_db(
     user_info: (i32, String, String),
     database: web::Data<Database>,
 ) -> Result<(), ApiError> {
     let (id, login_d, avatar) = user_info;
 
-    // todo: implement password
+	let mut rng = thread_rng();
+    let mut password_bytes = [0u8; 16];
+    rng.fill_bytes(&mut password_bytes);
+
+    let password = hex::encode(password_bytes);
+
     match database.get_user_by_id(id) {
         Ok(user) => {
             database.update_user_status(id, "online")?;
@@ -221,6 +228,7 @@ async fn interact_with_db(
                 intra: login_d.to_string(),
                 alias: login_d,
                 avatar,
+				password,
             })?;
         }
     }
