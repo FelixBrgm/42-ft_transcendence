@@ -17,6 +17,8 @@
 
 <script>
 
+import store from '../../store';
+
 export default { 
   data() {
     return {
@@ -117,7 +119,8 @@ export default {
         startGame() {
       // Connect to WebSocket when the button is clicked
       this.startButtonEnabled = false;
-      this.websocket = new WebSocket('ws://localhost:8080/game/matchmake');
+      const userId = store.state.auth.user.id;
+      this.websocket = new WebSocket('ws://localhost:8080/game/matchmake/' + userId);
       this.textvalue = "Waiting for game";
       // Handle WebSocket events
       this.websocket.addEventListener('open', (event) => {
