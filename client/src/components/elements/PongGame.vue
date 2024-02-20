@@ -16,7 +16,7 @@
 </template> 
 
 <script>
-import axios from 'axios';
+
 export default { 
   data() {
     return {
@@ -114,42 +114,28 @@ export default {
           enemyPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red';
         }
       },
-startGame() {
-    axios.get('http://127.0.0.1:8080/game/matchmake', { withCredentials: true })
-        .then(response => {
-            if (response.status !== 200) {
-                throw new Error('HTTP request failed');
-            }
-            return response.data;
-        })
-        .then(url => {
-            // Convert the response URL to a WebSocket URL
-            const wsURL = url.replace('http', 'ws');
-            // Establish a WebSocket connection
-            this.websocket = new WebSocket(wsURL);
+        startGame() {
+      // Connect to WebSocket when the button is clicked
+      this.startButtonEnabled = false;
+      this.websocket = new WebSocket('ws://localhost:8080/game/matchmake/');
+      this.textvalue = "Waiting for game";
+      // Handle WebSocket events
+      this.websocket.addEventListener('open', (event) => {
+        console.log('WebSocket connection opened:', event);
+      });
 
-            // Handle WebSocket events
-            this.websocket.addEventListener('open', (event) => {
-                console.log('WebSocket connection opened:', event);
-                this.textvalue = "Waiting for game";
-            });
+      this.websocket.addEventListener('message', (event) => {
+        console.log('WebSocket message received:', event.data);
+        this.handleWebSocketMessage(event.data);
+      });
 
-            this.websocket.addEventListener('message', (event) => {
-                console.log('WebSocket message received:', event.data);
-                this.handleWebSocketMessage(event.data);
-            });
+      this.websocket.addEventListener('close', (event) => {
+        console.log('WebSocket connection closed:', event); 
+      });
 
-            this.websocket.addEventListener('close', (event) => {
-                console.log('WebSocket connection closed:', event);
-            });
-
-            this.websocket.addEventListener('error', (event) => {
-                console.error('WebSocket error:', event);
-            });
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+      this.websocket.addEventListener('error', (event) => {
+        console.error('WebSocket error:', event);
+      });
     },
     delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));

@@ -18,8 +18,7 @@ async fn matchmaking(
     stream: web::Payload,
     server: web::Data<Addr<MatchmakingServer>>,
 ) -> Result<HttpResponse, ApiError> {
-    let client_id = identity.id()?.parse::<i32>()?;
-    let client_id = client_id as usize;
+    let client_id = identity.id()?.parse::<usize>()?;
 
     match ws::start(
         GameSession::new_matchmaking(client_id, server.get_ref().clone()),
@@ -40,9 +39,9 @@ async fn create_tournament(
     server: web::Data<Addr<TournamentServer>>,
     size: web::Path<u8>,
 ) -> Result<HttpResponse, ApiError> {
-    let client_id = identity.id()?.parse::<i32>()?;
-    let client_id = client_id as usize;
-    let size = size.into_inner();
+    let client_id = identity.id()?.parse::<usize>()?;
+
+	let size = size.into_inner();
     if !(size == 2
         || size == 4
         || size == 8
@@ -72,8 +71,7 @@ async fn connect_tournament(
     server: web::Data<Addr<TournamentServer>>,
     room_id: web::Path<UserId>,
 ) -> Result<HttpResponse, ApiError> {
-    let client_id = identity.id()?.parse::<i32>()?;
-    let client_id = client_id as usize;
+    let client_id = identity.id()?.parse::<usize>()?;
 
     match ws::start(
         GameSession::new_tournament(client_id, server.get_ref().clone(), room_id.into_inner()),
@@ -96,9 +94,7 @@ async fn one_vs_one(
     server: web::Data<Addr<OneVsOneServer>>,
     opponent_uid: web::Path<UserId>,
 ) -> Result<HttpResponse, ApiError> {
-    // let client_id = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
-    let client_id = identity.id()?.parse::<i32>()?;
-    let client_id = client_id as usize;
+    let client_id = identity.id()?.parse::<usize>()?;
 
     match ws::start(
         GameSession::new_one_vs_one(
