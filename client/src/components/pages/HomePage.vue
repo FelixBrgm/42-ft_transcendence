@@ -4,7 +4,7 @@
     <div id="Body">
       <div class="body">
         <div class="text-center">
-						Here are some options:
+          Here are some options:
           <div class="my-container" @click="playGame">
             <span>Play game</span>
           </div>
@@ -21,7 +21,7 @@
 <script>
 import GenHeader from "@/components/elements/GenHeader.vue";
 import GenFooter from "@/components/elements/GenFooter.vue";
-import axios from 'axios';
+import axios from "axios";
 
 export default {
   components: {
@@ -30,19 +30,20 @@ export default {
   },
   methods: {
     playGame() {
-      axios.get('http://localhost:8080/game/matchmake', { withCredentials: true })
+      axios
+        .get("http://localhost:8080/game/matchmake", { withCredentials: true })
         .then(() => {
           this.$router.push("/pong");
         })
-        .catch(error => {
-          console.error('Error occurred while initiating game:', error);
+        .catch((error) => {
+          console.error("Error occurred while initiating game:", error);
         });
     },
   },
 };
 </script> 
  
-<style> 
+<style>
 @import "./../functions/neonglow.css";
 
 .body {
@@ -66,5 +67,4 @@ export default {
   animation: neonGlow 6s infinite;
   cursor: pointer;
 }
-
 </style>
