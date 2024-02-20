@@ -117,7 +117,7 @@ export default {
         startGame() {
       // Connect to WebSocket when the button is clicked
       this.startButtonEnabled = false;
-      this.websocket = new WebSocket('ws://localhost:8080/game/matchmake/');
+      this.websocket = new WebSocket('ws://localhost:8080/game/matchmake');
       this.textvalue = "Waiting for game";
       // Handle WebSocket events
       this.websocket.addEventListener('open', (event) => {
