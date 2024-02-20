@@ -1,22 +1,34 @@
-use super::error::ApiError;
-use crate::chat::actor::WsActor;
-use crate::chat::server::{ChatServer, InsertRoom};
-use crate::db::Database;
 use actix::Addr;
 use actix_identity::Identity;
 use actix_web::{get, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
+use serde::Deserialize;
+
+use super::error::ApiError;
+use crate::chat::actor::WsActor;
+use crate::chat::server::{ChatServer, InsertRoom};
+use crate::db::Database;
+
+#[derive(Deserialize)]
+struct Info {
+    id: i32,
+	token: String,
+}
 
 #[get("/ws")]
 async fn server(
     req: HttpRequest,
-    identity: Identity,
     stream: web::Payload,
     server: web::Data<Addr<ChatServer>>,
+	info: web::Query<Info>,
+	db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-    let uid = identity.id()?.parse::<i32>()?;
+    
+	if !db.check_user_token(info.id, &info.token)? {
+        return Err(ApiError::Unauthorized);
+    }
 
-    match ws::start(WsActor::new(uid, server.get_ref().clone()), &req, stream) {
+    match ws::start(WsActor::new(info.id, server.get_ref().clone()), &req, stream) {
         Ok(ws) => Ok(ws),
         Err(err) => {
             eprintln!("Error during WebSocket handshake: {:?}", err);
