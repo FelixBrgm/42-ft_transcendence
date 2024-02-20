@@ -11,14 +11,14 @@ use crate::game::tournament::TournamentServer;
 use crate::game::{self, UserId};
 
 
-#[get("/game/matchmake")]
+#[get("/game/matchmake/{client_id}")]
 async fn matchmaking(
-    identity: Identity,
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<MatchmakingServer>>,
+	client_id: web::Path<usize>,
 ) -> Result<HttpResponse, ApiError> {
-    let client_id = identity.id()?.parse::<usize>()?;
+    let client_id = client_id.into_inner();
 
     match ws::start(
         GameSession::new_matchmaking(client_id, server.get_ref().clone()),
