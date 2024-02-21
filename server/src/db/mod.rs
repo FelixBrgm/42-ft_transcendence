@@ -234,14 +234,6 @@ impl Database {
     pub fn create_friendship(&self, user_id: i32, friend_id: i32) -> Result<i32> {
         use schema::friend_ship::dsl::*;
 
-        if self.check_friendship(user_id, friend_id)? {
-            return Err(anyhow::anyhow!(
-                "Friendship already exists between {} and {}!",
-                user_id,
-                friend_id
-            ));
-        }
-
         let fs = NewFriendship {
             user1: user_id,
             user2: friend_id,
@@ -258,14 +250,6 @@ impl Database {
     // Removes a friendship
     pub fn remove_friendship(&self, user_id: i32, friend_id: i32) -> Result<()> {
         use schema::friend_ship::dsl::*;
-
-        if !self.check_friendship(user_id, friend_id)? {
-            return Err(anyhow::anyhow!(
-                "No friendship exists between {} and {}!",
-                user_id,
-                friend_id
-            ));
-        }
 
         diesel::delete(
             friend_ship.filter(
