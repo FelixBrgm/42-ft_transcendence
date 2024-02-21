@@ -445,7 +445,7 @@ impl Database {
 
         let games = game_match
             .filter(winner.eq(uid).or(looser.eq(uid)))
-            .load(&mut self.pool.get()?)?;
+            .load::<GameMatch>(&mut self.pool.get()?)?;
 
         Ok(games)
     }
