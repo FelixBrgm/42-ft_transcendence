@@ -168,12 +168,12 @@ changePic() {
   }
 },
     blockUser() {
-      if (this.isb) {
+      if (!this.isb) {
         axios.get(`http://127.0.0.1:8080/block/remove/${this.$route.query.uid}`, { withCredentials: true });
-        this.isb = false;
+        this.isb = true;
       } else {
         axios.get(`http://127.0.0.1:8080/block/${this.$route.query.uid}`, { withCredentials: true });
-        this.isb = true;
+        this.isb = false;
       }
     },
     addFriend() {

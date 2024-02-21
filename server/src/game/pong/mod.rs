@@ -114,12 +114,14 @@ impl Actor for Pong {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Self::Context) {
-        self.players[0].socket.do_send(Message(
-            format!("FORMAT: (YOU) ({}) (BALL.x) (BALL.y)", self.players[1].id),
-        ));
-        self.players[1].socket.do_send(Message(
-            format!("FORMAT: ({}) (YOU) (BALL.x) (BALL.y)", self.players[0].id),
-        ));
+        self.players[0].socket.do_send(Message(format!(
+            "FORMAT: (YOU) ({}) (BALL.x) (BALL.y)",
+            self.players[1].id
+        )));
+        self.players[1].socket.do_send(Message(format!(
+            "FORMAT: ({}) (YOU) (BALL.x) (BALL.y)",
+            self.players[0].id
+        )));
 
         self.ball.reset(&self.config);
         self.players[0].reset(&self.config);

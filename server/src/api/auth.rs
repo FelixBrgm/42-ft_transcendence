@@ -41,15 +41,15 @@ use serde_json;
 async fn login(
     id: Option<Identity>,
     client: web::Data<BasicClient>,
-	database: web::Data<Database>,
+    database: web::Data<Database>,
     session: Session,
 ) -> Result<HttpResponse, ApiError> {
     // If user is already logged in redirect to frontend
     if id.is_some() {
-		let id = id.unwrap().id()?.parse()?;
+        let id = id.unwrap().id()?.parse()?;
         println!("(login) {:?} is already logged in", id);
 
-		database.update_user_status(id, "online")?;
+        database.update_user_status(id, "online")?;
 
         let inend_url = std::env::var("INEND_URL").expect("INEND_URL must be set");
         return Ok(HttpResponse::Found()
@@ -97,10 +97,10 @@ async fn callback(
 ) -> Result<HttpResponse, ApiError> {
     // If user is already logged in redirect to frontend
     if id.is_some() {
-		let id = id.unwrap().id()?.parse()?;
+        let id = id.unwrap().id()?.parse()?;
         println!("(callback) {:?} is already logged in", id);
 
-		database.update_user_status(id, "online")?;
+        database.update_user_status(id, "online")?;
 
         let inend_url = std::env::var("INEND_URL").expect("INEND_URL must be set");
         return Ok(HttpResponse::Found()
@@ -151,10 +151,10 @@ async fn callback(
     interact_with_db(user_info, database).await?;
 
     // add the user to the socket hashmap
-	let inend_url = std::env::var("INEND_URL").expect("INEND_URL must be set");
-	return Ok(HttpResponse::Found()
-		.insert_header((LOCATION, inend_url))
-		.finish());
+    let inend_url = std::env::var("INEND_URL").expect("INEND_URL must be set");
+    return Ok(HttpResponse::Found()
+        .insert_header((LOCATION, inend_url))
+        .finish());
 }
 
 fn extract_code_and_state(
@@ -209,9 +209,9 @@ async fn get_user_info(token: &str) -> Result<(i32, String, String), ApiError> {
     Ok((intra_id, intra_login, intra_avatar))
 }
 
-use rand::RngCore;
-use rand::thread_rng;
 use hex;
+use rand::thread_rng;
+use rand::RngCore;
 
 async fn interact_with_db(
     user_info: (i32, String, String),
@@ -219,7 +219,7 @@ async fn interact_with_db(
 ) -> Result<(), ApiError> {
     let (id, login_d, avatar) = user_info;
 
-	let mut rng = thread_rng();
+    let mut rng = thread_rng();
     let mut password_bytes = [0u8; 16];
     rng.fill_bytes(&mut password_bytes);
 
@@ -237,7 +237,7 @@ async fn interact_with_db(
                 intra: login_d.to_string(),
                 alias: login_d,
                 avatar,
-				password,
+                password,
             })?;
         }
     }
@@ -252,7 +252,7 @@ async fn interact_with_db(
 async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     database.update_user_status(id.id()?.parse()?, "offline")?;
     id.logout();
-	Ok(HttpResponse::Ok().json("User logged out!"))
+    Ok(HttpResponse::Ok().json("User logged out!"))
 }
 
 // ************************************************************ \\
