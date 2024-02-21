@@ -31,15 +31,15 @@ async fn post(
     }
 }
 
-#[get("/user/user_id")]
+#[get("/user/{user_id}")]
 async fn find(
     _: Identity,
-    user: web::Path<i32>,
+    user_id: web::Path<i32>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let user = user.into_inner();
 
-    match db.get_user_by_id(user) {
+    match db.get_user_by_id(user_id) {
         Ok(user) => Ok(HttpResponse::Ok().json(user)),
         Err(_) => Err(ApiError::InternalServerError),
     }
