@@ -37,7 +37,7 @@ async fn post(
     }
 }
 
-#[post("/user/user_id")]
+#[get("/user/user_id")]
 async fn find(
     _: Identity,
     user: web::Path<i32>,

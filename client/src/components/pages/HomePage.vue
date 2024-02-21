@@ -31,6 +31,7 @@
 <script>
 import GenHeader from "@/components/elements/GenHeader.vue";
 import GenFooter from "@/components/elements/GenFooter.vue";
+import axios from "axios";
 
 export default {
   components: {
@@ -57,8 +58,8 @@ export default {
   },
 };
 </script>
-
-<style> 
+ 
+<style>
 @import "./../functions/neonglow.css";
 
 .body {
@@ -94,5 +95,4 @@ export default {
   animation: neonGlow 6s infinite;
   cursor: pointer;
 }
-
 </style>

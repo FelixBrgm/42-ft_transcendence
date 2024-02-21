@@ -3,7 +3,7 @@
 		<GenHeader />
 		<div id="Body">
 		<div class="body">
-			<h1>TEST</h1>
+			<UserProfile />
 		</div>
 		</div>
 		<GenFooter />
@@ -13,11 +13,13 @@
 	<script>
 	import GenHeader from "@/components/elements/GenHeader.vue";
 	import GenFooter from "@/components/elements/GenFooter.vue";
+	import UserProfile from "@/components/elements/UserProfile.vue";
 	
 	export default {
 	components: {
 		GenHeader,
 		GenFooter,
+		UserProfile,
 	},
 	};
 	</script>
