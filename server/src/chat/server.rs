@@ -169,7 +169,6 @@ impl Handler<InsertRoom> for ChatServer {
     fn handle(&mut self, room: InsertRoom, _: &mut Context<Self>) {
         self.rooms
             .insert(Pair::new(room.user1, room.user2), room.room_id);
-        dbg!(&self.rooms);
     }
 }
 
@@ -179,7 +178,6 @@ impl Handler<BlockUser> for ChatServer {
     fn handle(&mut self, block: BlockUser, _: &mut Context<Self>) {
         self.rooms
             .remove(&Pair::new(block.user_id, block.blocked_id));
-        dbg!(&self.rooms);
     }
 }
 

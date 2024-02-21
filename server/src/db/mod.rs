@@ -95,19 +95,19 @@ impl Database {
         }
     }
 
-	pub fn check_user_token(&self, user_id: i32, token: &str) -> Result<bool> {
-		use schema::app_user::dsl::*;
+    pub fn check_user_token(&self, user_id: i32, token: &str) -> Result<bool> {
+        use schema::app_user::dsl::*;
 
-		// Retrieve the user's password from the database
-		let user_password = app_user
-			.select(password)
-			.filter(id.eq(user_id))
-			.first::<String>(&mut self.pool.get()?)?;
-	
-		let is_token_valid = user_password == token;
-	
-		Ok(is_token_valid)
-	}
+        // Retrieve the user's password from the database
+        let user_password = app_user
+            .select(password)
+            .filter(id.eq(user_id))
+            .first::<String>(&mut self.pool.get()?)?;
+
+        let is_token_valid = user_password == token;
+
+        Ok(is_token_valid)
+    }
 
     //     /// ===============================================================
     //     ///                             ROOMS
@@ -284,7 +284,7 @@ impl Database {
 
         let all_users = friend_ship
             .filter(user1.eq(user_id).or(user2.eq(user_id)))
-            .load::<Friendship>( &mut self.pool.get()?)?;
+            .load::<Friendship>(&mut self.pool.get()?)?;
 
         return Ok(all_users);
     }
