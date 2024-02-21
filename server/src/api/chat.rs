@@ -76,6 +76,7 @@ async fn join_chat(
 async fn get_rooms(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     let uid = identity.id()?.parse::<i32>()?;
 
+	
     if !db.check_user(uid)? {
         return Err(ApiError::BadRequest(
             "Requested user doesn't exist".to_string(),
