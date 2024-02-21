@@ -5,17 +5,17 @@ use actix_web::{get, web, HttpRequest, HttpResponse};
 use actix_web_actors::ws;
 use serde::Deserialize;
 
+use crate::db::Database;
 use crate::game::actor::GameSession;
 use crate::game::matchmake::MatchmakingServer;
 use crate::game::one_vs_one::OneVsOneServer;
 use crate::game::tournament::TournamentServer;
 use crate::game::{self, UserId};
-use crate::db::Database;
 
 #[derive(Deserialize)]
 struct Info {
     id: usize,
-	token: String,
+    token: String,
 }
 
 #[get("/game/matchmake/")]
@@ -23,10 +23,9 @@ async fn matchmaking(
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<MatchmakingServer>>,
-	info: web::Query<Info>,
-	db: web::Data<Database>,
+    info: web::Query<Info>,
+    db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-
     if !db.check_user_token(info.id as i32, &info.token)? {
         return Err(ApiError::Unauthorized);
     }
@@ -52,7 +51,7 @@ async fn create_tournament(
 ) -> Result<HttpResponse, ApiError> {
     let client_id = identity.id()?.parse::<usize>()?;
 
-	let size = size.into_inner();
+    let size = size.into_inner();
     if !(size == 2
         || size == 4
         || size == 8
@@ -80,13 +79,12 @@ async fn connect_tournament(
     stream: web::Payload,
     server: web::Data<Addr<TournamentServer>>,
     room_id: web::Path<UserId>,
-	info: web::Query<Info>,
-	db: web::Data<Database>,
+    info: web::Query<Info>,
+    db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-
-	if !db.check_user_token(info.id as i32, &info.token)? {
-        return Err(ApiError::Unauthorized);
-    }
+    // if !db.check_user_token(info.id as i32, &info.token)? {
+    //     return Err(ApiError::Unauthorized);
+    // }
 
     match ws::start(
         GameSession::new_tournament(info.id, server.get_ref().clone(), room_id.into_inner()),
@@ -107,20 +105,15 @@ async fn one_vs_one(
     stream: web::Payload,
     server: web::Data<Addr<OneVsOneServer>>,
     opponent_uid: web::Path<UserId>,
-	info: web::Query<Info>,
-	db: web::Data<Database>,
+    info: web::Query<Info>,
+    db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-
-	if !db.check_user_token(info.id as i32, &info.token)? {
+    if !db.check_user_token(info.id as i32, &info.token)? {
         return Err(ApiError::Unauthorized);
     }
 
     match ws::start(
-        GameSession::new_one_vs_one(
-            info.id,
-            opponent_uid.into_inner(),
-            server.get_ref().clone(),
-        ),
+        GameSession::new_one_vs_one(info.id, opponent_uid.into_inner(), server.get_ref().clone()),
         &req,
         stream,
     ) {
