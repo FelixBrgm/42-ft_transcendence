@@ -45,8 +45,8 @@ async fn remove(
 
 #[get("/friend/list/{uid}")]
 async fn list(
-    identity: Identity,
-	uid: web::Path<i32>,
+    _: Identity,
+    uid: web::Path<i32>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
     let uid = uid.into_inner();
@@ -72,8 +72,5 @@ async fn check(
         ));
     }
 
-    match db.check_friendship(uid, friend_id)? {
-        true => Ok(HttpResponse::Ok().body("User is a friend")),
-        false => Ok(HttpResponse::Ok().body("User is not a friend")),
-    }
+    Ok(HttpResponse::Ok().json(db.check_friendship(uid, friend_id)?))
 }
