@@ -31,7 +31,7 @@ async fn add(
     Ok(HttpResponse::Ok().finish())
 }
 
-#[get("/block/check/{blocked_id}")]
+#[get("/block/remove/{blocked_id}")]
 async fn remove(
     identity: Identity,
     db: web::Data<Database>,
