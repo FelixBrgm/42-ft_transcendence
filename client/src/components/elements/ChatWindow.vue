@@ -32,29 +32,58 @@
 </template>
 
 <script>
+import store from '../../store';
+import axios from 'axios';
+
 export default {
   props: {
     showChat: Boolean,
   },
   data() {
     return {
-      messages: [
-        { sender: 'User', text: 'Hello!' },
-        { sender: 'Bot', text: 'Hi there!' },
-      ],
+      messages: [], // Initialize messages as an empty array
       newMessage: '',
-      chatRooms: [
-        { room_id: 1, room_name: 'Room 1' },
-        { room_id: 2, room_name: 'Room 2' },
-      ],
+      chatRooms: [],
+      ws: null, // WebSocket connection instance
     };
   },
-  methods: {
+created() {
+    this.setupWebSocketAndFetchRooms(); // Initial setup
+
+    // Retry every 5 seconds if user data is not available
+    this.retryInterval = setInterval(() => {
+        if (store.state.auth.user && store.state.auth.user.id) {
+            clearInterval(this.retryInterval); // Clear retry interval if user data is available
+            this.setupWebSocketAndFetchRooms(); // Setup WebSocket and fetch rooms
+        }
+    }, 0);
+}, 
+destroyed() {
+    clearInterval(this.retryInterval); // Clear retry interval on component destruction
+},
+    methods: {
+    setupWebSocketAndFetchRooms() {
+        const user = store.state.auth.user;
+        if (user && user.id && !this.ws) {
+            const userId = user.id;
+            const token = user.password;
+            const websocketUrl = `ws://localhost:8080/ws?id=${userId}&token=${token}`;
+            this.ws = new WebSocket(websocketUrl); 
+
+            // Set up WebSocket event listeners  
+            this.ws.onopen = this.handleOpen;
+            this.ws.onclose = this.handleClose;
+            this.ws.onmessage = this.handleMessage;
+            this.ws.onerror = this.handleError;
+
+            // Fetch chat rooms
+            this.fetchChatRooms(); 
+        }
+    }, 
+    handleOpen() {
+    },
     sendMessage() {
       if (this.newMessage.trim() === '') return;
-      this.messages.push({ sender: 'User', text: this.newMessage });
-      this.messages.push({ sender: 'Bot', text: 'I got your message!' });
-      this.newMessage = '';
     },
     closeChat() {
       this.$emit('close-chat');
@@ -63,6 +92,19 @@ export default {
       // Implement logic to join the selected room
       console.log('Joining room:', roomId);
     },
+    fetchChatRooms() {
+        axios.get('http://localhost:8080/rooms', { withCredentials: true })
+            .then(response => {
+                // Handle successful response here
+                console.log(response.data); // For example, log the response data
+            })
+            .catch(error => {
+                // Handle error here 
+                console.error('Error fetching chat rooms:', error);
+            });
+    }
+    // handleMessage(event) {
+    // }
   },
 };
 </script>
