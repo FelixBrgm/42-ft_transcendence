@@ -39,7 +39,4 @@ RUN cd client && npm install
 # Start your Rust backend and Vue frontend
 EXPOSE 8081
 
-CMD ["/app/server/target/release/server"]
-
-# "/app/server/target/release/server"
-# , "&", "npm", "run", "serve", "--prefix", "/app/client"
+CMD ["sh", "-c", "/app/server/target/release/server & npm run serve --prefix /app/client" ]
