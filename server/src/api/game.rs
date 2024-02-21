@@ -73,21 +73,25 @@ async fn create_tournament(
     }
 }
 
+use std::sync::atomic::{AtomicUsize, Ordering};
+static NEXT_CLIENT_ID: AtomicUsize = AtomicUsize::new(1);
+
 #[get("/game/connect_tournament/{tournament_id}")]
 async fn connect_tournament(
-    req: HttpRequest,
+	req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<TournamentServer>>,
     room_id: web::Path<UserId>,
-    info: web::Query<Info>,
+    // info: web::Query<Info>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-    // if !db.check_user_token(info.id as i32, &info.token)? {
-    //     return Err(ApiError::Unauthorized);
-    // }
-
+	// if !db.check_user_token(info.id as i32, &info.token)? {
+		//     return Err(ApiError::Unauthorized);
+		// }
+		
+	let uid = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
     match ws::start(
-        GameSession::new_tournament(info.id, server.get_ref().clone(), room_id.into_inner()),
+        GameSession::new_tournament(uid, server.get_ref().clone(), room_id.into_inner()),
         &req,
         stream,
     ) {
@@ -123,4 +127,20 @@ async fn one_vs_one(
             Ok(HttpResponse::InternalServerError().finish())
         }
     }
+}
+
+// 404 not found
+#[get("/game/list/{uid}")]
+async fn games(
+	identity: Identity,
+    req: HttpRequest,
+    uid: web::Path<i32>,
+    db: web::Data<Database>,
+) -> Result<HttpResponse, ApiError> {
+	let uid = uid.into_inner();
+
+	match db.get_games_by_uid(uid) {
+		Ok(game) => Ok(HttpResponse::Ok().json(game)),
+		Err(_) => Err(ApiError::BadRequest("User was not found".to_string()))
+	}
 }

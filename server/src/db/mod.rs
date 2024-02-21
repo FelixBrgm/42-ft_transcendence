@@ -279,12 +279,12 @@ impl Database {
         Ok(())
     }
 
-    pub fn get_all_friendships(&self, user_id: i32) -> Result<Vec<(i32, i32, i32)>> {
+    pub fn get_all_friendships(&self, user_id: i32) -> Result<Vec<Friendship>> {
         use schema::friend_ship::dsl::*;
 
         let all_users = friend_ship
             .filter(user1.eq(user_id).or(user2.eq(user_id)))
-            .load(&mut self.pool.get()?)?;
+            .load::<Friendship>( &mut self.pool.get()?)?;
 
         return Ok(all_users);
     }

@@ -5,12 +5,6 @@ use actix_identity::Identity;
 use actix_web::{get, post, web, HttpResponse};
 use anyhow::Result;
 
-// home
-#[get("/")]
-async fn home() -> HttpResponse {
-    HttpResponse::Ok().body("welcome home!")
-}
-
 #[get("/user")]
 async fn get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     let id = identity.id()?;

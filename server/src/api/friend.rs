@@ -43,20 +43,13 @@ async fn remove(
     Ok(HttpResponse::Ok().finish())
 }
 
-#[get("/friend/list")]
+#[get("/friend/list/{uid}")]
 async fn list(
     identity: Identity,
+	uid: web::Path<i32>,
     db: web::Data<Database>,
-    friend: web::Path<i32>,
 ) -> Result<HttpResponse, ApiError> {
-    let uid = identity.id()?.parse::<i32>()?;
-    let friend_id = friend.into_inner();
-
-    if !db.check_user(friend_id)? {
-        return Err(ApiError::BadRequest(
-            "Requested user doesn't exist".to_string(),
-        ));
-    }
+    let uid = uid.into_inner();
 
     match db.get_all_friendships(uid) {
         Ok(v) => Ok(HttpResponse::Ok().json(&v)),
