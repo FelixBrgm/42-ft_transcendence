@@ -21,6 +21,7 @@ const router = createRouter({
 });
 
 import store from './store';
+import axios from 'axios';
 
 router.beforeEach(async (to, from, next) => {
 	console.log(to, from);
@@ -28,7 +29,16 @@ router.beforeEach(async (to, from, next) => {
 	document.body.style.backgroundColor = to.meta.backgroundColor || 'black';
 
 	if (!store.state.auth.user && to.path != "/login") {
-		store.dispatch('auth/updateUser');
+		try {
+			const response = await axios.get('http://127.0.0.1:8080/user', { 
+				withCredentials: true,
+			});
+			store.commit('auth/setUser', response.data);
+			console.log(store.state.auth.user);
+		} catch (error) {
+			console.error('Error fetching user data:', error);
+			return next('/login');
+		}
 	}
 	if (to.path === "/login" && store.state.auth.user != null) {
 		return next('/');

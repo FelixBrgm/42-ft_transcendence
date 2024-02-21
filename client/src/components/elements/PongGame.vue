@@ -8,12 +8,14 @@
       <h2>{{ this.leftPlayername }} </h2>
       <p>Wins: {{ this.leftPlayerwin }} Losses: {{ this.leftPlayerloss }}</p>
     </div>
-    <div class="profile right-profile">
+    <div v-if="this.$route.query.startTournament || this.$route.query.joinTournament" class="profile right-profile"> Round: {{ this.round }} </div>
+    <div class="profile right-profile"> 
         <img :src="rightPlayerimg">
-      <h2>{{ this.rightPlayername }} </h2>
+      <h2>{{ this.rightPlayername }} </h2> 
       <p>Wins: {{ this.rightPlayerwin }} Losses: {{ this.rightPlayerloss }}</p>
     </div>
-  </div>
+
+  </div>  
 </div>
 
   <div class="game-container" @keydown="handleKeyPress" @keyup="handleKeyRelease" ref="gameContainer" tabindex="0">
@@ -27,9 +29,9 @@
 
     <!-- Ball -->
     <div class="ball" :style="{ top: ballPosition.yaxis + 'px', left: ballPosition.xaxis + 'px' }"></div>
-    <div class="start-button" tabindex="0" role="button" @click="startGame" :style="{ pointerEvents: startButtonEnabled ? 'auto' : 'none' }" v-html="textvalue"></div>
+    <div class="start-button" tabindex="0" role="button" @click="startGame(-1)" :style="{ pointerEvents: startButtonEnabled ? 'auto' : 'none' }" v-html="textvalue"></div>
   </div>
-</div>
+</div> 
 </template> 
 
 <script>
@@ -42,11 +44,13 @@ export default {
   data() {
     return {  
       textvalue: "Start Game",
-      showtournament: false ,
+      showtournament: true ,
       startButtonEnabled: true,
       rightPosition: 450,
       leftPosition: 450,
       enemyid: 0, 
+      istournament: false, 
+      round: 1, 
       leftScore: 0 ,
       rightScore: 0 , 
       leftPlayerimg: "", 
@@ -163,29 +167,33 @@ export default {
               this.rightPlayerwins = store.state.auth.user.wins ;
               this.rightPlayerloss = store.state.auth.user.losses ;
             }
-            this.showtournament = true; 
           })
           .catch(error => {
             console.error('Error fetching enemy data:', error);
           });
+            this.showtournament = true; 
       },
-      startGame(numPlayers) {
+      startGame(numPlayers, ID) {
       // Connect to WebSocket when the button is clicked
       this.startButtonEnabled = false;
       const userId = store.state.auth.user.id;
       const token = store.state.auth.user.password;
       let websocketUrl = "";
       console.log("NUMPLASYERS", numPlayers);
-      if (numPlayers === undefined) 
+      if (numPlayers === -1) 
       {
         websocketUrl = `ws://localhost:8080/game/matchmake/?id=${userId}&token=${token}`;
       }
-      if (numPlayers < 129) 
+      else if (numPlayers === -2) 
+      {
+        websocketUrl = `ws://localhost:8080/game/onevsone/${ID}?id=${userId}&token=${token}`;
+      }
+      else if (numPlayers < 129)  
       {
         axios.get(`http://127.0.0.1:8080/game/create_tournament/${numPlayers}`, { withCredentials: true });
         websocketUrl = `ws://localhost:8080/game/connect_tournament/${userId}?id=${userId}&token=${token}`;
       }
-      if (numPlayers > 128)  
+      else if (numPlayers > 128)    
       { 
         websocketUrl = `ws://localhost:8080/game/connect_tournament/${numPlayers}?id=${userId}&token=${token}`;
       }
@@ -195,7 +203,6 @@ export default {
       this.websocket.addEventListener('open', (event) => { 
         console.log('WebSocket connection opened:', event); 
       });
-
       this.websocket.addEventListener('message', (event) => {
         console.log('WebSocket message received:', event.data);
         this.handleWebSocketMessage(event.data);
@@ -237,13 +244,18 @@ export default {
   mounted() {
     // Automatically start the game if redirected with the startGame query parameter
     if (this.$route.query.startGame === 'true') {
-      this.startGame();
+      this.startGame(-1);
     }
     if (this.$route.query.startTournament !== undefined) {
       this.startGame(this.$route.query.startTournament);
-    }
+      this.istournament = true;
+    } 
     if (this.$route.query.joinTournament !== undefined) {
       this.startGame(this.$route.query.joinTournament);
+      this.istournament = true; 
+    }
+    if (this.$route.query.joinvs !== undefined) {
+      this.startGame(-2, this.$route.query.joinvs); 
     }
   },
 };
