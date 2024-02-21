@@ -7,9 +7,9 @@
 </template>
 
 <script>
+import store from './store';
 import ChatButton from './components/elements/ChatButton.vue';
 import ChatWindow from './components/elements/ChatWindow.vue';
-import store from './store';
 
 export default {
   components: {

@@ -6,6 +6,6 @@ import 'bootstrap/dist/css/bootstrap.css'
 
 
 const app = createApp(App);
-app.use(router);
 app.use(store); // Use the Vuex store
+app.use(router);
 app.mount('#app');
