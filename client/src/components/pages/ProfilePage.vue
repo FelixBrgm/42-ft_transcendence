@@ -7,13 +7,14 @@
           <div class="profile-pic-container">
             <!-- Avatar image -->
             <img
+              @click="changePic" 
               v-if="user !== null && user !== undefined"
               class="rounded-circle profile-pic"
               alt="profile avatar"
               :src="user.avatar"
             />
           </div>
-          <h1 v-if="!this.isb" style="color: red;">BLOCKED!!</h1>
+          <h1 v-if="this.isb" style="color: red;">BLOCKED!!</h1>
         </div>
         <div v-show="!isUidMatch" class="icons-container">
           <!-- Block and add icons -->
@@ -38,7 +39,7 @@
             <div>Matchmaking history</div> 
             <span>{{ this.seperator }}</span>
             <ul v-if="matchs !== null && matchs.length > 0" >
-              <li v-for="match in matchs" :key="match.id">
+              <li v-for="match in matchs" :key="match.id"> 
                 {{ match.name }}
               </li>
             </ul>
@@ -49,11 +50,11 @@
           <div v-show="isUidMatch" class="mhistory">
             <div>Friends: </div>
             <span>{{ this.seperator }}</span>
-            <ul v-if="friends !== null && friends.length > 0" >
-              <li v-for="friend in friends" :key="friend.id" @click="goToProfile(friend)">
-                {{ friend.name }}
-              </li>
-            </ul>
+              <ul v-if="friends !== null && friends.length > 0" style="list-style-type: none;">
+                <li v-for="friend in friendInfos" :key="friend.id" @click="this.$router.push({ link: `/profile`, query: { uid: friend.id } })"> 
+                  {{friend.alias}}
+                </li>
+              </ul>
             <div v-else> 
               no friends . _.
             </div>
@@ -80,6 +81,7 @@ export default {
   data() {
     return {
       user: null,
+      friendInfos: [],
       friends: null,
       friendimg: null,
       ism: false,
@@ -91,27 +93,44 @@ export default {
     };
   },
   created() {
-  this.isf = this.isfriend;
-  this.isb = this.isblocked;
-  this.ism = this.isUidMatch;
-  if (this.isf) {
-    this.friendimg = require("@/assets/add-user.png");
-  } else {
-    this.friendimg = require("@/assets/delete-user.png");
-  } 
-},
+    this.fetchData();
+  },
+  watch: {
+    '$route'() {
+      this.fetchData();
+    }
+  },
   mounted() {
-    this.$store.subscribe((mutation) => {
-      this.user = mutation.payload;
-    });
+    // this.$store.subscribe((mutation) => {
+    //   this.user = mutation.payload;
+    // });
     this.$store.dispatch("auth/updateUser");
-    this.fetchFriends();
     this.fetchMatchs();
     this.uid = `${this.$route.query.uid}`;  
   },
   methods: {
-        changeUsername() {
-      const newUsername = prompt("Enter new username:"); 
+    async fetchData() {
+      this.uid = this.$route.query.uid; 
+      await this.getUser();
+      this.isf = await this.isfriend();
+      this.isb = await this.isblocked();
+      this.ism = this.isUidMatch;
+      console.log("isfriend", this.isf);
+      console.log("isblocked", this.isb);
+      console.log("ismatch", this.ism);
+      if (!this.isf) {
+        this.friendimg = require("@/assets/add-user.png");
+      } else {
+        this.friendimg = require("@/assets/delete-user.png");
+      }
+      this.fetchFriends(); 
+      this.fetchMatchs();
+    },
+        changeUsername() { 
+          if (this.ism)
+          {
+            
+            const newUsername = prompt("Enter new username:"); 
       if (newUsername !== null) {
         // Assuming you have an API endpoint to update the username
         axios.post(`http://127.0.0.1:8080/user`, { alias: newUsername }, { withCredentials: true })
@@ -121,8 +140,33 @@ export default {
           .catch(error => {
             console.error('Error updating username:', error);
           });
+            }
       }
   }, 
+changePic() {
+  if (this.ism) {
+    const newAvatar = prompt("Enter new avatar link");
+    if (newAvatar !== null) {
+      // Preload image to check validity
+      const img = new Image();
+      img.onload = async () => {
+        // Image loaded successfully, update avatar
+        try {
+          await axios.post(`http://127.0.0.1:8080/user`, { avatar: newAvatar }, { withCredentials: true });
+          this.user.avatar = newAvatar;
+        } catch (error) {
+          console.error('Error updating avatar:', error);
+        }
+      };
+      img.onerror = () => {
+        // Image failed to load, display error message
+        alert("Invalid image link! Fix that");
+        console.error('Invalid image link');
+      };
+      img.src = newAvatar;
+    }
+  }
+},
     blockUser() {
       if (this.isb) {
         axios.get(`http://127.0.0.1:8080/block/remove/${this.$route.query.uid}`, { withCredentials: true });
@@ -143,20 +187,24 @@ export default {
         this.isf = true;
       }
     },
-    goToProfile(friend) {
-        if (friend.user1 != this.$route.query.uid) {
-          this.$router.push({ link: `/profile`, query: { uid: friend.user1 } });
-        } else {
-          this.$router.push({ path: `/profile`, query: { uid: friend.user2 }});
-        }
-    },
     async fetchFriends() {
       try {
         const response = await axios.get(`http://127.0.0.1:8080/friend/list/${this.$route.query.uid}`, { withCredentials: true });
         this.friends = response.data;
+        this.friendInfos = [];
+        for (const friend of this.friends) { // Added missing 'const' and 'of' keywords
+          const userId = friend.user1 === this.$route.query.uid ? friend.user1 : friend.user2;
+          try {
+            const response = await axios.get(`http://127.0.0.1:8080/user/${userId}`, { withCredentials: true });
+            this.friendInfos.push(response.data); // Save user info to array
+            console.log("DATA", response.data)
+          } catch (error) {
+            console.error('Error fetching user info:', error);
+          } 
+        }
       } catch (error) {
-        console.error('Error fetching friends:', error);
-      }
+        console.error('Error fetching friends:', error); 
+      } 
     },
     async isblocked() {
       if(!this.ism){
@@ -189,7 +237,8 @@ export default {
     async getUser() {
       try {
         const response = await axios.get(`http://127.0.0.1:8080/user/${this.$route.query.uid}`, { withCredentials: true });
-        this.user = response.data;
+        console.log("gettinguser", response.data);
+        this.user = response.data; 
       } catch (error) {
         console.error('Error fetching matches:', error);
       }
@@ -200,8 +249,8 @@ export default {
         const routeUid = this.$route.query.uid;
         const user = store.state.auth.user;
 
-        // Check if user is defined and not null
-        if (user && user.id) {
+        // Check if routeUid is defined and not null
+        if (routeUid && user && user.id) {
           const componentUid = user.id;
 
           const routeUidConverted = isNaN(Number(routeUid)) ? routeUid.toString() : Number(routeUid);
@@ -248,6 +297,7 @@ export default {
   border-radius: 50%;
   box-shadow: 0 0 10px 0px #00f0ff;
   animation: neonGlow 6s infinite; 
+  cursor: pointer; 
 }
 
 .mhistory {
@@ -263,6 +313,7 @@ export default {
   display: flex;
   flex-direction: column; /* Align items in a column */
   align-items: center; /* Center items horizontally */
+  
 }
 
 .icons-container {
