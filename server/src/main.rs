@@ -81,14 +81,10 @@ async fn main() {
             .service(user::find)
             // friend
             .service(friend::toggle)
-            .service(friend::add)
-            .service(friend::remove)
             .service(friend::list)
             .service(friend::check)
             // block
             .service(block::toggle)
-            .service(block::add)
-            .service(block::remove)
             .service(block::check)
             // chat
             .service(api::chat::server)
