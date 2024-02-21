@@ -9,8 +9,8 @@
       </div>
       <div class="app-main">
         <div class="chat-sidebar bg-dark text-white">
-          <div v-for="(friend, index) in friends" :key="index" @click="joinFriendChat(friend.id)" class="room-item p-2 mb-2 rounded cursor-pointer">
-            {{ friend.name }}
+          <div v-for="(friend, index) in friendInfos" :key="index" @click="joinFriendChat(friend.id)" class="room-item p-2 mb-2 rounded cursor-pointer">
+            {{ friend.alias }}
           </div>
         </div>
         <div class="chat-container">
@@ -41,6 +41,7 @@ export default {
   },
   data() {
     return {
+      friendInfos: [], // Initialize messages as an empty array
       messages: [], // Initialize messages as an empty array
       newMessage: '',
       friends: [], // Initialize friends as an empty array
@@ -106,11 +107,24 @@ export default {
     },
     async fetchFriends() {
       try {
-        const response = await axios.get(`http://127.0.0.1:8080/friend/list/${this.$route.query.uid}`, { withCredentials: true });
+        const response = await axios.get(`http://127.0.0.1:8080/friend/list/${store.state.auth.user.id}`, { withCredentials: true });
         this.friends = response.data;
+        console.log("GOTMEFRIENDS"); 
+        this.friendInfos = [];
+        for (const friend of this.friends) { // Added missing 'const' and 'of' keywords
+          console.log(friend);
+          const userId = friend.user1 === this.$route.query.uid ? friend.user1 : friend.user2;
+          try {
+            const response = await axios.get(`http://127.0.0.1:8080/user/${userId}`, { withCredentials: true });
+            this.friendInfos.push(response.data); // Save user info to array
+            console.log("DATA", response.data)
+          } catch (error) {
+            console.error('Error fetching user info:', error);
+          } 
+        }
       } catch (error) {
-        console.error('Error fetching friends:', error);
-      }
+        console.error('Error fetching friends:', error); 
+      } 
     },
     async joinFriendChat(friendId, roomid) {
       this.roomid = roomid;
