@@ -12,7 +12,6 @@
 				"terminal.integrated.shell.linux": "/bin/bash"
 			},
 			"extensions": [
-				"rust-lang.rust-analyzer",
 				"octref.vetur",
 				"PKief.material-icon-theme"
 			]
@@ -20,7 +19,7 @@
 	},
 	"workspaceFolder": "/workspaces/42-ft_transcendence",
 	"mounts": [
-		"source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
-		"source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
+		"source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached"
+		//"source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
 	]
 }
