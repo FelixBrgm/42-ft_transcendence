@@ -3,15 +3,36 @@
     <GenHeader />
     <div id="Body" class="body">
       <div class="card-body text-center">
-        <div class="profile-pic overflow-hidden">
+        <div class="profile-container">
+          <div class="profile-pic-container">
+            <!-- Avatar image -->
+            <img
+              v-if="user !== null && user !== undefined"
+              class="rounded-circle profile-pic"
+              alt="profile avatar"
+              :src="user.avatar"
+            />
+          </div>
+          <h1 v-if="this.isblocked()" style="color: red;">BLOCKED!!</h1>
+        </div>
+        <div v-show="!isUidMatch" class="icons-container">
+          <!-- Block and add icons -->
           <img
             v-if="user !== null && user !== undefined"
-            class="rounded-circle"
-            alt="profile avatar"
-            :src="user.avatar"
+            class="icon"
+            :alt="'Add Friend'" 
+            :src="this.friendimg"
+            @click="addFriend"
+          />
+          <img
+            v-if="user !== null && user !== undefined"
+            class="icon"
+            alt="block user"
+            src="@/assets/block-user.png"
+            @click="blockUser"
           />
         </div>
-        <h1>{{ user == null || user == undefined ? "Loading..." : (user.alias || "User") }}</h1>
+        <h1 class="neon-text" id="editableHeader" @click="changeUsername">{{ user == null || user == undefined ? "Loading..." : (user.alias || "User") }}</h1>
         <div>
           <div class="mhistory">
             <div>Matchmaking history</div> 
@@ -29,7 +50,7 @@
             <div>Friends: </div>
             <span>{{ this.seperator }}</span>
             <ul v-if="friends !== null && friends.length > 0" >
-              <li v-for="friend in friends" :key="friend.id">
+              <li v-for="friend in friends" :key="friend.id" @click="goToProfile(friend.id)">
                 {{ friend.name }}
               </li>
             </ul>
@@ -45,6 +66,7 @@
 </template>
 
 <script>
+
 import axios from 'axios';
 import store from '../../store';
 import GenHeader from "@/components/elements/GenHeader.vue";
@@ -59,6 +81,7 @@ export default {
     return {
       user: null,
       friends: null,
+      friendimg: require("@/assets/add-user.png"),
       matchs: null,
       uid: "",
       seperator: "-------------------------------------------------------------------"
@@ -74,12 +97,45 @@ export default {
     this.uid = store.state.auth.user.id; 
   },
   methods: {
+        changeUsername() {
+      const newUsername = prompt("Enter new username:");
+      if (newUsername !== null) {
+        // Assuming you have an API endpoint to update the username
+        axios.post(`http://127.0.0.1:8080/user`, { alias: newUsername }, { withCredentials: true })
+          .then(() => {
+            this.user.alias = newUsername;
+          })
+          .catch(error => {
+            console.error('Error updating username:', error);
+          });
+      }
+  }, 
+    blockUser() {
+      if (this.isblocked()) {
+        axios.get(`http://127.0.0.1:8080/block/remove/${this.$route.query.uid}`, { withCredentials: true });
+      } else {
+        axios.get(`http://127.0.0.1:8080/block/${this.$route.query.uid}`, { withCredentials: true });
+      }
+    },
+    addFriend() {
+    },
+    goToProfile(friendId) {
+      this.$router.push({ path: `/profile/${friendId}` });
+    },
     async fetchFriends() {
       try {
         const response = await axios.get(`http://127.0.0.1:8080/friend/list/${this.$route.query.uid}`, { withCredentials: true });
         this.friends = response.data;
       } catch (error) {
         console.error('Error fetching friends:', error);
+      }
+    },
+    async isblocked() {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8080/block/check/${this.$route.query.uid}`, { withCredentials: true });
+        return response.data; 
+      } catch (error) {
+        console.error('Error fetching blocked:', error);
       }
     },
     async fetchMatchs() {
@@ -139,6 +195,8 @@ isUidMatch() {
   height: 125px;
   object-fit: cover;
   border-radius: 50%;
+  box-shadow: 0 0 10px 0px #00f0ff;
+  animation: neonGlow 6s infinite; 
 }
 
 .mhistory {
@@ -146,5 +204,33 @@ isUidMatch() {
   box-shadow: 0 0 10px 5px #00f0ff;
   animation: neonGlow 6s infinite;
   margin: 20px;
+  border-radius: 20px;  
+  padding: 15px;
+} 
+
+.profile-container {
+  display: flex;
+  flex-direction: column; /* Align items in a column */
+  align-items: center; /* Center items horizontally */
+}
+
+.icons-container {
+  display: flex;
+  justify-content: center; /* Center icons horizontally */
+  margin-top: 10px; /* Add space between profile pic and icons */
+}
+ 
+.icon {
+  width: 30px;
+  height: 30px;
+  margin: 0 5px; /* Adjust margin as needed */
+  cursor: pointer; 
+  border-radius: 8px;
+    box-shadow: 0 0 10px 0px #00f0ff;
+  animation: neonGlow 6s infinite;
+}
+.neon-text {
+	text-shadow: 0 0 10px hsl(45, 100%, 60%), 0 0 20px hsl(45, 100%, 60%), 0 0 30px hsl(45, 100%, 60%);
+	cursor: pointer;
 }
 </style>
