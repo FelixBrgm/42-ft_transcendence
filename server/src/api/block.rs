@@ -66,8 +66,5 @@ async fn check(
         ));
     }
 
-    match db.check_blocked(uid, blocked_id)? {
-        true => Ok(HttpResponse::Ok().body("User is blocked")),
-        false => Ok(HttpResponse::Ok().body("User is not blocked")),
-    }
+	Ok(HttpResponse::Ok().json(db.check_blocked(uid, blocked_id)?))
 }
