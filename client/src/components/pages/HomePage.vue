@@ -9,6 +9,12 @@
             <span>Single player</span>
           </div>
           <div class="my-container">
+            <div>1 v 1</div>
+            <span>Enter other player ID: </span> 
+            <input type="text" v-model="vsID" placeholder="Enter player ID">
+            <span class="mybutton" style="margin-top: 6px;" @click="joinVs">Start</span> 
+          </div>
+          <div class="my-container">
             <div> Create Tournament </div>
             <span> Number of players: </span>
             <select v-model="selectedNumberOfPlayers">
@@ -46,6 +52,7 @@ export default {
     return {
       selectedNumberOfPlayers: null,
       tournamentID: null,
+      vsID: null,
       numbers: Array.from({ length: 7 }, (_, index) => Math.pow(2, index + 1)),
     };
   },
@@ -65,6 +72,13 @@ export default {
         this.$router.push({ path: "/pong", query: { joinTournament: this.tournamentID } });
       } else {
         alert("Please enter a valid Tournament ID");
+      }
+    },
+    joinVs() {
+      if (this.vsID && /^\d{6}$/.test(this.vsID)) { 
+        this.$router.push({ path: "/pong", query: { joinvs: this.vsID } });
+      } else {
+        alert("Please enter a valid player ID");
       }
     },
   },
