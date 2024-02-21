@@ -54,24 +54,14 @@
           <div v-show="isUidMatch" class="mhistory">
             <div>Friends:</div>
             <span>{{ this.seperator }}</span>
-            <ul
-              v-if="friends !== null && friends.length > 0"
-              style="list-style-type: none"
-            >
-              <li
-                v-for="friend in friendInfos"
-                :key="friend.id"
-                @click="
-                  this.$router.push({
-                    link: `/profile`,
-                    query: { uid: friend.id },
-                  })
-                "
-              >
-                {{ friend.alias }}
-              </li>
-            </ul>
-            <div v-else>no friends . _.</div>
+              <ul v-if="friends !== null && friends.length > 0" style="list-style-type: none;">
+                <span v-for="friend in friendInfos" :key="friend.id" @click="this.$router.push({ link: `/profile`, query: { uid: friend.id } })"> 
+                  {{friend.alias}}
+                </span>
+              </ul>
+            <div v-else>  
+              no friends . _.
+            </div>
           </div>
         </div>
       </div>
