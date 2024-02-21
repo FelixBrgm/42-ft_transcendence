@@ -49,7 +49,8 @@ export default {
       rightPosition: 450,
       leftPosition: 450,
       enemyid: 0, 
-      istournament: false, 
+      istournament: false,
+      won: false,
       round: 1, 
       leftScore: 0 ,
       rightScore: 0 , 
@@ -97,10 +98,10 @@ export default {
         const rest = parts[1].split(':')
         if ((rest[0] > this.leftScore && this.isYou == true) ||
         (rest[0] == this.leftScore && this.isYou == false))
-        {this.textvalue = "YOU WON";}
+        {this.textvalue = "YOU WON"; this.won = true;}
         else if((rest[0] == this.leftScore && this.isYou == true) ||
         (rest[0] != this.leftScore && this.isYou == false))
-        {this.textvalue = "HEHE YOU LOOSE"} 
+        {this.textvalue = "HEHE YOU LOOSE"; this.won = true;} 
         this.leftScore = rest[0];
         this.rightScore = rest[1];
       }
@@ -218,7 +219,16 @@ export default {
       });
       this.websocket.addEventListener('close', (event) => {
         console.log('WebSocket connection closed:', event);
-        if (this.$route.query.joinTournament != 0)
+        if (this.istournament === true && this.won === true)
+        {
+          this.startGame(Math.max(parseInt(this.$route.query.joinTournament) || 0, parseInt(this.$route.query.startTournament) || 0))
+        }
+        else if (this.won === false)
+        {
+          this.$router.push('/'); 
+          alert("You have lost");
+        }
+        else if (this.$route.query.joinTournament != 0)
         {
           this.$router.push('/'); 
           alert("This game does not exist");
