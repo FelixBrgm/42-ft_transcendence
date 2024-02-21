@@ -1,10 +1,8 @@
 <template>
 	<div id="app">
 		<GenHeader />
-		<div id="Body">
 		<div class="body">
 			<UserProfile />
-		</div>
 		</div>
 		<GenFooter />
 	</div>

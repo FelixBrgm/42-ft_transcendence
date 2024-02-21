@@ -175,21 +175,22 @@ export default {
       const userId = store.state.auth.user.id;
       const token = store.state.auth.user.password;
       let websocketUrl = "";
-      if (numPlayers != 0) 
+      console.log("NUMPLASYERS", numPlayers);
+      if (numPlayers === undefined) 
       {
         websocketUrl = `ws://localhost:8080/game/matchmake/?id=${userId}&token=${token}`;
       }
-      else
+      if (numPlayers < 129) 
       {
         axios.get(`http://127.0.0.1:8080/game/create_tournament/${numPlayers}`, { withCredentials: true });
         websocketUrl = `ws://localhost:8080/game/connect_tournament/${userId}?id=${userId}&token=${token}`;
       }
-      if (numPlayers > 128) 
+      if (numPlayers > 128)  
       { 
         websocketUrl = `ws://localhost:8080/game/connect_tournament/${numPlayers}?id=${userId}&token=${token}`;
       }
       this.websocket = new WebSocket(websocketUrl);
-      this.textvalue = "Waiting for game";
+      this.textvalue = "Waiting for game"; 
       // Handle WebSocket events
       this.websocket.addEventListener('open', (event) => { 
         console.log('WebSocket connection opened:', event); 
