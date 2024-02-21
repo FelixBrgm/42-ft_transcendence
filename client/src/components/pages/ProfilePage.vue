@@ -16,25 +16,25 @@
           <div class="mhistory">
             <div>Matchmaking history</div> 
             <span>{{ this.seperator }}</span>
-            <ul v-if="matchs !== null">
+            <ul v-if="matchs !== null && matchs.length > 0" >
               <li v-for="match in matchs" :key="match.id">
                 {{ match.name }}
               </li>
             </ul>
             <div v-else> 
-              {{ errorMessage }}
+              no game . _. 
             </div>
           </div>
           <div v-show="isUidMatch" class="mhistory">
             <div>Friends: </div>
             <span>{{ this.seperator }}</span>
-            <ul v-if="friends !== null">
+            <ul v-if="friends !== null && friends.length > 0" >
               <li v-for="friend in friends" :key="friend.id">
                 {{ friend.name }}
               </li>
             </ul>
             <div v-else> 
-              {{ errorMessage }}
+              no friends . _.
             </div>
           </div>
         </div>
@@ -60,7 +60,6 @@ export default {
       user: null,
       friends: null,
       matchs: null,
-      errorMessage: "",
       uid: "",
       seperator: "-------------------------------------------------------------------"
     };
@@ -81,7 +80,6 @@ export default {
         this.friends = response.data;
       } catch (error) {
         console.error('Error fetching friends:', error);
-        this.errorMessage = "404 not found"; // Set errorMessage
       }
     },
     async fetchMatchs() {
@@ -90,7 +88,6 @@ export default {
         this.matchs = response.data;
       } catch (error) {
         console.error('Error fetching matches:', error);
-        this.errorMessage = "404 not found"; // Set errorMessage
       }
     }
   },
@@ -103,10 +100,6 @@ isUidMatch() {
     const routeUidConverted = isNaN(Number(routeUid)) ? routeUid.toString() : Number(routeUid);
     const componentUidConverted = isNaN(Number(componentUid)) ? componentUid.toString() : Number(componentUid);
 
-    console.log("Route UID:", routeUidConverted, typeof routeUidConverted);
-    console.log("Component UID:", componentUidConverted, typeof componentUidConverted);
-
-    // Compare the values to determine if they are equal
     if (routeUidConverted === componentUidConverted)
       return true;
     else  
