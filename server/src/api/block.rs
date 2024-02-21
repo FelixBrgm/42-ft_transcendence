@@ -21,11 +21,11 @@ async fn toggle(
         ));
     }
 
-    match !db.check_blocked(uid, blocked_id)? {
-        true => {
+    match db.check_blocked(uid, blocked_id)? {
+        false => {
             db.create_blocked(uid, blocked_id)?;
         }
-        false => {
+        true => {
             db.remove_blocked(uid, blocked_id)?;
             chat_server.do_send(BlockUser {
                 user_id: uid,

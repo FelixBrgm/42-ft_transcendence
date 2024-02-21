@@ -80,6 +80,7 @@ async fn main() {
             .service(user::post)
             .service(user::find)
             // friend
+            .service(friend::toggle)
             .service(friend::add)
             .service(friend::remove)
             .service(friend::list)
