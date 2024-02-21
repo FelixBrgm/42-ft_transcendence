@@ -9,8 +9,8 @@
       </div>
       <div class="app-main">
         <div class="chat-sidebar bg-dark text-white">
-          <div v-for="(room, index) in chatRooms" :key="index" @click="joinRoom(room.room_id)" class="room-item p-2 mb-2 rounded cursor-pointer">
-            {{ room.room_name }}
+          <div v-for="(friend, index) in friends" :key="index" @click="joinFriendChat(friend.id)" class="room-item p-2 mb-2 rounded cursor-pointer">
+            {{ friend.name }}
           </div>
         </div>
         <div class="chat-container">
@@ -43,26 +43,26 @@ export default {
     return {
       messages: [], // Initialize messages as an empty array
       newMessage: '',
-      chatRooms: [],
+      friends: [], // Initialize friends as an empty array
       ws: null, // WebSocket connection instance
     };
   },
-created() {
-    this.setupWebSocketAndFetchRooms(); // Initial setup
+  created() {
+    this.setupWebSocketAndFetchFriends(); // Initial setup
 
     // Retry every 5 seconds if user data is not available
     this.retryInterval = setInterval(() => {
         if (store.state.auth.user && store.state.auth.user.id) {
             clearInterval(this.retryInterval); // Clear retry interval if user data is available
-            this.setupWebSocketAndFetchRooms(); // Setup WebSocket and fetch rooms
+            this.setupWebSocketAndFetchFriends(); // Setup WebSocket and fetch friends
         }
-    }, 0);
-}, 
-destroyed() {
+    }, 5000);
+  },
+  destroyed() {
     clearInterval(this.retryInterval); // Clear retry interval on component destruction
-},
-    methods: {
-    setupWebSocketAndFetchRooms() {
+  },
+  methods: {
+    async setupWebSocketAndFetchFriends() {
         const user = store.state.auth.user;
         if (user && user.id && !this.ws) {
             const userId = user.id;
@@ -70,41 +70,57 @@ destroyed() {
             const websocketUrl = `ws://localhost:8080/ws?id=${userId}&token=${token}`;
             this.ws = new WebSocket(websocketUrl); 
 
-            // Set up WebSocket event listeners  
-            this.ws.onopen = this.handleOpen;
-            this.ws.onclose = this.handleClose;
-            this.ws.onmessage = this.handleMessage;
-            this.ws.onerror = this.handleError;
+            // Set up WebSocket event listeners 
+            if(this.roomid != undefined)
+            {
+              this.ws.onopen = this.handleOpen;
+              this.ws.onclose = this.handleClose;
+              this.ws.onmessage = this.handleMessage;
+              this.ws.onerror = this.handleError;
+            }
 
-            // Fetch chat rooms
-            this.fetchChatRooms(); 
+            // Fetch friends
+            await this.fetchFriends(); 
         }
-    }, 
-    handleOpen() {
     },
-    sendMessage() {
-      if (this.newMessage.trim() === '') return;
+    handleOpen() {
+      this.updateChat(this.roomid);
+      // Handle WebSocket connection open
+    },
+    async sendMessage() {
+      if (this.ws && this.newMessage.trim() !== '') {
+        this.ws.send(this.roomid + ":" + this.newMessage);
+        this.newMessage = ''; // Reset newMessage after sending
+      }
     },
     closeChat() {
       this.$emit('close-chat');
     },
-    joinRoom(roomId) {
-      // Implement logic to join the selected room
-      console.log('Joining room:', roomId);
+    async updateChat(roomid) {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8080/messages/${roomid}`, { withCredentials: true });
+        this.messages = response.data;
+      } catch (error) {
+        console.error('Error fetching messages:', error); 
+      }
     },
-    fetchChatRooms() {
-        axios.get('http://localhost:8080/rooms', { withCredentials: true })
-            .then(response => {
-                // Handle successful response here
-                console.log(response.data); // For example, log the response data
-            })
-            .catch(error => {
-                // Handle error here 
-                console.error('Error fetching chat rooms:', error);
-            });
+    async fetchFriends() {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8080/friend/list/${this.$route.query.uid}`, { withCredentials: true });
+        this.friends = response.data;
+      } catch (error) {
+        console.error('Error fetching friends:', error);
+      }
+    },
+    async joinFriendChat(friendId, roomid) {
+      this.roomid = roomid;
+      this.updateChat(roomid); 
+      console.log('Joining chat with friend:', friendId);
+    },
+    handleMessage()
+    {
+      this.updateChat(this.roomid);
     }
-    // handleMessage(event) {
-    // }
   },
 };
 </script>
@@ -117,7 +133,7 @@ destroyed() {
 .text-left {
   text-align: left;
 }
-
+ 
 .room-item:hover {
   background-color: #555;
 }
