@@ -37,9 +37,9 @@ async fn find(
     user_id: web::Path<i32>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-    let user = user.into_inner();
+    let user = user_id.into_inner();
 
-    match db.get_user_by_id(user_id) {
+    match db.get_user_by_id(user) {
         Ok(user) => Ok(HttpResponse::Ok().json(user)),
         Err(_) => Err(ApiError::InternalServerError),
     }
