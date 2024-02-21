@@ -28,6 +28,14 @@ async fn main() {
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
     let secret_key = cookie::Key::from(env_key.as_bytes());
 
+	_ = db.add_user(&db::models::NewUser {
+		id: 424242,
+		intra: "GOOS".to_string(),
+		alias: "GOOS".to_string(),
+		avatar: "https://i.pinimg.com/564x/bc/5d/17/bc5d173a3001839b5f4ec29efad072ae.jpg".to_string(),
+		password: "randompassword".to_string(),
+	});
+
     println!(" < --- * --- >");
 
     // Start the Actix Web server

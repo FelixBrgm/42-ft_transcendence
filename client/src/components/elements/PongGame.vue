@@ -187,7 +187,7 @@ export default {
       }
       else if (numPlayers === -2) 
       {
-        websocketUrl = `ws://localhost:8080/game/onevsone/${ID}?id=${userId}&token=${token}`;
+        websocketUrl = `ws://localhost:8080/game/one_vs_one/${ID}?id=${userId}&token=${token}`;
       }
       else if (numPlayers < 129)  
       {
