@@ -112,6 +112,7 @@ async fn one_vs_one(
     info: web::Query<Info>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
+
     if !db.check_user_token(info.id as i32, &info.token)? {
         return Err(ApiError::Unauthorized);
     }
