@@ -32,7 +32,7 @@ export default {
 			menuItems: [
 				{ text: "Home", link: "/" },
 				{ text: "Rules", link: "/rules" },
-				{ text: "Profile", link: "/profile" },
+				{ text: "Profile", link: `/profile?uid=${store.state.auth.user.id}` },
 				{ text: "About", link: "/about" },
 			],
 			sound: null,

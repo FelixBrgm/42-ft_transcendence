@@ -1,18 +1,48 @@
 <template>
-  <div class="user-profile">
-    <div class="logo">
-      <img src="logo.png" alt="Logo">
-      <h1 class="neon-text">User Profile</h1>
+  <div class="card d-flex justify-content-center align-items-center">
+    <div class="card-body text-center">
+      <div class="profile-pic overflow-hidden">
+        <img
+          v-if="user != undefined"
+          class="rounded-circle"
+          alt="profile avatar"
+          :src="user.avatar"
+        />
+      </div>
+      <a href="#" class="btn btn-primary">{{
+        user == undefined ? "Loading..." : user.alias
+      }}</a> 
     </div>
-    <nav>
-      <ul>
-        <li><a href="#">Home</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="#">Contact</a></li>
-      </ul>
-    </nav>
-  </div>
+  </div> 
 </template>
+<script>
+export default {
+  data() {
+    this.$store.subscribe((mutation) => {
+      this.user = mutation.payload;
+    });
+    this.$store.dispatch("auth/updateUser");
+    return {
+      user: null,
+    };
+  },
+};
+</script>
+<style scoped>
+.btn {
+  background: rgb(59, 57, 57);
+}
+.card {
+  background: rgb(163, 165, 169);
+  width: 18rem;
+}
+.rounded-circle {
+  width: 125px;
+  height: 125px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+</style>
 
 <style scoped>
 .user-profile {
@@ -53,6 +83,18 @@
   100% {
     box-shadow: 0 0 10px 5px hsl(45, 100%, 60%);
   }
+}
+
+
+.body {
+  font-family: neuropol;
+  padding: 1rem;
+  background-color: #5c5e5f;
+  box-shadow: 0 0 10px 5px #00f0ff;
+  animation: neonGlow 6s infinite;
+  max-width: 1600px;
+  min-width: 900px;
+  width: 100%;
 }
 
 .logo {
