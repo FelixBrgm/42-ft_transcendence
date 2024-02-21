@@ -234,14 +234,6 @@ impl Database {
     pub fn create_friendship(&self, user_id: i32, friend_id: i32) -> Result<i32> {
         use schema::friend_ship::dsl::*;
 
-        if self.check_friendship(user_id, friend_id)? {
-            return Err(anyhow::anyhow!(
-                "Friendship already exists between {} and {}!",
-                user_id,
-                friend_id
-            ));
-        }
-
         let fs = NewFriendship {
             user1: user_id,
             user2: friend_id,
@@ -258,14 +250,6 @@ impl Database {
     // Removes a friendship
     pub fn remove_friendship(&self, user_id: i32, friend_id: i32) -> Result<()> {
         use schema::friend_ship::dsl::*;
-
-        if !self.check_friendship(user_id, friend_id)? {
-            return Err(anyhow::anyhow!(
-                "No friendship exists between {} and {}!",
-                user_id,
-                friend_id
-            ));
-        }
 
         diesel::delete(
             friend_ship.filter(
@@ -309,14 +293,6 @@ impl Database {
     pub fn create_blocked(&self, uid: i32, blocked_uid: i32) -> Result<i32> {
         use schema::blocked_users::dsl::*;
 
-        if self.check_blocked(uid, blocked_uid)? {
-            return Err(anyhow::anyhow!(
-                "{} is already blocked by {}!",
-                blocked_uid,
-                uid
-            ));
-        }
-
         let b = NewBlocked {
             user_id: uid,
             blocked_user_id: blocked_uid,
@@ -333,14 +309,6 @@ impl Database {
     // Removes a blocked
     pub fn remove_blocked(&self, uid: i32, blocked_uid: i32) -> Result<()> {
         use schema::blocked_users::dsl::*;
-
-        if !self.check_blocked(uid, blocked_uid)? {
-            return Err(anyhow::anyhow!(
-                "{} is not blocked by {}!",
-                blocked_uid,
-                uid
-            ));
-        }
 
         diesel::delete(blocked_users.filter(user_id.eq(uid).and(blocked_user_id.eq(blocked_uid))))
             .execute(&mut self.pool.get()?)?;
