@@ -16,12 +16,17 @@
                 {{ number }}
               </option>
             </select>
-          <div class="mybutton" @click="playTournament" >
+          <div class="mybutton" style="margin-top: 6px;" @click="playTournament" >
             <span > Start Tournament</span>
           </div>
-            
           </div>
-        </div>
+          <div class="my-container">
+            <div>Join Tournament</div>
+            <span>Enter ID: </span> 
+            <input type="text" v-model="tournamentID" placeholder="Enter Tournament ID">
+            <span class="mybutton" style="margin-top: 6px;" @click="joinTournament">Start</span> 
+          </div>
+        </div> 
       </div>
     </div>
     <GenFooter />
@@ -29,9 +34,8 @@
 </template>
 
 <script>
-import GenHeader from "@/components/elements/GenHeader.vue";
+import GenHeader from "@/components/elements/GenHeader.vue"; 
 import GenFooter from "@/components/elements/GenFooter.vue";
-import axios from "axios";
 
 export default {
   components: {
@@ -41,18 +45,26 @@ export default {
   data() {
     return {
       selectedNumberOfPlayers: null,
-      numbers: Array.from({ length: 64 }, (_, index) => (index + 1) * 2), // Example numbers for the dropdown
+      tournamentID: null,
+      numbers: Array.from({ length: 7 }, (_, index) => Math.pow(2, index + 1)),
     };
   },
   methods: {
     playGame() {
-      this.$router.push({ path: "/pong", query: { startGame: true } }); // Pass query parameter
+      this.$router.push({ path: "/pong", query: { startGame: true } });
     },
     playTournament() {
       if (this.selectedNumberOfPlayers) {
         this.$router.push({ path: "/pong", query: { startTournament: this.selectedNumberOfPlayers } });
       } else {
         alert("Please select the number of players for the tournament.");
+      }
+    },
+    joinTournament() {
+      if (this.tournamentID && /^\d{6}$/.test(this.tournamentID)) {
+        this.$router.push({ path: "/pong", query: { joinTournament: this.tournamentID } });
+      } else {
+        alert("Please enter a valid Tournament ID");
       }
     },
   },
