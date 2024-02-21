@@ -41,11 +41,16 @@ use serde_json;
 async fn login(
     id: Option<Identity>,
     client: web::Data<BasicClient>,
+	database: web::Data<Database>,
     session: Session,
 ) -> Result<HttpResponse, ApiError> {
     // If user is already logged in redirect to frontend
     if id.is_some() {
-        println!("(login) {:?} is already logged in", id.unwrap().id());
+		let id = id.unwrap().id()?.parse()?;
+        println!("(login) {:?} is already logged in", id);
+
+		database.update_user_status(id, "online")?;
+
         let inend_url = std::env::var("INEND_URL").expect("INEND_URL must be set");
         return Ok(HttpResponse::Found()
             .insert_header((LOCATION, inend_url))
@@ -92,7 +97,11 @@ async fn callback(
 ) -> Result<HttpResponse, ApiError> {
     // If user is already logged in redirect to frontend
     if id.is_some() {
-        println!("(callback) {:?} is already logged in", id.unwrap().id());
+		let id = id.unwrap().id()?.parse()?;
+        println!("(callback) {:?} is already logged in", id);
+
+		database.update_user_status(id, "online")?;
+
         let inend_url = std::env::var("INEND_URL").expect("INEND_URL must be set");
         return Ok(HttpResponse::Found()
             .insert_header((LOCATION, inend_url))
