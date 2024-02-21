@@ -89,6 +89,7 @@ async fn main() {
             .service(api::game::create_tournament)
             .service(api::game::connect_tournament)
             .service(api::game::one_vs_one)
+            .service(api::game::list)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
     .bind("0.0.0.0:8080")

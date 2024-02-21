@@ -129,9 +129,8 @@ async fn one_vs_one(
     }
 }
 
-// 404 not found
 #[get("/game/list/{uid}")]
-async fn games(
+async fn list(
 	identity: Identity,
     req: HttpRequest,
     uid: web::Path<i32>,
