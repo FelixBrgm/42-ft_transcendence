@@ -13,7 +13,7 @@
               :src="user.avatar"
             />
           </div>
-          <h1 v-if="this.isblocked()" style="color: red;">BLOCKED!!</h1>
+          <h1 v-if="!this.isb" style="color: red;">BLOCKED!!</h1>
         </div>
         <div v-show="!isUidMatch" class="icons-container">
           <!-- Block and add icons -->
@@ -50,7 +50,7 @@
             <div>Friends: </div>
             <span>{{ this.seperator }}</span>
             <ul v-if="friends !== null && friends.length > 0" >
-              <li v-for="friend in friends" :key="friend.id" @click="goToProfile(friend.id)">
+              <li v-for="friend in friends" :key="friend.id" @click="goToProfile(friend)">
                 {{ friend.name }}
               </li>
             </ul>
@@ -68,7 +68,7 @@
 <script>
 
 import axios from 'axios';
-import store from '../../store';
+import store from '../../store'; 
 import GenHeader from "@/components/elements/GenHeader.vue";
 import GenFooter from "@/components/elements/GenFooter.vue";
 
@@ -81,24 +81,37 @@ export default {
     return {
       user: null,
       friends: null,
-      friendimg: require("@/assets/add-user.png"),
+      friendimg: null,
+      ism: false,
+      isb: false,
+      isf: false,
       matchs: null,
       uid: "",
       seperator: "-------------------------------------------------------------------"
     };
   },
+  created() {
+  this.isf = this.isfriend;
+  this.isb = this.isblocked;
+  this.ism = this.isUidMatch;
+  if (this.isf) {
+    this.friendimg = require("@/assets/add-user.png");
+  } else {
+    this.friendimg = require("@/assets/delete-user.png");
+  } 
+},
   mounted() {
     this.$store.subscribe((mutation) => {
-      this.user = mutation.payload; 
+      this.user = mutation.payload;
     });
     this.$store.dispatch("auth/updateUser");
     this.fetchFriends();
     this.fetchMatchs();
-    this.uid = store.state.auth.user.id; 
+    this.uid = `${this.$route.query.uid}`;  
   },
   methods: {
         changeUsername() {
-      const newUsername = prompt("Enter new username:");
+      const newUsername = prompt("Enter new username:"); 
       if (newUsername !== null) {
         // Assuming you have an API endpoint to update the username
         axios.post(`http://127.0.0.1:8080/user`, { alias: newUsername }, { withCredentials: true })
@@ -111,16 +124,31 @@ export default {
       }
   }, 
     blockUser() {
-      if (this.isblocked()) {
+      if (this.isb) {
         axios.get(`http://127.0.0.1:8080/block/remove/${this.$route.query.uid}`, { withCredentials: true });
+        this.isb = false;
       } else {
         axios.get(`http://127.0.0.1:8080/block/${this.$route.query.uid}`, { withCredentials: true });
+        this.isb = true;
       }
     },
     addFriend() {
+      if (!this.isf) {
+        axios.get(`http://127.0.0.1:8080/friend/remove/${this.$route.query.uid}`, { withCredentials: true });
+        this.friendimg= require("@/assets/delete-user.png");
+        this.isf = false;
+      } else {
+        axios.get(`http://127.0.0.1:8080/friend/add/${this.$route.query.uid}`, { withCredentials: true });
+        this.friendimg= require("@/assets/add-user.png");  
+        this.isf = true;
+      }
     },
-    goToProfile(friendId) {
-      this.$router.push({ path: `/profile/${friendId}` });
+    goToProfile(friend) {
+        if (friend.user1 != this.$route.query.uid) {
+          this.$router.push({ link: `/profile`, query: { uid: friend.user1 } });
+        } else {
+          this.$router.push({ path: `/profile`, query: { uid: friend.user2 }});
+        }
     },
     async fetchFriends() {
       try {
@@ -131,11 +159,23 @@ export default {
       }
     },
     async isblocked() {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8080/block/check/${this.$route.query.uid}`, { withCredentials: true });
-        return response.data; 
-      } catch (error) {
-        console.error('Error fetching blocked:', error);
+      if(!this.ism){
+        try { 
+      const response = await axios.get(`http://127.0.0.1:8080/block/check/${this.$route.query.uid}`, { withCredentials: true });
+          return response.data; 
+        } catch (error) {
+          console.error('Error fetching blocked:', error);
+        }
+      }
+    }, 
+    async isfriend() {
+      if(!this.ism){
+        try {
+          const response = await axios.get(`http://127.0.0.1:8080/friend/check/${this.$route.query.uid}`, { withCredentials: true });
+          return response.data; 
+        } catch (error) {
+          console.error('Error fetching blocked:', error); 
+        }
       }
     },
     async fetchMatchs() {
@@ -145,22 +185,33 @@ export default {
       } catch (error) {
         console.error('Error fetching matches:', error);
       }
+    },
+    async getUser() {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8080/user/${this.$route.query.uid}`, { withCredentials: true });
+        this.user = response.data;
+      } catch (error) {
+        console.error('Error fetching matches:', error);
+      }
     }
   },
     computed: {
-isUidMatch() {
-  const routeUid = this.$route.query.uid;
-  const componentUid = this.uid;
+      isUidMatch() {
+        const routeUid = this.$route.query.uid;
+        const user = store.state.auth.user;
 
-  // Check if both values are defined and not null
-    const routeUidConverted = isNaN(Number(routeUid)) ? routeUid.toString() : Number(routeUid);
-    const componentUidConverted = isNaN(Number(componentUid)) ? componentUid.toString() : Number(componentUid);
+        // Check if user is defined and not null
+        if (user && user.id) {
+          const componentUid = user.id;
 
-    if (routeUidConverted === componentUidConverted)
-      return true;
-    else  
-      return false;
-  } 
+          const routeUidConverted = isNaN(Number(routeUid)) ? routeUid.toString() : Number(routeUid);
+          const componentUidConverted = isNaN(Number(componentUid)) ? componentUid.toString() : Number(componentUid);
+
+          return routeUidConverted === componentUidConverted;
+        } else {
+          return false;
+        }
+      }
     }
 };
 </script>

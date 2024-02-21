@@ -8,12 +8,12 @@
 		</div>
 		</router-link>
 		<nav>
-			<ul>
-				<li v-for="(item, index) in menuItems" :key="index">
-					<a :href="item.link" class="neon-text">{{ item.text }}</a>
-				</li>
-				<a v-on:click="logout" class="neon-text">Logout</a>
-			</ul>
+      <ul>
+        <li v-for="(item, index) in menuItems" :key="index">
+          <a :href="generateLink(item)" class="neon-text">{{ item.text }}</a>
+        </li>
+        <a v-on:click="logout" class="neon-text">Logout</a>
+      </ul>
 		</nav>
 	</header>
 </template> 
@@ -26,39 +26,46 @@ import store from '../../store';
 
 
 export default {
-	data() {
-		return {
-			title: "Transcendence",
-			menuItems: [
-				{ text: "Home", link: "/" },
-				{ text: "Rules", link: "/rules" },
-				{ text: "Profile", link: `/profile?uid=${store.state.auth.user.id}` },
-				{ text: "About", link: "/about" },
-			],
-			sound: null,
-		};
+  data() {
+    return {
+      title: "Transcendence",
+      menuItems: [
+        { text: "Home", link: "/" },
+        { text: "Rules", link: "/rules" },
+        { text: "Profile", link: "/profile" },
+        { text: "About", link: "/about" },
+      ],
+      sound: null, 
+    };
+  },
+  methods: {
+		generateLink(item) {
+		if (item.text === "Profile" && store.state.auth.user !== null) {
+			return `${item.link}?uid=${store.state.auth.user.id}`;
+		} else {
+			return item.link;
+		}
+		},
+	async logout() {
+		try {
+			await axios.get('http://127.0.0.1:8080/auth/logout', { withCredentials: true });
+			store.state.auth.user = null;
+			this.$router.push('/login');
+		} catch (error) {
+			console.error('Error Logging out:', error);
+		}
+	},
+	playSound() {
+		if (this.sound) {
+			this.sound.play();
+		}
+	},
 	},
 	mounted() {
 		this.sound = new Howl({
 		src: [honkSound],
 		});
-	},
-	methods: {
-		async logout() {
-			try {
-				await axios.get('http://127.0.0.1:8080/auth/logout', { withCredentials: true });
-				store.state.auth.user = null;
-				this.$router.push('/login');
-			} catch (error) {
-				console.error('Error Logging out:', error);
-			}
-		},
-		playSound() {
-			if (this.sound) {
-				this.sound.play();
-			}
-		},
-	},
+	}
 };
 </script>
 
