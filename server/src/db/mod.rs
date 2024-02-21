@@ -309,14 +309,6 @@ impl Database {
     pub fn create_blocked(&self, uid: i32, blocked_uid: i32) -> Result<i32> {
         use schema::blocked_users::dsl::*;
 
-        if self.check_blocked(uid, blocked_uid)? {
-            return Err(anyhow::anyhow!(
-                "{} is already blocked by {}!",
-                blocked_uid,
-                uid
-            ));
-        }
-
         let b = NewBlocked {
             user_id: uid,
             blocked_user_id: blocked_uid,
@@ -333,14 +325,6 @@ impl Database {
     // Removes a blocked
     pub fn remove_blocked(&self, uid: i32, blocked_uid: i32) -> Result<()> {
         use schema::blocked_users::dsl::*;
-
-        if !self.check_blocked(uid, blocked_uid)? {
-            return Err(anyhow::anyhow!(
-                "{} is not blocked by {}!",
-                blocked_uid,
-                uid
-            ));
-        }
 
         diesel::delete(blocked_users.filter(user_id.eq(uid).and(blocked_user_id.eq(blocked_uid))))
             .execute(&mut self.pool.get()?)?;
