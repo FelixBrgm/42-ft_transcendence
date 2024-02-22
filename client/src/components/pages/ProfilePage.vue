@@ -17,7 +17,6 @@
           <h1 v-if="this.isb" style="color: red">BLOCKED!!</h1>
         </div>
         <div v-show="!isUidMatch" class="icons-container">
-          <!-- Block and add icons -->
           <img
             v-if="user !== null && user !== undefined"
             class="icon"
@@ -44,7 +43,7 @@
           <div class="mhistory">
             <div>Matchmaking history</div>
             <span>{{ this.seperator }}</span>
-            <ul v-if="matchs !== null && matchs.length > 0">
+            <ul v-if="matchs !== null && (matchs.length > 0)">
               <li v-for="match in matchs" :key="match.id">
                 {{ match.name }}
               </li>
@@ -54,7 +53,7 @@
           <div v-show="isUidMatch" class="mhistory">
             <div>Friends:</div>
             <span>{{ this.seperator }}</span>
-              <ul v-if="friends !== null && friends.length > 0" style="list-style-type: none;">
+              <ul v-if="friends !== null && (friends.length > 0)" style="list-style-type: none;">
                 <span v-for="friend in friendInfos" :key="friend.id" @click="this.$router.push({ link: `/profile`, query: { uid: friend.id } })"> 
                   {{friend.alias}}
                 </span>
@@ -204,6 +203,7 @@ export default {
       this.isf = !this.isf;
     },
     async fetchFriends() {
+      console.log("FETCHING PROFILEFRIENDS");
       try {
         const response = await axios.get(
           `http://127.0.0.1:8080/friend/list/${this.$route.query.uid}`,
