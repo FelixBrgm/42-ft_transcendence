@@ -60,6 +60,7 @@ export default {
   data() {
     return {  
       games: [],
+      matchreset: false,
       textvalue: "Start Game",
       showtournament: false , 
       startButtonEnabled: true,
@@ -116,6 +117,8 @@ export default {
       }  
       if (parts[0] == 'MATCH')
       {
+        if(this.matchreset == true)
+          this.games = [];
         this.games.push({ leftPlayer: parts[1], rightPlayer: parts[2] });
       }
       if (parts[0] == 'SCR')
@@ -144,17 +147,18 @@ export default {
       }
       if(parts[0] == 'END')
       {
+        this.matchreset = true;
         setTimeout(() => {
           if (this.won == false){
             this.$router.push('/'); 
             alert("Game over you lost");
           }
-          else if (this.won == true && this.istournament == true){
+          else if (this.won == true && this.istournament == true && this.round != 1){
             this.textvalue = "Waiting for next game";
           }
           else{
             alert("Congrats, you won");
-            this.$router.push('/'); 
+            this.$router.push('/');
           }
         }, 3000);
       }
@@ -168,7 +172,7 @@ export default {
       }
       if(parts[0] == 'SZE')
       {
-        this.round = parts[1];
+        this.round = parts[1] / 2;
       }
 
         // Update the colors based on the isYou property
