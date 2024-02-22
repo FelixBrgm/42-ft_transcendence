@@ -39,6 +39,11 @@ export default {
   props: {
     showChat: Boolean,
   },
+    watch: {
+    $route() {
+      this.fetchFriends();
+    },
+  }, 
   data() {
     return {
       friendInfos: [], // Initialize messages as an empty array
@@ -49,18 +54,20 @@ export default {
     };
   },
   created() {
-    this.setupWebSocketAndFetchFriends(); // Initial setup
+    // Set up Axios interceptor to call setupWebSocketAndFetchFriends before every request
+    axios.interceptors.request.use(config => {
+      this.fetchFriends();
+      return config;
+    });
+      this.setupWebSocketAndFetchFriends();
 
-    // Retry every 5 seconds if user data is not available
+
     this.retryInterval = setInterval(() => {
-        if (store.state.auth.user && store.state.auth.user.id) {
-            clearInterval(this.retryInterval); // Clear retry interval if user data is available
-            this.setupWebSocketAndFetchFriends(); // Setup WebSocket and fetch friends
-        }
+      if (store.state.auth.user && store.state.auth.user.id) {
+        clearInterval(this.retryInterval);
+        this.setupWebSocketAndFetchFriends();
+      }
     }, 5000);
-  },
-  destroyed() {
-    clearInterval(this.retryInterval); // Clear retry interval on component destruction
   },
   methods: {
     async setupWebSocketAndFetchFriends() {
@@ -109,7 +116,7 @@ export default {
       try {
         const response = await axios.get(`http://127.0.0.1:8080/friend/list/${store.state.auth.user.id}`, { withCredentials: true });
         this.friends = response.data;
-        console.log("GOTMEFRIENDS"); 
+
         this.friendInfos = [];
         for (const friend of this.friends) { // Added missing 'const' and 'of' keywords
           console.log(friend);
