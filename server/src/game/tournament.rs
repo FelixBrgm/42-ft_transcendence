@@ -1,4 +1,4 @@
-use super::{Create, TournamentConnect};
+use super::{Create, TournamentConnect, TournamentCreate};
 use crate::game::actor::Stop;
 
 use crate::game::actor::GameMode;
@@ -96,8 +96,18 @@ impl Tournament {
     }
 
     pub fn start_round(&mut self, ctx: &mut Context<TournamentServer>) {
-        println!("starting round");
+        println!("Starting round");
         let mut round = Round::new();
+
+        // send the MATCHES in each round
+        for participant in &self.players {
+            for matching in self.players.chunks(2) {
+                if let [player1, player2] = matching {
+                    let match_msg = format!("MATCH {} {}", player1.id, player2.id);
+                    participant.addr.do_send(Message(match_msg));
+                }
+            }
+        }
 
         while self.players.len() > 0 {
             let p1 = self.players.remove(0);
@@ -188,31 +198,25 @@ impl Actor for TournamentServer {
 impl Handler<TournamentConnect> for TournamentServer {
     type Result = ();
 
-	
     fn handle(&mut self, msg: TournamentConnect, ctx: &mut Context<Self>) {
-
-		dbg!(&msg);
-
         if let Some(t) = self.tournaments.get_mut(&msg.tournament_id) {
-            println!("2");
             t.try_connect(Player::new(msg.uid, msg.socket, msg.addr), ctx);
         } else {
-            println!("3");
             msg.addr.do_send(Stop { id: msg.uid });
         }
     }
 }
 
-impl Handler<Create> for TournamentServer {
-    type Result = ();
+impl Handler<TournamentCreate> for TournamentServer {
+    type Result = Option<Tournament>;
 
-    fn handle(&mut self, msg: Create, _: &mut Context<Self>) {
-        println!(
-            "Tournament created with id {} and a size of {}.",
-            msg.id, msg.size
-        );
-        let tournament = Tournament::new(msg.id, msg.size);
-        self.tournaments.insert(msg.id, tournament);
+    fn handle(&mut self, msg: TournamentCreate, _: &mut Context<Self>) -> Option<Tournament> {
+		println!(
+			"Tournament created with id {} and a size of {}.",
+			msg.id, msg.size
+		);
+		let tournament = Tournament::new(msg.id, msg.size);
+       self.tournaments.insert(msg.id, tournament)
     }
 }
 
@@ -227,34 +231,26 @@ impl Handler<ClientMessage> for TournamentServer {
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
         println!("tournament message: {}", msg.msg);
-		
-        let res = self.tournaments.iter().find(|t| {
-            t.1.rounds
-                .last()
-                .unwrap()
-                .matches
-                .iter()
-                .any(|m| m.player1 == msg.id || m.player2 == msg.id)
-        });
 
-        let Some(tournament) = res else {
-            return;
-        };
-
-        let Some(m) = tournament.1.rounds.last() else {
-            return;
-        };
-
-        let Some(m) = m
-            .matches
-            .iter()
-            .find(|m| m.player1 == msg.id || m.player2 == msg.id)
-        else {
-            return;
-        };
-
-        if let Some(c) = msg.msg.chars().last() {
-            m.instance.do_send(PlayerInput { id: msg.id, cmd: c });
+        if let Some((_, tournament)) = self.tournaments.iter().find(|(_, t)| {
+            t.rounds.last().map_or(false, |last_round| {
+                last_round
+                    .matches
+                    .iter()
+                    .any(|m| m.player1 == msg.id || m.player2 == msg.id)
+            })
+        }) {
+            if let Some(last_round) = tournament.rounds.last() {
+                if let Some(m) = last_round
+                    .matches
+                    .iter()
+                    .find(|m| m.player1 == msg.id || m.player2 == msg.id)
+                {
+                    if let Some(c) = msg.msg.chars().last() {
+                        m.instance.do_send(PlayerInput { id: msg.id, cmd: c })
+                    }
+                }
+            }
         }
     }
 }
