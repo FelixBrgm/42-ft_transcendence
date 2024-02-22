@@ -2,7 +2,7 @@ use super::{Create, TournamentConnect};
 use crate::game::actor::Stop;
 
 use crate::game::actor::GameMode;
-use crate::game::pong::{GameResult, Player, PlayerInput, Pong};
+use crate::game::pong::{RoundResult, Player, PlayerInput, Pong};
 use crate::game::Message;
 use crate::game::{ClientMessage, Disconnect, UserId};
 
@@ -67,27 +67,28 @@ impl Tournament {
             if let None = self.players.iter().find(|p| p.id == player.id) {
                 self.players.push(player);
             }
-        } else {
-            let current_round = self.rounds.last().unwrap();
-            if current_round.matches.iter().any(|m| m.winner == None) {
-                player.addr.do_send(Stop { id: player.id });
-                return;
-            } else {
-                let player_doesnt_exists =
-                    self.players.iter().find(|p| p.id == player.id).is_none();
-                let won_round = current_round
-                    .matches
-                    .iter()
-                    .any(|m| m.winner == Some(player.id));
+        } 
+		// else {
+        //     let current_round = self.rounds.last().unwrap();
+        //     if current_round.matches.iter().any(|m| m.winner == None) {
+        //         player.addr.do_send(Stop { id: player.id });
+        //         return;
+        //     } else {
+        //         let player_doesnt_exists =
+        //             self.players.iter().find(|p| p.id == player.id).is_none();
+        //         let won_round = current_round
+        //             .matches
+        //             .iter()
+        //             .any(|m| m.winner == Some(player.id));
 
-                if player_doesnt_exists && won_round {
-                    self.players.push(player);
-                } else {
-                    player.addr.do_send(Stop { id: player.id });
-                    return;
-                }
-            }
-        }
+        //         if player_doesnt_exists && won_round {
+        //             self.players.push(player);
+        //         } else {
+        //             player.addr.do_send(Stop { id: player.id });
+        //             return;
+        //         }
+        //     }
+        // }
 
         let needed_size = self.size / pow(2, self.rounds.len());
         if self.players.len() == needed_size as usize {
@@ -154,10 +155,10 @@ impl TournamentServer {
     }
 }
 
-impl Handler<GameResult> for TournamentServer {
+impl Handler<RoundResult> for TournamentServer {
     type Result = ();
 
-    fn handle(&mut self, msg: GameResult, ctx: &mut Context<Self>) {
+    fn handle(&mut self, msg: RoundResult, ctx: &mut Context<Self>) {
         println!("{:?}", msg);
 
         let tournament = self
@@ -170,7 +171,7 @@ impl Handler<GameResult> for TournamentServer {
                     .unwrap()
                     .matches
                     .iter()
-                    .any(|m| m.player1 == msg.winner || m.player2 == msg.winner)
+                    .any(|m| m.player1 == msg.winner.id || m.player2 == msg.winner.id)
             })
             .unwrap();
 
@@ -182,12 +183,13 @@ impl Handler<GameResult> for TournamentServer {
             .unwrap()
             .matches
             .iter_mut()
-            .find(|m| m.player1 == msg.winner || m.player2 == msg.winner)
+            .find(|m| m.player1 == msg.winner.id || m.player2 == msg.winner.id)
             .unwrap();
 
-        m.winner = Some(msg.winner);
+        m.winner = Some(msg.winner.id);
 
-        let _ = self.db.insert_game(msg.winner as i32, msg.looser as i32);
+        let _ = self.db.insert_game(msg.winner.id as i32, msg.looser as i32);
+		dbg!(msg.winner);
     }
 }
 
