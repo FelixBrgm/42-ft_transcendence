@@ -1,4 +1,4 @@
-use super::{Create, TournamentConnect};
+use super::{Create, TournamentConnect, TournamentCreate};
 use crate::game::actor::Stop;
 
 use crate::game::actor::GameMode;
@@ -206,16 +206,16 @@ impl Handler<TournamentConnect> for TournamentServer {
     }
 }
 
-impl Handler<Create> for TournamentServer {
-    type Result = ();
+impl Handler<TournamentCreate> for TournamentServer {
+    type Result = Option<Tournament>;
 
-    fn handle(&mut self, msg: Create, _: &mut Context<Self>) {
-        println!(
-            "Tournament created with id {} and a size of {}.",
-            msg.id, msg.size
-        );
-        let tournament = Tournament::new(msg.id, msg.size);
-        self.tournaments.insert(msg.id, tournament);
+    fn handle(&mut self, msg: TournamentCreate, _: &mut Context<Self>) -> Option<Tournament> {
+		println!(
+			"Tournament created with id {} and a size of {}.",
+			msg.id, msg.size
+		);
+		let tournament = Tournament::new(msg.id, msg.size);
+       self.tournaments.insert(msg.id, tournament)
     }
 }
 
