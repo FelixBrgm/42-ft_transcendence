@@ -18,10 +18,14 @@ async fn toggle(
         ));
     }
 
-	match db.check_friendship(uid, friend_id)? {
-		false => { db.create_friendship(uid, friend_id)?; }
-		true => {db.remove_friendship(uid, friend_id)?; }
-	}
+    match db.check_friendship(uid, friend_id)? {
+        false => {
+            db.create_friendship(uid, friend_id)?;
+        }
+        true => {
+            db.remove_friendship(uid, friend_id)?;
+        }
+    }
 
     Ok(HttpResponse::Ok().finish())
 }

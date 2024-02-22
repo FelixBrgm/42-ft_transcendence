@@ -63,12 +63,12 @@ async fn create_tournament(
             "Tournament size must be a power of 2 between 4 and 128".to_string(),
         ));
     }
-    match server.get_ref().try_send(game::Create {
+    match server.get_ref().try_send(game::TournamentCreate {
         id: client_id,
         size: size,
     }) {
         Ok(_) => Ok(HttpResponse::Ok().finish()),
-        Err(_) => Err(ApiError::InternalServerError),
+        Err(e) => Err(ApiError::BadRequest(format!("Error: {}", e))),
     }
 }
 
