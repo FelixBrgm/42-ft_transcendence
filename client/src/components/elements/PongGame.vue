@@ -1,7 +1,17 @@
 <!-- PongGame.vue -->
 <template>
 <div>
-<div v-if="showtournament" class="playerinfo">
+  <div v-if="showtournament" class="playerinfo">
+  <div class="players-container">
+  <GameInfo
+  v-for="(game, index) in games"
+  :key="index"
+  :leftPlayer="game.leftPlayer"
+  :rightPlayer="game.rightPlayer"
+  />
+</div>
+</div>  
+  <div v-if="showtournament" class="playerinfo">
   <div class="players-container">
     <div class="profile left-profile">
       <img :src="leftPlayerimg">
@@ -14,7 +24,6 @@
       <h2>{{ this.rightPlayername }} </h2> 
       <p>Wins: {{ this.rightPlayerwin }} Losses: {{ this.rightPlayerloss }}</p>
     </div>
-
   </div>  
 </div>
 
@@ -38,11 +47,16 @@
 
 import store from '../../store';
 import axios from 'axios';
+import GameInfo from "@/components/elements/GameInfo.vue";
 
 
-export default { 
+export default {
+  components: {
+    GameInfo,
+  },
   data() {
     return {  
+      games: [],
       textvalue: "Start Game",
       showtournament: true ,
       startButtonEnabled: true,
@@ -93,6 +107,10 @@ export default {
       } 
       this.enemyid = parts[2];
       this.updatePaddleColors();
+      if(parts[0] == 'MATCH')
+      {
+        this.games.push({ leftPlayer: parts[1], rightPlayer: parts[2] });
+      }
       if(parts[0] == 'SCR')
       {
         const rest = parts[1].split(':')
@@ -180,24 +198,12 @@ export default {
       const userId = store.state.auth.user.id;
       const token = store.state.auth.user.password;
       let websocketUrl = "";
-      console.log("NUMPLASYERS", numPlayers);
       if (numPlayers === -1) 
-      {
         websocketUrl = `ws://localhost:8080/game/matchmake/?id=${userId}&token=${token}`;
-      }
       else if (numPlayers === -2) 
-      {
         websocketUrl = `ws://localhost:8080/game/one_vs_one/${ID}?id=${userId}&token=${token}`;
-      }
-      else if (numPlayers < 129)  
-      {
-        axios.get(`http://127.0.0.1:8080/game/create_tournament/${numPlayers}`, { withCredentials: true });
-        websocketUrl = `ws://localhost:8080/game/connect_tournament/${userId}?id=${userId}&token=${token}`;
-      }
-      else if (numPlayers > 128)    
-      { 
+      else   
         websocketUrl = `ws://localhost:8080/game/connect_tournament/${numPlayers}?id=${userId}&token=${token}`;
-      }
       this.websocket = new WebSocket(websocketUrl);
       this.textvalue = "Waiting for game"; 
       // Handle WebSocket events
@@ -223,15 +229,15 @@ export default {
         {
           this.startGame(Math.max(parseInt(this.$route.query.joinTournament) || 0, parseInt(this.$route.query.startTournament) || 0))
         }
-        else if (this.won === false)
-        {
-          this.$router.push('/'); 
-          alert("You have lost");
-        }
         else if (this.$route.query.joinTournament != 0)
         {
           this.$router.push('/'); 
           alert("This game does not exist");
+        }
+        else if (this.won === false)
+        {
+          this.$router.push('/'); 
+          alert("You have lost");
         }
       }); 
     },

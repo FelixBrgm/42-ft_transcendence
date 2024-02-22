@@ -23,13 +23,14 @@
               </option>
             </select>
           <div class="mybutton" style="margin-top: 6px;" @click="playTournament" >
-            <span > Start Tournament</span>
+            <span > Create Tournament</span>
           </div>
+          <div v-if="togglenum"> Tournament ID: {{this.userId }}</div>
           </div>
           <div class="my-container">
             <div>Join Tournament</div>
             <span>Enter ID: </span> 
-            <input type="text" v-model="tournamentID" placeholder="Enter Tournament ID">
+            <input type="text" v-model="tournamentID" :placeholder="this.togglenum ? this.userId : 'Enter tournament ID'">
             <span class="mybutton" style="margin-top: 6px;" @click="joinTournament">Start</span> 
           </div>
         </div> 
@@ -42,6 +43,8 @@
 <script>
 import GenHeader from "@/components/elements/GenHeader.vue"; 
 import GenFooter from "@/components/elements/GenFooter.vue";
+import store from '../../store';
+import axios from 'axios'; 
 
 export default {
   components: {
@@ -53,19 +56,27 @@ export default {
       selectedNumberOfPlayers: null,
       tournamentID: null,
       vsID: null,
-      numbers: Array.from({ length: 7 }, (_, index) => Math.pow(2, index + 1)),
+      togglenum: false,
+      userId: null, 
+      numbers: Array.from({ length: 7 }, (_, index) => Math.pow(2, index + 2)),
     };
   },
   methods: {
     playGame() {
-      this.$router.push({ path: "/pong", query: { startGame: true } });
+      this.$router.push({ path: "/pong", query: { startGame: true } }); 
     },
     playTournament() {
       if (this.selectedNumberOfPlayers) {
-        this.$router.push({ path: "/pong", query: { startTournament: this.selectedNumberOfPlayers } });
-      } else {
-        alert("Please select the number of players for the tournament.");
+        this.togglenum = true; 
+        this.userId = store.state.auth.user.id 
+        this.tournamentID = this.userId;
+        axios.get(`http://127.0.0.1:8080/game/create_tournament/${this.selectedNumberOfPlayers}`, { withCredentials: true })
+        .catch(error => {
+          alert("An error occurred: " + error.message);
+        }); 
       }
+      else 
+        alert("Please select the number of players for the tournament.");
     },
     joinTournament() {
       if (this.tournamentID && /^\d{6}$/.test(this.tournamentID)) {
@@ -88,7 +99,7 @@ export default {
 <style>
 @import "./../functions/neonglow.css";
 
-.body {
+.body { 
   font-family: neuropol;
   padding: 1rem;
   background-color: #5c5e5f;

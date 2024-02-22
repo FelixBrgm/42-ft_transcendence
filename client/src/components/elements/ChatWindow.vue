@@ -135,7 +135,7 @@ export default {
             const response = await axios.get(`http://127.0.0.1:8080/user/${userId}`, { withCredentials: true });
             this.friendInfos.push(response.data);
           } catch (error) {
-            console.error('Error fetching user info:', error);
+            console.error('Error fetching user info:', error); 
           }
         }
       } catch (error) {
