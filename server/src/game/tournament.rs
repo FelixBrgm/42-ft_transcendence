@@ -199,6 +199,7 @@ impl Handler<RoundResult> for TournamentServer {
 		if required_amount == 1 && tournament.players.len() == 1 {
 			let player = &tournament.players[0];
 			player.addr.do_send(Stop{ id: player.id});
+			// self.tournaments.remove(&tournament.uid);
 		}
 		else if tournament.players.len() == required_amount {
 			tournament.start_round(ctx);
