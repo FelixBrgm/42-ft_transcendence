@@ -189,7 +189,20 @@ impl Handler<RoundResult> for TournamentServer {
         m.winner = Some(msg.winner.id);
 
         let _ = self.db.insert_game(msg.winner.id as i32, msg.looser as i32);
-		dbg!(msg.winner);
+
+		dbg!(&msg.winner);
+		// add winner to players
+		tournament.players.push(msg.winner);
+
+		let required_amount = tournament.size as usize / (tournament.rounds.len() + 1);
+		println!("required amount {}", required_amount);
+		if required_amount == 1 && tournament.players.len() == 1 {
+			let player = &tournament.players[0];
+			player.addr.do_send(Stop{ id: player.id});
+		}
+		else if tournament.players.len() == required_amount {
+			tournament.start_round(ctx);
+		}
     }
 }
 
@@ -213,12 +226,14 @@ impl Handler<Create> for TournamentServer {
     type Result = ();
 
     fn handle(&mut self, msg: Create, _: &mut Context<Self>) {
-		println!(
-			"Tournament created with id {} and a size of {}.",
-			msg.id, msg.size
-		);
+
 		let tournament = Tournament::new(msg.id, msg.size);
-       self.tournaments.insert(msg.id, tournament);
+        if let None = self.tournaments.insert(msg.id, tournament) {
+			println!(
+				"Tournament created with id {} and a size of {}.",
+				msg.id, msg.size
+			);
+		}
     }
 }
 
