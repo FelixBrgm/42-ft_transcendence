@@ -119,6 +119,15 @@ export default {
       this.isf = await this.isfriend();
       this.isb = await this.isblocked();
       this.ism = this.isUidMatch;
+      console.log("FETCHDATAFRIEND", this.isf);
+      console.log("FETCHDATABLOCK", this.isb);
+      if (this.isf === undefined)
+        this.isf = false;
+      if (this.isb === undefined)
+        this.isb = false;
+      this.friendimg = this.isf
+        ? require("@/assets/add-user.png")
+        : require("@/assets/delete-user.png");
       console.log("isfriend", this.isf);
       console.log("isblocked", this.isb);
       console.log("ismatch", this.ism);
@@ -182,17 +191,17 @@ export default {
       axios.get(`http://127.0.0.1:8080/block/${this.$route.query.uid}`, {
         withCredentials: true,
       });
-      this.isb = !this.isb;
+      this.isb = !this.isb; 
     },
     addFriend() {
       axios.get(
         `http://127.0.0.1:8080/friend/${this.$route.query.uid}`,
         { withCredentials: true }
       );
-      this.isf = !this.isf;
       this.friendimg = this.isf
         ? require("@/assets/add-user.png")
         : require("@/assets/delete-user.png");
+      this.isf = !this.isf;
     },
     async fetchFriends() {
       try {
@@ -224,7 +233,6 @@ export default {
       }
     },
     async isblocked() {
-      if (!this.ism) {
         try {
           const response = await axios.get(
             `http://127.0.0.1:8080/block/check/${this.$route.query.uid}`,
@@ -234,10 +242,8 @@ export default {
         } catch (error) {
           console.error("Error fetching blocked:", error);
         }
-      }
     },
     async isfriend() {
-      if (!this.ism) {
         try {
           const response = await axios.get(
             `http://127.0.0.1:8080/friend/check/${this.$route.query.uid}`,
@@ -245,9 +251,8 @@ export default {
           );
           return response.data;
         } catch (error) {
-          console.error("Error fetching blocked:", error);
+          console.error("Error fetching friend:", error);
         }
-      }
     },
     async fetchMatchs() {
       try {
@@ -269,7 +274,7 @@ export default {
         console.log("gettinguser", response.data);
         this.user = response.data;
       } catch (error) {
-        console.error("Error fetching matches:", error);
+        console.error("Error fetching user:", error);
       }
     },
   },

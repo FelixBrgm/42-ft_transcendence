@@ -277,9 +277,9 @@ export default {
   position: relative;
   width: 1600px; 
   height: 900px;
-  margin: 0 auto; /* Center the container horizontally */
-  border: 1px solid #00000;
-  overflow: hidden; /* Prevent player from moving outside the container */
+  margin: 0 auto;
+  border: 1px solid #000000;
+  overflow: hidden;
   border-radius: 20px; 
   box-shadow: 0 0 10px 5px #00f0ff; 
   animation: neonGlow 6s infinite;
