@@ -64,7 +64,10 @@ async fn join_chat(
         return Err(ApiError::BadRequest("You are blocked by user".to_string()));
     }
 
-    let rid = db.add_room(user2, uid)?;
+	let rid = match db.check_room_by_user(uid, user2)? {
+		Some(rid) => {rid},
+		None => {db.add_room(user2, uid)?},
+	};
 
     chat_server.do_send(InsertRoom {
         room_id: rid,
@@ -72,7 +75,7 @@ async fn join_chat(
         user2: user2,
     });
 
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Ok().json(rid))
 }
 
 #[get("/rooms")]
