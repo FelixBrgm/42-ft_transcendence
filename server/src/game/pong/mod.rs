@@ -49,6 +49,14 @@ pub struct GameResult {
     pub winner: UserId,
 }
 
+#[derive(Message, Debug)]
+#[rtype(result = "()")]
+pub struct RoundResult {
+    pub winner: Player,
+	pub looser: UserId,
+}
+
+
 #[derive(Debug, Clone)]
 pub struct Pong {
     players: [Player; 2],
@@ -193,8 +201,6 @@ impl Handler<GameOver> for Pong {
         self.finished = true;
         self.send_to_players(Message("END".to_owned()));
 
-        // update the db
-
         let (winner, looser) = if self.score[0] > self.score[1] {
             (self.players[0].id, self.players[1].id)
         } else {
@@ -210,13 +216,29 @@ impl Handler<GameOver> for Pong {
                 addr.do_send(res);
             }
             GameMode::Tournament(addr) => {
+				let res = RoundResult {
+					winner: if self.players[0].id == winner {
+						self.players[0].clone()
+					} else {
+						self.players[1].clone()
+					},
+					looser: if self.players[0].id == winner {
+						looser
+					} else {
+						winner
+					},
+				};
                 addr.do_send(res);
             }
         }
 
-        for p in self.players.iter_mut() {
-            p.addr.do_send(Stop { id: p.id });
-        }
+		for p in self.players.iter_mut() {
+			if let GameMode::Tournament(addr) = &self.mode {
+				if p.id != winner {
+					p.addr.do_send(Stop { id: p.id });
+				}
+			}
+		}
     }
 }
 
