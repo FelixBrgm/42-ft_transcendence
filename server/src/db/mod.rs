@@ -125,19 +125,21 @@ impl Database {
         Ok(room_count > 0)
     }
 
-    // Check if Room exists by users
-    pub fn check_room_by_user(&self, user_1: i32, user_2: i32) -> Result<bool> {
-        use schema::chat_rooms::dsl::*;
+    // Checks if a room with those two users exists
+	pub fn check_room_by_user(&self, user_1: i32, user_2: i32) -> Result<Option<i32>> {
+		use schema::chat_rooms::dsl::*;
 
-        let room_count = chat_rooms
-            .filter(
-                (user1.eq(user_1).and(user2.eq(user_2))).or(user1.eq(user_2).and(user2.eq(user_1))),
-            )
-            .count()
-            .execute(&mut self.pool.get()?)?;
+		let room_id = chat_rooms
+			.filter(
+				(user1.eq(user_1).and(user2.eq(user_2)))
+					.or(user1.eq(user_2).and(user2.eq(user_1))),
+			)
+			.select(id)
+			.first::<i32>(&mut self.pool.get()?)
+			.optional()?; 
 
-        Ok(room_count > 0)
-    }
+		Ok(room_id)
+	}
 
     // Add a new Room, if it doesn't exists with those users yet and return its id
     pub fn add_room(&self, user_1: i32, user_2: i32) -> Result<i32> {

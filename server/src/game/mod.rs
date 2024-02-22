@@ -21,7 +21,7 @@ pub struct Connect {
     pub socket: Socket,
 }
 
-#[derive(Message)]
+#[derive(Message, Debug)]
 #[rtype(result = "()")]
 pub struct TournamentConnect {
     pub tournament_id: UserId,

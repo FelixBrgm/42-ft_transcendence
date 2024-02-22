@@ -187,7 +187,11 @@ impl Actor for TournamentServer {
 impl Handler<TournamentConnect> for TournamentServer {
     type Result = ();
 
+	
     fn handle(&mut self, msg: TournamentConnect, ctx: &mut Context<Self>) {
+
+		dbg!(&msg);
+
         if let Some(t) = self.tournaments.get_mut(&msg.tournament_id) {
             println!("2");
             t.try_connect(Player::new(msg.uid, msg.socket, msg.addr), ctx);
@@ -222,7 +226,7 @@ impl Handler<ClientMessage> for TournamentServer {
 
     fn handle(&mut self, msg: ClientMessage, _: &mut Context<Self>) {
         println!("tournament message: {}", msg.msg);
-
+		
         let res = self.tournaments.iter().find(|t| {
             t.1.rounds
                 .last()
