@@ -101,17 +101,21 @@ export default {
     },
     handleWebSocketMessage(message) {
       const parts = message.split(' ');
-      if (parts[0] == 'FORMAT:' && parts[1] == '(YOU)') {
+      if (parts[0] == 'FORMAT:' && parts[1] == 'YOU') {
         this.isYou = true;
-        this.startButtonEnabled = false;
-      } 
-      this.enemyid = parts[2];
+        this.enemyid = parts[2];
+      }
+      else if (parts[0] == 'FORMAT:' && parts[2] == 'YOU') {
+        this.isYou = false;
+        this.enemyid = parts[1];
+      }  
+      this.startButtonEnabled = false;
       this.updatePaddleColors();
-      if(parts[0] == 'MATCH')
+      if (parts[0] == 'MATCH')
       {
         this.games.push({ leftPlayer: parts[1], rightPlayer: parts[2] });
       }
-      if(parts[0] == 'SCR')
+      if (parts[0] == 'SCR')
       {
         const rest = parts[1].split(':')
         if ((rest[0] > this.leftScore && this.isYou == true) ||
@@ -155,7 +159,7 @@ export default {
       updatePaddleColors() {
         const playerPaddle = this.$refs.gameContainer.querySelector('.rightPaddle');
         const enemyPaddle = this.$refs.gameContainer.querySelector('.leftPaddle');
-
+        console.log("ENEMYID:", this.enemyid);
         axios.get(`http://127.0.0.1:8080/user/${this.enemyid}`, { withCredentials: true })
           .then(response => {
             const enemy = response.data;
