@@ -61,6 +61,7 @@ export default {
     return {  
       games: [],
       matchreset: false,
+      msgrcvd: false,
       textvalue: "Start Game",
       showtournament: false , 
       startButtonEnabled: true,
@@ -263,6 +264,7 @@ export default {
         console.log('WebSocket connection opened:', event); 
       });
       this.websocket.addEventListener('message', (event) => {
+        this.msgrcvd = true;
         this.handleWebSocketMessage(event.data);
       });
 
@@ -272,10 +274,8 @@ export default {
       });
 
       this.websocket.addEventListener('close', (event) => {
-        console.log('WebSocket connection closed:', event);
-        if (event.code === 1006) {
-          // WebSocket closed due to an error
-          // Handle the error appropriately
+        console.log('WebSocket connection closed:', event); 
+        if (event.code === 1006 && this.msgrcvd != false) {
           console.error('WebSocket closed due to an error');
         } else {
           // WebSocket closed normally
