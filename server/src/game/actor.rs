@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(1);
 const CLIENT_TIMEOUT: Duration = Duration::from_secs(10);
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum GameMode {
     OneVsOne(Addr<OneVsOneServer>),
     Matchmaking(Addr<MatchmakingServer>),
