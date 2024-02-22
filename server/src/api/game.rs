@@ -52,8 +52,7 @@ async fn create_tournament(
     let client_id = identity.id()?.parse::<usize>()?;
 
     let size = size.into_inner();
-    if !(size == 2
-        || size == 4
+    if !(size == 4
         || size == 8
         || size == 16
         || size == 32
@@ -61,7 +60,7 @@ async fn create_tournament(
         || size == 128)
     {
         return Err(ApiError::BadRequest(
-            "Tournament size must be a power of 2 between 2 and 128".to_string(),
+            "Tournament size must be a power of 2 between 4 and 128".to_string(),
         ));
     }
     match server.get_ref().try_send(game::Create {
