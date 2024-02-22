@@ -8,8 +8,8 @@
         </button>
       </div>
       <div class="app-main">
-        <div class="chat-sidebar">
-          <div v-for="(friend, index) in friendInfos" :key="index" @click="joinFriendChat(friend.id)" class="room-item">
+        <div class="chat-sidebar bg-dark text-white">
+          <div v-for="(friend, index) in friendInfos" :key="index" @click="joinFriendChat(friend.id)" class="room-item p-2 mb-2 rounded cursor-pointer">
             {{ friend.alias }}
           </div>
         </div>
@@ -39,6 +39,11 @@ export default {
   props: {
     showChat: Boolean,
   },
+    watch: {
+    $route() {
+      this.fetchFriends();
+    },
+  }, 
   data() {
     return {
       friendInfos: [],
@@ -115,8 +120,8 @@ export default {
           }
         }
       } catch (error) {
-        console.error('Error fetching friends:', error);
-      }
+        console.error('Error fetching friends:', error); 
+      } 
     },
     async joinFriendChat(friendId, roomid) {
       this.roomid = roomid;
