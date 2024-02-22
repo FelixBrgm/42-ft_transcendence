@@ -48,14 +48,6 @@ pub struct Create {
 }
 
 #[derive(Message)]
-#[rtype(result = "Option<Tournament>")]
-pub struct TournamentCreate {
-    pub id: UserId,
-    pub size: u8,
-}
-
-
-#[derive(Message)]
 #[rtype(result = "()")]
 pub struct Disconnect {
     pub id: UserId,

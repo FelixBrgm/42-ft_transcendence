@@ -63,7 +63,7 @@ async fn create_tournament(
             "Tournament size must be a power of 2 between 4 and 128".to_string(),
         ));
     }
-    match server.get_ref().try_send(game::TournamentCreate {
+    match server.get_ref().try_send(game::Create {
         id: client_id,
         size: size,
     }) {
