@@ -126,7 +126,7 @@ export default {
         {this.textvalue = "YOU WON"; this.won = true;}
         else if((rest[0] == this.leftScore && this.isYou == true) ||
         (rest[0] != this.leftScore && this.isYou == false))
-        {this.textvalue = "HEHE YOU LOOSE"; this.won = true;} 
+        {this.textvalue = "HEHE YOU LOOSE"; this.won = false;} 
         this.leftScore = rest[0];
         this.rightScore = rest[1];
       }
@@ -144,6 +144,10 @@ export default {
       if(parts[0] == 'END')
       {
         setTimeout(() => {
+          if (this.won == false){
+            this.$router.push('/'); 
+            alert("Game over you lost");
+          }
           this.textvalue = "Start game";
           this.startButtonEnabled = true;
         }, 3000);
