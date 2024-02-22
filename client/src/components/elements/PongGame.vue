@@ -61,7 +61,7 @@ export default {
     return {  
       games: [],
       textvalue: "Start Game",
-      showtournament: true ,
+      showtournament: false , 
       startButtonEnabled: true,
       rightPosition: 450,
       leftPosition: 450,
@@ -116,7 +116,6 @@ export default {
       this.updatePaddleColors(); 
       if (parts[0] == 'MATCH')
       {
-        console.log("LEFTPLAYER",parts[1],"LEFTPLAYER",parts[2]);
         this.games.push({ leftPlayer: parts[1], rightPlayer: parts[2] });
       }
       if (parts[0] == 'SCR')
@@ -167,7 +166,6 @@ export default {
       updatePaddleColors() {
         const playerPaddle = this.$refs.gameContainer.querySelector('.rightPaddle');
         const enemyPaddle = this.$refs.gameContainer.querySelector('.leftPaddle');
-        // console.log("ENEMYID:", this.enemyid);
         axios.get(`http://127.0.0.1:8080/user/${this.enemyid}`, { withCredentials: true })
           .then(response => {
             const enemy = response.data;
@@ -223,7 +221,6 @@ export default {
         console.log('WebSocket connection opened:', event); 
       });
       this.websocket.addEventListener('message', (event) => {
-        // console.log('WebSocket message received:', event.data);
         this.handleWebSocketMessage(event.data);
       });
 
