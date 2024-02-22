@@ -4,6 +4,7 @@ pub mod one_vs_one;
 mod pong;
 pub mod tournament;
 
+use tournament::Tournament;
 use actix::prelude::*;
 
 pub type Socket = Recipient<Message>;
@@ -29,6 +30,7 @@ pub struct TournamentConnect {
     pub uid: UserId,
     pub socket: Socket,
 }
+
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct OneVsOneConnect {
@@ -37,12 +39,21 @@ pub struct OneVsOneConnect {
     pub uid: UserId,
     pub socket: Socket,
 }
+
 #[derive(Message)]
 #[rtype(result = "()")]
 pub struct Create {
     pub id: UserId,
     pub size: u8,
 }
+
+#[derive(Message)]
+#[rtype(result = "Option<Tournament>")]
+pub struct TournamentCreate {
+    pub id: UserId,
+    pub size: u8,
+}
+
 
 #[derive(Message)]
 #[rtype(result = "()")]
