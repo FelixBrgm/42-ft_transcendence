@@ -88,11 +88,6 @@ impl ChatServer {
     fn send_message(&self, message: &str, recipient: &i32) {
         if let Some(socket_recipient) = self.sockets.get(recipient) {
             let _ = socket_recipient.do_send(ChatMessage(message.to_owned()));
-        } else {
-            println!(
-                "attempting to send message to {}, but couldn't find him in the session",
-                recipient
-            )
         }
     }
 
@@ -156,8 +151,9 @@ impl Handler<Disconnect> for ChatServer {
 
             println!(
                 "Removing room {} with users {:?} and {:?}",
-                room_id, pair.user1, pair.user1
+                room_id, pair.user1, pair.user2
             );
+
             self.rooms.remove(pair);
         }
     }

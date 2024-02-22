@@ -152,7 +152,6 @@ impl Handler<CountDown> for Pong {
         let slept = actix::clock::sleep(Duration::from_secs(delay)).into_actor(self);
         let fut = Box::pin(slept);
         let fut = fut.then(move |_r, _, _| {
-            println!("HELO1");
             ctx_addr.do_send(GameStart);
             actix::fut::ready(())
         });
@@ -167,7 +166,6 @@ impl Handler<UpdateScore> for Pong {
     fn handle(&mut self, msg: UpdateScore, ctx: &mut Self::Context) {
         self.score[msg.side] += 1;
         self.send_to_players(Message(format!("SCR {}:{}", self.score[0], self.score[1])));
-        println!("{}", self.score[msg.side]);
         if self.score[msg.side] >= 3 {
             ctx.notify(GameOver);
         } else {
