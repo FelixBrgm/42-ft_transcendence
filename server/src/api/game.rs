@@ -68,7 +68,7 @@ async fn create_tournament(
         size: size,
     }) {
         Ok(_) => Ok(HttpResponse::Ok().finish()),
-        Err(e) => Err(ApiError::BadRequest(format!("Error: {}", e))),
+        Err(_) => Err(ApiError::BadRequest(format!("Error: You're hosting a ongiong Tournament"))),
     }
 }
 
