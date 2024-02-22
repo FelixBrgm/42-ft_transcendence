@@ -148,7 +148,6 @@ export default {
       if(parts[0] == 'END')
       {
         this.matchreset = true;
-        setTimeout(() => {
           if (this.won == false){
             this.$router.push('/'); 
             alert("Game over you lost");
@@ -160,7 +159,6 @@ export default {
             alert("Congrats, you won");
             this.$router.push('/');
           }
-        }, 3000);
       }
       if(parts[0] == 'POS')
       {
@@ -173,13 +171,21 @@ export default {
       if(parts[0] == 'SZE')
       {
         this.round = parts[1] / 2;
+        this.leftScore = 0;
+        this.rightScore = 0;
       }
-
-        // Update the colors based on the isYou property
       },
       updatePaddleColors() {
         const playerPaddle = this.$refs.gameContainer.querySelector('.rightPaddle');
         const enemyPaddle = this.$refs.gameContainer.querySelector('.leftPaddle');
+        this.leftPlayerimg = null;
+        this.leftPlayername = null;
+        this.leftPlayerwin = null;
+        this.leftPlayerloss = null;
+        this.rightPlayerimg = null;
+        this.rightPlayername = null;
+        this.rightPlayerwin = null;
+        this.rightPlayerloss = null;
         if (this.isYou) {
           playerPaddle.style.backgroundColor = 'red';
           enemyPaddle.style.backgroundColor = 'yellow';
