@@ -1,33 +1,35 @@
 <template>
   <div v-show="showChat" class="chat-window">
+    <div class="chat-container-wrapper">
     <div class="card">
       <div class="card-header">
-        Chat Window
+        Chat
         <button @click="closeChat" class="close-btn" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+          <span aria-hidden="false">&times;</span>
         </button>
       </div>
       <div class="app-main">
-        <div class="chat-sidebar bg-dark text-white">
-          <div v-for="(friend, index) in friendInfos" :key="index" @click="joinFriendChat(friend.id)" class="room-item p-2 mb-2 rounded cursor-pointer">
-            {{ friend.alias }}
+      </div>
+      <div class="chat-container">
+        <div class="chat-box">
+          <div v-for="(message, index) in messages" :key="index" class="message" :class="{ 'sent': message.sender === 'User', 'received': message.sender === 'Bot' }">
+            <strong>{{ message.sender }}:</strong> {{ message.text }}
           </div>
         </div>
-        <div class="chat-container">
-          <div class="chat-box">
-            <div v-for="(message, index) in messages" :key="index" class="message" :class="{ 'sent': message.sender === 'User', 'received': message.sender === 'Bot' }">
-              <strong>{{ message.sender }}:</strong> {{ message.text }}
-            </div>
-          </div>
-          <div class="card-footer">
-            <div class="input-group">
-              <input type="text" v-model="newMessage" @keyup.enter="sendMessage" class="form-control" placeholder="Type your message...">
-              <button @click="sendMessage" class="send-button">Send</button>
-            </div>
+        <div class="card-footer">
+          <div class="input-group">
+            <input type="text" v-model="newMessage" @keyup.enter="sendMessage" class="form-control" placeholder="Type your message...">
+            <button @click="sendMessage" class="send-button">Send</button>
           </div>
         </div>
       </div>
     </div>
+    <div class="friend-list">
+      <div v-for="(friend, index) in friendInfos" :key="index" @click="joinFriendChat(friend.id, index)" class="room-item p-2 mb-2 rounded cursor-pointer">
+        {{ friend.alias }}
+      </div>
+    </div>
+  </div>
   </div>
 </template>
 
@@ -41,7 +43,7 @@ export default {
   },
     watch: {
     $route() {
-      this.fetchFriends();
+      this.setupWebSocketAndFetchFriends();
     },
   }, 
   data() {
@@ -74,25 +76,26 @@ export default {
         const token = user.password;
         const websocketUrl = `ws://localhost:8080/ws?id=${userId}&token=${token}`;
         this.ws = new WebSocket(websocketUrl);
-
-        if (this.roomid !== undefined) {
-          this.ws.onopen = this.handleOpen;
-          this.ws.onclose = this.handleClose;
-          this.ws.onmessage = this.handleMessage;
-          this.ws.onerror = this.handleError;
-        }
-
+        this.ws.onopen = this.handleOpen;
+        this.ws.onclose = this.handleClose;
+        this.ws.onmessage = this.handleMessage;
+        this.ws.onerror = this.handleError;
         await this.fetchFriends();
       }
     },
-    handleOpen() { 
-      this.updateChat(this.roomid);
+    handleError(event) {  
+      console.log('ERROR:', event.data); // Logging the incoming message
+    }, 
+    handleOpen(event) {  
+      console.log('Incoming OPEN', event.data); // Logging the incoming message
     },
     async sendMessage() {
-      if (this.ws && this.newMessage.trim() !== '') {
+      if (this.ws && this.newMessage.trim() !== '' && (this.roomid != undefined)) {
+        console.log(this.roomid + ":" + this.newMessage);
         this.ws.send(this.roomid + ":" + this.newMessage);
-        this.newMessage = '';
+        this.updateChat(this.roomid);
       }
+      this.newMessage = '';
     },
     closeChat() {
       this.$emit('close-chat');
@@ -101,6 +104,9 @@ export default {
       try {
         const response = await axios.get(`http://127.0.0.1:8080/messages/${roomid}`, { withCredentials: true });
         this.messages = response.data;
+        for (let message in this.messages){ 
+          console.log(message);  
+        }
       } catch (error) {
         console.error('Error fetching messages:', error);
       }
@@ -108,8 +114,8 @@ export default {
     async fetchFriends() {
       try {
         const response = await axios.get(`http://127.0.0.1:8080/friend/list/${store.state.auth.user.id}`, { withCredentials: true });
-        this.friends = response.data; 
-        this.friendInfos = [];
+        this.friends = response.data;  
+        this.friendInfos = []; // Clear friendInfos array
         for (const friend of this.friends) {
           const userId = friend.user1 === this.$route.query.uid ? friend.user1 : friend.user2;
           try {
@@ -123,31 +129,34 @@ export default {
         console.error('Error fetching friends:', error); 
       } 
     },
-    async joinFriendChat(friendId, roomid) {
-      this.roomid = roomid;
-      this.updateChat(roomid); 
-      console.log('Joining chat with friend:', friendId); 
+    async joinFriendChat(friendId) {
+      
+      try {
+        const response = await axios.get(`http://127.0.0.1:8080/chat/${friendId}`, { withCredentials: true });
+        console.log("CHAT RESPONSE", response.data);
+        this.roomid = response.data; 
+        // this.friend.chat.push(response.data); 
+      } catch (error) {
+        console.error('Error fetching chat:', error);
+      } 
+      this.updateChat(friendId); 
     },
-    handleMessage() {
-      this.updateChat(this.roomid);
+    handleMessage(event) {
+      console.log('Incoming message:', event.data); // Logging the incoming message
     }
-  },
+  }, 
 };
 </script>
 
 <style scoped>
 .chat-window {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  width: calc(50% - 20px);
+  flex: 1; /* Take remaining space */
   border-radius: 20px;
   background-color: #727475;
   color: white;
   font-family: neuropol;
   box-shadow: 0 0 10px 5px #00f0ff;
   animation: neonGlow 6s infinite;
-  z-index: 9999;
 }
 
 .card-header {
@@ -159,7 +168,7 @@ export default {
 .close-btn {
   background: none;
   border: none;
-  color: white;
+  color: rgb(3, 3, 3);
 }
 
 .chat-sidebar {
@@ -211,5 +220,20 @@ export default {
 
 .send-button {
   flex: 0 0 auto;
+}
+
+.friend-list {
+  width: 200px; /* Adjust width as needed */
+  background-color: #343a40;
+  color: white;
+}
+
+.chat-container-wrapper {
+  display: flex;
+  justify-content: flex-end; /* Align items to the right */
+  position: fixed; 
+  bottom: 0;
+  right: 0;
+  width: calc(50% - 20px); /* Adjust width as needed */
 }
 </style>
