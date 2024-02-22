@@ -28,13 +28,14 @@ async fn main() {
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
     let secret_key = cookie::Key::from(env_key.as_bytes());
 
-	_ = db.add_user(&db::models::NewUser {
-		id: 424242,
-		intra: "GOOS".to_string(),
-		alias: "GOOS".to_string(),
-		avatar: "https://i.pinimg.com/564x/bc/5d/17/bc5d173a3001839b5f4ec29efad072ae.jpg".to_string(),
-		password: "randompassword".to_string(),
-	});
+    _ = db.add_user(&db::models::NewUser {
+        id: 424242,
+        intra: "GOOS".to_string(),
+        alias: "GOOS".to_string(),
+        avatar: "https://i.pinimg.com/564x/bc/5d/17/bc5d173a3001839b5f4ec29efad072ae.jpg"
+            .to_string(),
+        password: "randompassword".to_string(),
+    });
 
     println!(" < --- * --- >");
 
@@ -79,13 +80,11 @@ async fn main() {
             .service(user::post)
             .service(user::find)
             // friend
-            .service(friend::add)
-            .service(friend::remove)
+            .service(friend::toggle)
             .service(friend::list)
             .service(friend::check)
             // block
-            .service(block::add)
-            .service(block::remove)
+            .service(block::toggle)
             .service(block::check)
             // chat
             .service(api::chat::server)

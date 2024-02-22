@@ -12,7 +12,7 @@ use crate::db::Database;
 #[derive(Deserialize)]
 struct Info {
     id: i32,
-	token: String,
+    token: String,
 }
 
 #[get("/ws")]
@@ -20,15 +20,18 @@ async fn server(
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<ChatServer>>,
-	info: web::Query<Info>,
-	db: web::Data<Database>,
+    info: web::Query<Info>,
+    db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-    
-	if !db.check_user_token(info.id, &info.token)? {
+    if !db.check_user_token(info.id, &info.token)? {
         return Err(ApiError::Unauthorized);
     }
 
-    match ws::start(WsActor::new(info.id, server.get_ref().clone()), &req, stream) {
+    match ws::start(
+        WsActor::new(info.id, server.get_ref().clone()),
+        &req,
+        stream,
+    ) {
         Ok(ws) => Ok(ws),
         Err(err) => {
             eprintln!("Error during WebSocket handshake: {:?}", err);
@@ -76,7 +79,6 @@ async fn join_chat(
 async fn get_rooms(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     let uid = identity.id()?.parse::<i32>()?;
 
-	
     if !db.check_user(uid)? {
         return Err(ApiError::BadRequest(
             "Requested user doesn't exist".to_string(),
