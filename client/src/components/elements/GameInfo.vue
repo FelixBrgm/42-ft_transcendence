@@ -38,14 +38,11 @@ export default {
   methods: {
     async fetchFriends() { // Corrected method name to fetchFriends
       try {
-        // const LPResponse = await axios.get(`http://127.0.0.1:8080/user/424242`, { withCredentials: true }); 
-        // const RPResponse = await axios.get(`http://127.0.0.1:8080/user/424242`, { withCredentials: true });
         const LPResponse = await axios.get(`http://127.0.0.1:8080/user/${this.leftPlayer}`, { withCredentials: true }); 
         const RPResponse = await axios.get(`http://127.0.0.1:8080/user/${this.rightPlayer}`, { withCredentials: true });
         this.LP =  LPResponse.data;
         
         this.RP =  RPResponse.data; 
-        // console.log("11111111", this.LP.alias, "222222", this.RP.alias); // Access data property to get response data
       } catch (error) {
         console.error("Error fetching friend:", error);   
       }

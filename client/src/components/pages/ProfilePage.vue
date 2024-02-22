@@ -200,7 +200,6 @@ export default {
     async fetchSingle(tofind){
       try {
               const response = await axios.get(`http://127.0.0.1:8080/user/${tofind}`, { withCredentials: true });
-              console.log("RESPONSE", response.data.alias);  
               return (response.data.alias);
             } catch (error) {  
               console.error('Error fetching user info:', error); 
@@ -226,7 +225,6 @@ export default {
               { withCredentials: true }
             );
             this.friendInfos.push(response.data); // Save user info to array
-            console.log("DATA", response.data);
           } catch (error) {
             console.error("Error fetching user info:", error);
           }
@@ -243,10 +241,8 @@ export default {
           this.matchInfos = [];
           for (const match of response.data) {
             try {
-              console.log(match);
               const response1 = await axios.get(`http://127.0.0.1:8080/user/${match.winner}`, { withCredentials: true });
               const response2 = await axios.get(`http://127.0.0.1:8080/user/${match.looser}`, { withCredentials: true });
-              console.log("11111111", response1.data.alias, "222222", response2.data.alias); 
               this.matchInfos.push({timestamp: match.timestamp, winner: response1.data, looser: response2.data });
             } catch (error) { 
               console.error("Error fetching match info:", error);
@@ -284,7 +280,6 @@ export default {
           `http://127.0.0.1:8080/user/${this.$route.query.uid}`,
           { withCredentials: true }
         );
-        console.log("gettinguser", response.data);
         this.user = response.data;
       } catch (error) {
         console.error("Error fetching user:", error);
