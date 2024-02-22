@@ -3,7 +3,7 @@
     <div class="chat-container-wrapper">
     <div class="card">
       <div class="card-header">
-        Chat
+        <div v-if="foundFriend">{{ foundFriend.alias }}</div>
         <button @click="closeChat" class="close-btn" aria-label="Close">
           <span aria-hidden="false">&times;</span>
         </button>
@@ -11,9 +11,10 @@
       <div class="app-main">
       </div>
       <div class="chat-container">
-        <div class="chat-box">
+        <div v-if="chatReload" class="chat-box">
           <div v-for="(message, index) in messages" :key="index" class="message" :class="{ 'sent': message.sender === 'User', 'received': message.sender === 'Bot' }">
-            <strong>{{ message.sender }}:</strong> {{ message.text }}
+            <strong>
+              {{ message.sender_id == myId.id ? myId.alias : foundFriend.alias }}: </strong> {{ message.message }}
           </div>
         </div>
         <div class="card-footer">
@@ -24,8 +25,8 @@
         </div>
       </div>
     </div>
-    <div class="friend-list">
-      <div v-for="(friend, index) in friendInfos" :key="index" @click="joinFriendChat(friend.id, index)" class="room-item p-2 mb-2 rounded cursor-pointer">
+    <div v-if="chatReload" class="friend-list">
+      <div v-for="(friend, index) in friendInfos" :key="index" @click="joinFriendChat(friend)" class="room-item p-2 mb-2 rounded cursor-pointer">
         {{ friend.alias }}
       </div>
     </div>
@@ -45,6 +46,14 @@ export default {
     $route() {
       this.setupWebSocketAndFetchFriends();
     },
+  },
+  computed: {
+    foundFriend() {
+      return this.friendInfos.find(friend => friend.id === this.friendid);
+    },
+    myId() {
+      return store.state.auth.user ;
+    }
   }, 
   data() {
     return {
@@ -52,6 +61,9 @@ export default {
       messages: [],
       newMessage: '',
       friends: [],
+      friendid: null, 
+      roomid: null,
+      chatReload: true, 
       ws: null,
     };
   },
@@ -91,26 +103,27 @@ export default {
     },
     async sendMessage() {
       if (this.ws && this.newMessage.trim() !== '' && (this.roomid != undefined)) {
-        console.log(this.roomid + ":" + this.newMessage);
-        this.ws.send(this.roomid + ":" + this.newMessage);
-        this.updateChat(this.roomid);
+        console.log(this.friendid + ":" + this.newMessage);
+        this.ws.send(this.friendid + ":" + this.newMessage);
+        this.updateChat();
       }
       this.newMessage = '';
     },
     closeChat() {
       this.$emit('close-chat');
     },
-    async updateChat(roomid) {
+    async updateChat() {
+      this.chatReload = !this.chatReload;
+      this.chatReload = !this.chatReload;
       try {
-        const response = await axios.get(`http://127.0.0.1:8080/messages/${roomid}`, { withCredentials: true });
+        console.log("UPDATING");
+        const response = await axios.get(`http://127.0.0.1:8080/messages/${this.roomid}`, { withCredentials: true });
         this.messages = response.data;
-        for (let message in this.messages){ 
-          console.log(message);  
-        }
-      } catch (error) {
+        console.log(this.messages); 
+      } catch (error) { 
         console.error('Error fetching messages:', error);
       }
-    },
+    }, 
     async fetchFriends() {
       try {
         const response = await axios.get(`http://127.0.0.1:8080/friend/list/${store.state.auth.user.id}`, { withCredentials: true });
@@ -129,17 +142,17 @@ export default {
         console.error('Error fetching friends:', error); 
       } 
     },
-    async joinFriendChat(friendId) {
-      
+    async joinFriendChat(friend) {
       try {
-        const response = await axios.get(`http://127.0.0.1:8080/chat/${friendId}`, { withCredentials: true });
+        console.log(friend.id);
+        const response = await axios.get(`http://127.0.0.1:8080/chat/${friend.id}`, { withCredentials: true });
         console.log("CHAT RESPONSE", response.data);
-        this.roomid = response.data; 
-        // this.friend.chat.push(response.data); 
+        this.friendid = friend.id;
+        this.roomid = response.data;  
       } catch (error) {
         console.error('Error fetching chat:', error);
       } 
-      this.updateChat(friendId); 
+      this.updateChat(); 
     },
     handleMessage(event) {
       console.log('Incoming message:', event.data); // Logging the incoming message
