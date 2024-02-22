@@ -2,44 +2,47 @@
 <template>
 <div>
   <div v-if="showtournament" class="playerinfo">
-  <div class="players-container">
-  <GameInfo
-  v-for="(game, index) in games"
-  :key="index"
-  :leftPlayer="game.leftPlayer"
-  :rightPlayer="game.rightPlayer"
-  />
-</div>
-</div>  
-  <div v-if="showtournament" class="playerinfo">
-  <div class="players-container">
-    <div class="profile left-profile">
-      <img :src="leftPlayerimg">
-      <h2>{{ this.leftPlayername }} </h2>
-      <p>Wins: {{ this.leftPlayerwin }} Losses: {{ this.leftPlayerloss }}</p>
-    </div>
-    <div v-if="this.$route.query.startTournament || this.$route.query.joinTournament" class="profile right-profile"> Round: {{ this.round }} </div>
-    <div class="profile right-profile"> 
-        <img :src="rightPlayerimg">
-      <h2>{{ this.rightPlayername }} </h2> 
-      <p>Wins: {{ this.rightPlayerwin }} Losses: {{ this.rightPlayerloss }}</p>
-    </div>
-  </div>  
-</div>
-
+    <div class="players-container">
+      <div class="profile left-profile">
+        <img :src="leftPlayerimg" class="rounded-circle profile-pic">
+        <h2 style="padding: 10px;" >{{ this.leftPlayername }} </h2>
+        <p>Wins: {{ this.leftPlayerwin }} Losses: {{ this.leftPlayerloss }}</p>
+      </div>
+      <div v-if="this.$route.query.startTournament || this.$route.query.joinTournament" class="profile right-profile"> Round: {{ this.round }} </div>
+      <div class="profile right-profile"> 
+        <img :src="rightPlayerimg" class="rounded-circle profile-pic">
+        <h2 style="padding: 10px;" >{{ this.rightPlayername }} </h2> 
+        <p>Wins: {{ this.rightPlayerwin }} Losses: {{ this.rightPlayerloss }}</p>
+      </div>
+    </div>  
+  </div>
+  
   <div class="game-container" @keydown="handleKeyPress" @keyup="handleKeyRelease" ref="gameContainer" tabindex="0">
     <!-- Score Counter -->
     <div class="score-counter">{{ leftScore }} - {{ rightScore }}</div>
-
+    
     <!-- Player and Enemy paddles -->
     <div class="rightPaddle" :style="{ top: rightPosition + 'px' }"></div>
     <div class="leftPaddle" :style="{ top: leftPosition + 'px' }"></div>
-
-
+    
+    
     <!-- Ball -->
     <div class="ball" :style="{ top: ballPosition.yaxis + 'px', left: ballPosition.xaxis + 'px' }"></div>
     <div class="start-button" tabindex="0" role="button" @click="startGame(-1)" :style="{ pointerEvents: startButtonEnabled ? 'auto' : 'none' }" v-html="textvalue"></div>
   </div>
+  <div v-if="showtournament" class="playerinfo">
+    <h1>Other ongoing games</h1> 
+  </div>
+  <div v-if="showtournament" class="playerinfo">
+  <div class="players-container">
+  <GameInfo
+  v-for="(game, index) in games"
+  :key="index"
+  :leftPlayer="game.leftPlayer" 
+  :rightPlayer="game.rightPlayer"
+  />
+  </div>
+  </div>  
 </div> 
 </template> 
 
@@ -89,14 +92,14 @@ export default {
     handleKeyPress(event) {
       if (this.websocket && this.websocket.readyState === WebSocket.OPEN)
       {
-        if (event.keyCode === 38) {this.websocket.send("u");}
-        if (event.keyCode === 40) {this.websocket.send('d');}
+        if (event.keyCode === 87) {this.websocket.send("u");}
+        if (event.keyCode === 83) {this.websocket.send('d');}
       }
     },
     handleKeyRelease(event) { 
       if (this.websocket && this.websocket.readyState === WebSocket.OPEN)
       {
-      if (event.keyCode === 38 || event.keyCode === 40) {this.websocket.send('n');}
+      if (event.keyCode === 87 || event.keyCode === 83) {this.websocket.send('n');}
       }
     },
     handleWebSocketMessage(message) {
@@ -110,9 +113,10 @@ export default {
         this.enemyid = parts[1];
       }  
       this.startButtonEnabled = false;
-      this.updatePaddleColors();
+      this.updatePaddleColors(); 
       if (parts[0] == 'MATCH')
       {
+        console.log("LEFTPLAYER",parts[1],"LEFTPLAYER",parts[2]);
         this.games.push({ leftPlayer: parts[1], rightPlayer: parts[2] });
       }
       if (parts[0] == 'SCR')
@@ -153,13 +157,17 @@ export default {
         this.ballPosition.xaxis = parts[3];
         this.ballPosition.yaxis = 900 - parts[4];  
       }
+      if(parts[0] == 'SZE')
+      {
+        this.round = parts[1];
+      }
 
         // Update the colors based on the isYou property
       },
       updatePaddleColors() {
         const playerPaddle = this.$refs.gameContainer.querySelector('.rightPaddle');
         const enemyPaddle = this.$refs.gameContainer.querySelector('.leftPaddle');
-        console.log("ENEMYID:", this.enemyid);
+        // console.log("ENEMYID:", this.enemyid);
         axios.get(`http://127.0.0.1:8080/user/${this.enemyid}`, { withCredentials: true })
           .then(response => {
             const enemy = response.data;
@@ -215,7 +223,7 @@ export default {
         console.log('WebSocket connection opened:', event); 
       });
       this.websocket.addEventListener('message', (event) => {
-        console.log('WebSocket message received:', event.data);
+        // console.log('WebSocket message received:', event.data);
         this.handleWebSocketMessage(event.data);
       });
 
@@ -266,17 +274,14 @@ export default {
     if (this.$route.query.startGame === 'true') {
       this.startGame(-1);
     }
-    if (this.$route.query.startTournament !== undefined) {
-      this.startGame(this.$route.query.startTournament);
-      this.istournament = true;
-    } 
     if (this.$route.query.joinTournament !== undefined) {
       this.startGame(this.$route.query.joinTournament);
-      this.istournament = true; 
+      this.istournament = true;
     }
     if (this.$route.query.joinvs !== undefined) {
       this.startGame(-2, this.$route.query.joinvs); 
     }
+    this.$refs.gameContainer.focus();
   },
 };
 </script>

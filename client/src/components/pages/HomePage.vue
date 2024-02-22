@@ -53,9 +53,9 @@ export default {
   },
   data() {
     return {
-      selectedNumberOfPlayers: null,
+      selectedNumberOfPlayers: 4,
       tournamentID: null,
-      vsID: null,
+      vsID: null, 
       togglenum: false,
       userId: null, 
       numbers: Array.from({ length: 7 }, (_, index) => Math.pow(2, index + 2)),

@@ -43,23 +43,26 @@
           <div class="mhistory">
             <div>Matchmaking history</div>
             <span>{{ this.seperator }}</span>
-            <ul v-if="matchs !== null && (matchs.length > 0)">
-              <li v-for="match in matchs" :key="match.id">
-                {{ match.name }}
-              </li>
-            </ul>
-            <div v-else>no game . _.</div>
+              <div v-if="matchInfos !== null "> 
+                <div v-for="match in matchInfos" :key="match.id" > 
+                  On: {{ formattedTimestamp(match.timestamp) }}
+                  Winner: {{ match.winner.alias }}
+                  Looser: {{ match.looser.alias }}     
+                </div>
+              </div> 
+              <div v-else>no game . _.</div>
           </div>
           <div v-show="isUidMatch" class="mhistory">
             <div>Friends:</div>
             <span>{{ this.seperator }}</span>
-              <ul v-if="friends !== null && (friends.length > 0)" style="list-style-type: none;">
-                <span v-for="friend in friendInfos" :key="friend.id" @click="this.$router.push({ link: `/profile`, query: { uid: friend.id } })"> 
-                  {{friend.alias}}
-                </span>
-              </ul>
-            <div v-else>  
-              no friends . _.
+            <div v-if="friends !== null && friends.length > 0"> <!-- Use div instead of ul -->
+              <div v-for="friend in friendInfos" :key="friend.id" @click="this.$router.push({ link: `/profile`, query: { uid: friend.id } })">
+                <!-- Use div instead of span -->
+                {{ friend.alias }}
+              </div>
+            </div>
+            <div v-else>
+              No friends. 
             </div>
           </div>
         </div>
@@ -84,12 +87,12 @@ export default {
     return {
       user: null,
       friendInfos: [],
+      matchInfos: [],
       friends: null,
       friendimg: null,
       ism: false,
       isb: false,
       isf: false,
-      matchs: null,
       uid: "",
       seperator:
         "-------------------------------------------------------------------",
@@ -104,9 +107,6 @@ export default {
     },
   },
   mounted() {
-    // this.$store.subscribe((mutation) => {
-    //   this.user = mutation.payload;
-    // });
     this.$store.dispatch("auth/updateUser");
     this.fetchMatchs();
     this.uid = `${this.$route.query.uid}`;
@@ -118,8 +118,6 @@ export default {
       this.isf = await this.isfriend();
       this.isb = await this.isblocked();
       this.ism = this.isUidMatch;
-      console.log("FETCHDATAFRIEND", this.isf);
-      console.log("FETCHDATABLOCK", this.isb);
       if (this.isf === undefined)
         this.isf = false;
       if (this.isb === undefined)
@@ -127,9 +125,6 @@ export default {
       this.friendimg = this.isf
         ? require("@/assets/add-user.png")
         : require("@/assets/delete-user.png");
-      console.log("isfriend", this.isf);
-      console.log("isblocked", this.isb);
-      console.log("ismatch", this.ism);
       if (!this.isf) {
         this.friendimg = require("@/assets/add-user.png");
       } else {
@@ -202,8 +197,16 @@ export default {
         : require("@/assets/delete-user.png");
       this.isf = !this.isf;
     },
+    async fetchSingle(tofind){
+      try {
+              const response = await axios.get(`http://127.0.0.1:8080/user/${tofind}`, { withCredentials: true });
+              console.log("RESPONSE", response.data.alias);  
+              return (response.data.alias);
+            } catch (error) {  
+              console.error('Error fetching user info:', error); 
+            }
+    },
     async fetchFriends() {
-      console.log("FETCHING PROFILEFRIENDS");
       try {
         const response = await axios.get(
           `http://127.0.0.1:8080/friend/list/${this.$route.query.uid}`,
@@ -232,6 +235,27 @@ export default {
         console.error("Error fetching friends:", error);
       }
     },
+    async fetchMatchs() {
+        try {
+          const response = await axios.get(
+            `http://127.0.0.1:8080/game/list/${this.$route.query.uid}`, { withCredentials: true }
+          );
+          this.matchInfos = [];
+          for (const match of response.data) {
+            try {
+              console.log(match);
+              const response1 = await axios.get(`http://127.0.0.1:8080/user/${match.winner}`, { withCredentials: true });
+              const response2 = await axios.get(`http://127.0.0.1:8080/user/${match.looser}`, { withCredentials: true });
+              console.log("11111111", response1.data.alias, "222222", response2.data.alias); 
+              this.matchInfos.push({timestamp: match.timestamp, winner: response1.data, looser: response2.data });
+            } catch (error) { 
+              console.error("Error fetching match info:", error);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching matches:", error);
+        }
+      }, 
     async isblocked() {
         try {
           const response = await axios.get(
@@ -254,17 +278,6 @@ export default {
           console.error("Error fetching friend:", error);
         }
     },
-    async fetchMatchs() {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8080/game/list/${this.$route.query.uid}`,
-          { withCredentials: true }
-        );
-        this.matchs = response.data;
-      } catch (error) {
-        console.error("Error fetching matches:", error);
-      }
-    },
     async getUser() {
       try {
         const response = await axios.get(
@@ -279,6 +292,12 @@ export default {
     },
   },
   computed: {
+    formattedTimestamp() {
+      return (timestamp) => {
+        const date = new Date(timestamp);
+        return date.toLocaleString(); // Customize this as per your requirement
+      };
+    },
     isUidMatch() {
       const routeUid = this.$route.query.uid;
       const user = store.state.auth.user;
