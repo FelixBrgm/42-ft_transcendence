@@ -118,7 +118,7 @@ export default {
   margin-top: 20px;
   margin-bottom: 20px;
   box-shadow: 0 0 10px 5px #00f0ff;
-  animation: neonGlow 6s infinite;
+  animation: neonGlow 6s infinite; 
   cursor: pointer;
 }
 </style>
