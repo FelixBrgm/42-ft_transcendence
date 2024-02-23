@@ -79,6 +79,7 @@ async fn main() {
             .service(user::get)
             .service(user::post)
             .service(user::find)
+            .service(user::list)
             // friend
             .service(friend::toggle)
             .service(friend::list)
