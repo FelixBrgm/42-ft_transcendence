@@ -109,6 +109,7 @@ export default {
   mounted() {
     this.$store.dispatch("auth/updateUser");
     this.fetchMatchs();
+    this.fetchFriends();
     this.uid = `${this.$route.query.uid}`;
   },
   methods: {
@@ -124,14 +125,12 @@ export default {
         this.isb = false;
       this.friendimg = this.isf
         ? require("@/assets/add-user.png")
-        : require("@/assets/delete-user.png");
+        : require("@/assets/delete-user.png"); 
       if (!this.isf) {
         this.friendimg = require("@/assets/add-user.png");
       } else {
         this.friendimg = require("@/assets/delete-user.png");
       }
-      this.fetchFriends();
-      this.fetchMatchs();
     },
     changeUsername() {
       if (this.ism) {
@@ -239,7 +238,9 @@ export default {
             `http://127.0.0.1:8080/game/list/${this.$route.query.uid}`, { withCredentials: true }
           );
           this.matchInfos = [];
+            console.log(response.data);
           for (const match of response.data) {
+            console.log(match);
             try {
               const response1 = await axios.get(`http://127.0.0.1:8080/user/${match.winner}`, { withCredentials: true });
               const response2 = await axios.get(`http://127.0.0.1:8080/user/${match.looser}`, { withCredentials: true });
