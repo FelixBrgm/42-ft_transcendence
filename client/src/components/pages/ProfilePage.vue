@@ -47,18 +47,6 @@
 		}}
 		</h3>
         <div>
-          <div class="mhistory">
-            <div>Matchmaking history</div>
-            <span>{{ this.seperator }}</span>
-              <div v-if="matchInfos !== null "> 
-                <div v-for="match in matchInfos" :key="match.id" > 
-                  On: {{ formattedTimestamp(match.timestamp) }}
-                  Winner: {{ match.winner.alias }}
-                  Looser: {{ match.looser.alias }}     
-                </div>
-              </div> 
-              <div v-else>no game . _.</div>
-          </div>
           <div v-show="isUidMatch" class="mhistory">
             <div>Friends:</div>
             <span>{{ this.seperator }}</span>
