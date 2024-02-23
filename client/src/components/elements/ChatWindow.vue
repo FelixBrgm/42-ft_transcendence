@@ -43,8 +43,13 @@
       showChat: Boolean,
     },
       watch: {
+      showChat() {
+          this.fetchFriends();
+          this.messages = [];
+          this.friendid = null; 
+      },
       $route() {
-        this.setupWebSocketAndFetchFriends();
+        this.setupWebSocketAndFetchFriends(); 
       },
     },
     computed: {
@@ -99,7 +104,12 @@
         console.log('ERROR:', event.data); // Logging the incoming message
       }, 
       async sendMessage() {
-        if (this.ws && this.newMessage.trim() !== '' && (this.roomid != undefined)) {
+        if (axios.get(`http://127.0.0.1:8080/block/check/${this.friendid}`,{ withCredentials: true }) == true)
+        {
+          alert("This user is blocked or has blocked you");
+        }
+        else (this.ws && this.newMessage.trim() !== '' && (this.roomid != undefined)) 
+        {
           this.ws.send(this.friendid + ":" + this.newMessage);
           this.updateChat();
         }
@@ -114,6 +124,8 @@
       async updateChat() {
         this.chatReload = !this.chatReload;
         this.chatReload = !this.chatReload;
+        if (this.roomid == null)
+          return; 
         try {
           const response = await axios.get(`http://127.0.0.1:8080/messages/${this.roomid}`, { withCredentials: true });
           this.messages = response.data;
@@ -145,7 +157,7 @@
           this.friendid = friend.id;
           this.roomid = response.data;  
         } catch (error) {
-          console.error('Error fetching chat:', error);
+          alert(error.response.data);
         } 
         this.updateChat(); 
       },
