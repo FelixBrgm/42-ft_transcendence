@@ -154,7 +154,6 @@ impl Actor for GameSession {
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         let msg = game::Disconnect { id: self.id };
-
 		println!("in stopping state");
         // match &self.game_mode {
         //     GameMode::OneVsOne(game_server) => {
@@ -167,7 +166,6 @@ impl Actor for GameSession {
         //         tournament_server.do_send(msg);
         //     }
         // }
-
         Running::Stop
     }
 }
