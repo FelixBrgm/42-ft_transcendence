@@ -44,3 +44,15 @@ async fn find(
         Err(_) => Err(ApiError::InternalServerError),
     }
 }
+
+#[get("/user/list")]
+async fn list(
+    _: Identity,
+    db: web::Data<Database>,
+) -> Result<HttpResponse, ApiError> {
+
+    match db.get_all_users() {
+        Ok(users) => Ok(HttpResponse::Ok().json(users)),
+        Err(_) => Err(ApiError::InternalServerError),
+    }
+}
