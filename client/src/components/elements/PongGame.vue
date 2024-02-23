@@ -1,7 +1,7 @@
 <!-- PongGame.vue -->
 <template>
 <div>
-  <div v-if="showtournament" class="playerinfo">
+  <div v-if="this.isYou != null" class="playerinfo"> 
     <div class="players-container">
       <div class="profile left-profile">
         <img :src="leftPlayerimg" class="rounded-circle profile-pic">
@@ -46,7 +46,7 @@
 </div> 
 </template> 
 
-<script>
+<script> 
 
 import store from '../../store';
 import axios from 'axios';
@@ -86,7 +86,7 @@ export default {
         xaxis: 800,  
         yaxis: 450,
       },
-      isYou: false,  
+      isYou: null,  
       websocket: null,
     };
   },
@@ -243,7 +243,6 @@ export default {
               console.error('Error fetching enemy data:', error);
             });
         }
-        this.showtournament = true; 
       },
       startGame(numPlayers, ID) {
       // Connect to WebSocket when the button is clicked
@@ -255,8 +254,11 @@ export default {
         websocketUrl = `ws://localhost:8080/game/matchmake/?id=${userId}&token=${token}`;
       else if (numPlayers === -2) 
         websocketUrl = `ws://localhost:8080/game/one_vs_one/${ID}?id=${userId}&token=${token}`;
-      else   
+      else  
+      {
+        this.showtournament = true; 
         websocketUrl = `ws://localhost:8080/game/connect_tournament/${numPlayers}?id=${userId}&token=${token}`;
+      }
       this.websocket = new WebSocket(websocketUrl);
       this.textvalue = "Waiting for game"; 
       // Handle WebSocket events
