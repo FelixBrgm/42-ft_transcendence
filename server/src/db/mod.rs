@@ -282,12 +282,17 @@ impl Database {
     pub fn check_blocked(&self, uid: i32, blocked_uid: i32) -> Result<bool> {
         use schema::blocked_users::dsl::*;
 
-        let b = blocked_users
+        let is_blocked = blocked_users
             .filter(user_id.eq(uid).and(blocked_user_id.eq(blocked_uid)))
             .first::<Blocked>(&mut self.pool.get()?)
             .optional()?;
 
-        Ok(b.is_some())
+		let has_blocked = blocked_users
+		.filter(user_id.eq(blocked_uid).and(blocked_user_id.eq(uid)))
+		.first::<Blocked>(&mut self.pool.get()?)
+		.optional()?;
+
+        Ok(is_blocked.is_some() || has_blocked.is_some())
     }
 
     // Creates a new blocked if it doesn't exist
