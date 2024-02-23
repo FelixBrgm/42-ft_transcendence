@@ -47,6 +47,18 @@
 		}}
 		</h3>
         <div>
+          <div class="mhistory">
+            <div>Matchmaking history</div>
+            <span>{{ this.seperator }}</span>
+              <div v-if="matchInfos !== null "> 
+                <div v-for="match in matchInfos" :key="match.id" > 
+                  On: {{ formattedTimestamp(match.timestamp) }}
+                  Winner: {{ match.winner.alias }}
+                  Looser: {{ match.looser.alias }}     
+                </div>
+              </div> 
+              <div v-else>no game . _.</div>
+          </div>
           <div v-show="isUidMatch" class="mhistory">
             <div>Friends:</div>
             <span>{{ this.seperator }}</span>
@@ -116,6 +128,7 @@ export default {
   mounted() {
     this.$store.dispatch("auth/updateUser");
     this.fetchMatchs();
+    this.fetchFriends();
     this.uid = `${this.$route.query.uid}`;
   },
   methods: {
@@ -137,8 +150,6 @@ export default {
       } else {
         this.friendimg = require("@/assets/delete-user.png");
       }
-      this.fetchFriends();
-      this.fetchMatchs();
     },
     changeUsername() {
       if (this.ism) {
@@ -245,10 +256,10 @@ export default {
           const response = await axios.get(
             `http://127.0.0.1:8080/game/list/${this.$route.query.uid}`, { withCredentials: true }
           );
-			console.log(response.data);
           this.matchInfos = [];
+            console.log(response.data);
           for (const match of response.data) {
-			console.log(match);
+            console.log(match);
             try {
               const response1 = await axios.get(`http://127.0.0.1:8080/user/${match.winner}`, { withCredentials: true });
               const response2 = await axios.get(`http://127.0.0.1:8080/user/${match.looser}`, { withCredentials: true });

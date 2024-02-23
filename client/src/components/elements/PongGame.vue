@@ -2,44 +2,47 @@
 <template>
 <div>
   <div v-if="showtournament" class="playerinfo">
+    <div class="players-container">
+      <div class="profile left-profile">
+        <img :src="leftPlayerimg" class="rounded-circle profile-pic">
+        <h2 style="padding: 10px;" >{{ this.leftPlayername }} </h2>
+        <p>Wins: {{ this.leftPlayerwin }} Losses: {{ this.leftPlayerloss }}</p>
+      </div>
+      <div v-if="this.$route.query.startTournament || this.$route.query.joinTournament" class="profile right-profile"> Round: {{ this.round }} </div>
+      <div class="profile right-profile"> 
+        <img :src="rightPlayerimg" class="rounded-circle profile-pic">
+        <h2 style="padding: 10px;" >{{ this.rightPlayername }} </h2> 
+        <p>Wins: {{ this.rightPlayerwin }} Losses: {{ this.rightPlayerloss }}</p>
+      </div>
+    </div>  
+  </div>
+  
+  <div class="game-container" @keydown="handleKeyPress" @keyup="handleKeyRelease" ref="gameContainer" tabindex="0">
+    <!-- Score Counter -->
+    <div class="score-counter">{{ leftScore }} - {{ rightScore }}</div>
+    
+    <!-- Player and Enemy paddles -->
+    <div class="rightPaddle" :style="{ top: rightPosition + 'px' }"></div>
+    <div class="leftPaddle" :style="{ top: leftPosition + 'px' }"></div>
+    
+    
+    <!-- Ball -->
+    <div class="ball" :style="{ top: ballPosition.yaxis + 'px', left: ballPosition.xaxis + 'px' }"></div>
+    <div class="start-button" tabindex="0" role="button" :style="{ pointerEvents: startButtonEnabled ? 'auto' : 'none' }" v-html="textvalue"></div>
+  </div>
+  <div v-if="showtournament" class="playerinfo">
+    <h1>Other ongoing games</h1> 
+  </div>
+  <div v-if="showtournament" class="playerinfo">
   <div class="players-container">
   <GameInfo
   v-for="(game, index) in games"
   :key="index"
-  :leftPlayer="game.leftPlayer"
+  :leftPlayer="game.leftPlayer" 
   :rightPlayer="game.rightPlayer"
   />
-</div>
-</div>  
-  <div v-if="showtournament" class="playerinfo">
-  <div class="players-container">
-    <div class="profile left-profile">
-      <img :src="leftPlayerimg">
-      <h2>{{ this.leftPlayername }} </h2>
-      <p>Wins: {{ this.leftPlayerwin }} Losses: {{ this.leftPlayerloss }}</p>
-    </div>
-    <div v-if="this.$route.query.startTournament || this.$route.query.joinTournament" class="profile right-profile"> Round: {{ this.round }} </div>
-    <div class="profile right-profile"> 
-        <img :src="rightPlayerimg">
-      <h2>{{ this.rightPlayername }} </h2> 
-      <p>Wins: {{ this.rightPlayerwin }} Losses: {{ this.rightPlayerloss }}</p>
-    </div>
-  </div>  
-</div>
-
-  <div class="game-container" @keydown="handleKeyPress" @keyup="handleKeyRelease" ref="gameContainer" tabindex="0">
-    <!-- Score Counter -->
-    <div class="score-counter">{{ leftScore }} - {{ rightScore }}</div>
-
-    <!-- Player and Enemy paddles -->
-    <div class="rightPaddle" :style="{ top: rightPosition + 'px' }"></div>
-    <div class="leftPaddle" :style="{ top: leftPosition + 'px' }"></div>
-
-
-    <!-- Ball -->
-    <div class="ball" :style="{ top: ballPosition.yaxis + 'px', left: ballPosition.xaxis + 'px' }"></div>
-    <div class="start-button" tabindex="0" role="button" @click="startGame(-1)" :style="{ pointerEvents: startButtonEnabled ? 'auto' : 'none' }" v-html="textvalue"></div>
   </div>
+  </div>  
 </div> 
 </template> 
 
@@ -57,13 +60,16 @@ export default {
   data() {
     return {  
       games: [],
+      matchreset: false,
+      msgrcvd: false,
       textvalue: "Start Game",
-      showtournament: true ,
+      showtournament: false , 
       startButtonEnabled: true,
       rightPosition: 450,
       leftPosition: 450,
-      enemyid: 0, 
-      istournament: false,
+      enemyid: 0,
+      enemy: null,
+      istournament: false, 
       won: false,
       round: 1, 
       leftScore: 0 ,
@@ -89,18 +95,19 @@ export default {
     handleKeyPress(event) {
       if (this.websocket && this.websocket.readyState === WebSocket.OPEN)
       {
-        if (event.keyCode === 38) {this.websocket.send("u");}
-        if (event.keyCode === 40) {this.websocket.send('d');}
+        if (event.keyCode === 87) {this.websocket.send("u");}
+        if (event.keyCode === 83) {this.websocket.send('d');}
       }
     },
     handleKeyRelease(event) { 
       if (this.websocket && this.websocket.readyState === WebSocket.OPEN)
       {
-      if (event.keyCode === 38 || event.keyCode === 40) {this.websocket.send('n');}
+      if (event.keyCode === 87 || event.keyCode === 83) {this.websocket.send('n');}
       }
     },
     handleWebSocketMessage(message) {
       const parts = message.split(' ');
+      this.startButtonEnabled = false;
       if (parts[0] == 'FORMAT:' && parts[1] == 'YOU') {
         this.isYou = true;
         this.enemyid = parts[2];
@@ -109,10 +116,10 @@ export default {
         this.isYou = false;
         this.enemyid = parts[1];
       }  
-      this.startButtonEnabled = false;
-      this.updatePaddleColors();
       if (parts[0] == 'MATCH')
       {
+        if(this.matchreset == true)
+          this.games = [];
         this.games.push({ leftPlayer: parts[1], rightPlayer: parts[2] });
       }
       if (parts[0] == 'SCR')
@@ -123,11 +130,12 @@ export default {
         {this.textvalue = "YOU WON"; this.won = true;}
         else if((rest[0] == this.leftScore && this.isYou == true) ||
         (rest[0] != this.leftScore && this.isYou == false))
-        {this.textvalue = "HEHE YOU LOOSE"; this.won = true;} 
+        {this.textvalue = "HEHE YOU LOOSE"; this.won = false;} 
         this.leftScore = rest[0];
         this.rightScore = rest[1];
       }
       if (parts[0] == 'Starting') {
+        this.updatePaddleColors();
         (async () => {
           this.textvalue = "Starting game in 3 Seconds";
           await this.delay(1000);
@@ -140,10 +148,18 @@ export default {
       }
       if(parts[0] == 'END')
       {
-        setTimeout(() => {
-          this.textvalue = "Start game";
-          this.startButtonEnabled = true;
-        }, 3000);
+        this.matchreset = true;
+          if (this.won == false){
+            this.$router.push('/'); 
+            alert("Game over you lost");
+          }
+          else if (this.won == true && this.istournament == true && this.round != 1){
+            this.textvalue = "Waiting for next game";
+          }
+          else{
+            alert("Congrats, you won");
+            this.$router.push('/');
+          }
       }
       if(parts[0] == 'POS')
       {
@@ -153,48 +169,81 @@ export default {
         this.ballPosition.xaxis = parts[3];
         this.ballPosition.yaxis = 900 - parts[4];  
       }
-
-        // Update the colors based on the isYou property
+      if(parts[0] == 'SZE')
+      {
+        this.round = parts[1] / 2;
+        this.leftScore = 0;
+        this.rightScore = 0;
+      }
       },
       updatePaddleColors() {
         const playerPaddle = this.$refs.gameContainer.querySelector('.rightPaddle');
         const enemyPaddle = this.$refs.gameContainer.querySelector('.leftPaddle');
-        console.log("ENEMYID:", this.enemyid);
-        axios.get(`http://127.0.0.1:8080/user/${this.enemyid}`, { withCredentials: true })
-          .then(response => {
-            const enemy = response.data;
-            if (this.isYou) {
-              playerPaddle.style.backgroundColor = 'red';
-              enemyPaddle.style.backgroundColor = 'yellow';
-              enemyPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
-              playerPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red'; 
-              this.leftPlayerimg = store.state.auth.user.avatar;
-              this.leftPlayername = store.state.auth.user.alias;
-              this.leftPlayerwin = store.state.auth.user.wins ;
-              this.leftPlayerloss = store.state.auth.user.losses ;
-              this.rightPlayerimg = enemy.avatar;
-              this.rightPlayername = enemy.alias;
-              this.rightPlayerwin = enemy.wins;
-              this.rightPlayerloss = enemy.losses;
-            } else {
-              playerPaddle.style.backgroundColor = 'yellow';
-              enemyPaddle.style.backgroundColor = 'red';
-              playerPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
-              enemyPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red';
-              this.leftPlayerimg = enemy.avatar;
-              this.leftPlayername = enemy.alias;
-              this.leftPlayerwin = enemy.wins;
-              this.leftPlayerloss = enemy.losses;
-              this.rightPlayerimg = store.state.auth.user.avatar;
-              this.rightPlayername = store.state.auth.user.alias;
-              this.rightPlayerwins = store.state.auth.user.wins ;
-              this.rightPlayerloss = store.state.auth.user.losses ;
-            }
-          })
-          .catch(error => {
-            console.error('Error fetching enemy data:', error);
-          });
-            this.showtournament = true; 
+        this.leftPlayerimg = null;
+        this.leftPlayername = null;
+        this.leftPlayerwin = null;
+        this.leftPlayerloss = null;
+        this.rightPlayerimg = null;
+        this.rightPlayername = null;
+        this.rightPlayerwin = null;
+        this.rightPlayerloss = null;
+        if (this.isYou) {
+          playerPaddle.style.backgroundColor = 'red';
+          enemyPaddle.style.backgroundColor = 'yellow';
+          enemyPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
+          playerPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red'; 
+          this.leftPlayerimg = store.state.auth.user.avatar;
+          this.leftPlayername = store.state.auth.user.alias;
+          this.leftPlayerwin = store.state.auth.user.wins ;
+          this.leftPlayerloss = store.state.auth.user.losses ;
+        } else {
+          playerPaddle.style.backgroundColor = 'yellow';
+          enemyPaddle.style.backgroundColor = 'red';
+          playerPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
+          enemyPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red';
+          this.rightPlayerimg = store.state.auth.user.avatar;
+          this.rightPlayername = store.state.auth.user.alias;
+          this.rightPlayerwins = store.state.auth.user.wins ;
+          this.rightPlayerloss = store.state.auth.user.losses ;
+        }
+        if (this.enemy === null)
+        {
+          axios.get(`http://127.0.0.1:8080/user/${this.enemyid}`, { withCredentials: true })
+            .then(response => {
+              this.enemy = response.data;
+              if (this.isYou) {
+                playerPaddle.style.backgroundColor = 'red';
+                enemyPaddle.style.backgroundColor = 'yellow';
+                enemyPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
+                playerPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red'; 
+                this.leftPlayerimg = store.state.auth.user.avatar;
+                this.leftPlayername = store.state.auth.user.alias; 
+                this.leftPlayerwin = store.state.auth.user.wins ;
+                this.leftPlayerloss = store.state.auth.user.losses ;
+                this.rightPlayerimg = this.enemy.avatar; 
+                this.rightPlayername = this.enemy.alias;
+                this.rightPlayerwin = this.enemy.wins;
+                this.rightPlayerloss = this.enemy.losses;
+              } else {
+                playerPaddle.style.backgroundColor = 'yellow';
+                enemyPaddle.style.backgroundColor = 'red';
+                playerPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
+                enemyPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red';
+                this.leftPlayerimg = this.enemy.avatar; 
+                this.leftPlayername = this.enemy.alias;
+                this.leftPlayerwin = this.enemy.wins;
+                this.leftPlayerloss = this.enemy.losses;
+                this.rightPlayerimg = store.state.auth.user.avatar;
+                this.rightPlayername = store.state.auth.user.alias;
+                this.rightPlayerwins = store.state.auth.user.wins ;
+                this.rightPlayerloss = store.state.auth.user.losses ;
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching enemy data:', error);
+            });
+        }
+        this.showtournament = true; 
       },
       startGame(numPlayers, ID) {
       // Connect to WebSocket when the button is clicked
@@ -215,35 +264,30 @@ export default {
         console.log('WebSocket connection opened:', event); 
       });
       this.websocket.addEventListener('message', (event) => {
-        console.log('WebSocket message received:', event.data);
+        this.msgrcvd = true;
         this.handleWebSocketMessage(event.data);
+      });
+
+	// handle if websocket connection failed
+        this.websocket.addEventListener('error', (event) => {
+        console.error('WebSocket error:', event);
       });
 
       this.websocket.addEventListener('close', (event) => {
         console.log('WebSocket connection closed:', event); 
+        if (event.code === 1006 && this.msgrcvd != false) {
+          console.error('WebSocket closed due to an error');
+        } else {
+          // WebSocket closed normally
+          if (this.$route.query.joinTournament != 0) {
+            this.$router.push('/'); 
+            alert("This game does not exist");
+          } else if (this.won === false) {
+            this.$router.push('/'); 
+            alert("You have lost");
+          }
+        }
       });
-
-	// handle if websocket connection failed
-      this.websocket.addEventListener('error', (event) => {
-        console.error('WebSocket error:', event);
-      });
-      this.websocket.addEventListener('close', (event) => {
-        console.log('WebSocket connection closed:', event);
-        if (this.istournament === true && this.won === true)
-        {
-          this.startGame(Math.max(parseInt(this.$route.query.joinTournament) || 0, parseInt(this.$route.query.startTournament) || 0))
-        }
-        else if (this.$route.query.joinTournament != 0)
-        {
-          this.$router.push('/'); 
-          alert("This game does not exist");
-        }
-        else if (this.won === false)
-        {
-          this.$router.push('/'); 
-          alert("You have lost");
-        }
-      }); 
     },
     delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -262,21 +306,17 @@ export default {
   updated() {
   },
   mounted() {
-    // Automatically start the game if redirected with the startGame query parameter
     if (this.$route.query.startGame === 'true') {
       this.startGame(-1);
     }
-    if (this.$route.query.startTournament !== undefined) {
-      this.startGame(this.$route.query.startTournament);
-      this.istournament = true;
-    } 
     if (this.$route.query.joinTournament !== undefined) {
+      this.istournament = true;
       this.startGame(this.$route.query.joinTournament);
-      this.istournament = true; 
     }
     if (this.$route.query.joinvs !== undefined) {
       this.startGame(-2, this.$route.query.joinvs); 
     }
+    this.$refs.gameContainer.focus();
   },
 };
 </script>
