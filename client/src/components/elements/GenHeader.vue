@@ -33,7 +33,7 @@ export default {
         { text: "Home", link: "/" },
         { text: "Rules", link: "/rules" },
         { text: "Profile", link: "/profile" },
-        { text: "About", link: "/about" },
+        { text: "People", link: "/people" },
       ],
       sound: null, 
     };
