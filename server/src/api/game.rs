@@ -111,12 +111,18 @@ async fn one_vs_one(
     info: web::Query<Info>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
+	let opponent_uid = opponent_uid.into_inner();
+
     if !db.check_user_token(info.id as i32, &info.token)? {
         return Err(ApiError::Unauthorized);
     }
 
+	if !db.check_user(opponent_uid as i32)? {
+		return Err(ApiError::BadRequest("The requested User doesn't exits!".to_string()));
+	}
+
     match ws::start(
-        GameSession::new_one_vs_one(info.id, opponent_uid.into_inner(), server.get_ref().clone()),
+        GameSession::new_one_vs_one(info.id, opponent_uid, server.get_ref().clone()),
         &req,
         stream,
     ) {

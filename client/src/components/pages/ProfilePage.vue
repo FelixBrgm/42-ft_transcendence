@@ -39,6 +39,13 @@
               : user.alias || "User"
           }}
         </h1>
+		<h3 class="neon-text" id="userStatusAndId">
+		{{
+			user == null || user == undefined
+			? "Status: Loading... | ID: Loading..."
+			: "Status: " + (user.status || "Unknown") + " | ID: " + (user.id || "Unknown")
+		}}
+		</h3>
         <div>
           <div class="mhistory">
             <div>Matchmaking history</div>
@@ -64,6 +71,18 @@
             <div v-else>
               No friends. 
             </div>
+          </div>
+          <div class="mhistory">
+            <div>Matchmaking history</div>
+            <span>{{ this.seperator }}</span>
+              <div v-if="matchInfos !== null "> 
+                <div v-for="match in matchInfos" :key="match.id" > 
+                  On: {{ formattedTimestamp(match.timestamp) }}
+                  Winner: {{ match.winner.alias }}
+                  Looser: {{ match.looser.alias }}     
+                </div>
+              </div> 
+              <div v-else>no game . _.</div>
           </div>
         </div>
       </div>
@@ -125,7 +144,7 @@ export default {
         this.isb = false;
       this.friendimg = this.isf
         ? require("@/assets/add-user.png")
-        : require("@/assets/delete-user.png"); 
+        : require("@/assets/delete-user.png");
       if (!this.isf) {
         this.friendimg = require("@/assets/add-user.png");
       } else {
