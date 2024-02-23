@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomePage from './components/pages/HomePage.vue';
-import AboutUs from './components/pages/AboutUs.vue';
+import PeoplePeople from './components/pages/PeoplePeople.vue';
 import RulesPage from './components/pages/RulesPage.vue';
 import ProfilePage from './components/pages/ProfilePage.vue';
 import DevTest from './components/elements/DevTest.vue';
-import PongGame from './components/pages/GamePage.vue';
+import PongGame from './components/pages/GamePage.vue'; 
 import LoginPage from './components/pages/LoginPage';
 import NotFoundPage from './components/pages/NotFoundPage.vue'; // Import your custom 404 page
 
@@ -12,8 +12,8 @@ const router = createRouter({
     history: createWebHistory(),
     routes: [
         { path: '/', component: HomePage, meta: { title: 'Transcendence' } },
-        { path: '/login', component: LoginPage, meta: { title: 'Login' } },
-        { path: '/about', component: AboutUs, meta: { title: 'About Us' } },
+        { path: '/login', component: LoginPage, meta: { title: 'Login' } }, 
+        { path: '/people', component: PeoplePeople, meta: { title: 'PeoplePeople' } },
         { path: '/rules', component: RulesPage, meta: { title: 'Rules' } },
         { path: '/dev', component: DevTest, meta: { title: 'Developer testing', backgroundColor: 'white' } },
         { path: '/profile', component: ProfilePage, meta: { title: 'Profile', requiresAuth: true } }, // Example of a route that requires authentication
