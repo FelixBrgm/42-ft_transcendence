@@ -31,6 +31,18 @@ async fn post(
     }
 }
 
+#[get("/users")]
+async fn list(
+	_: Identity,
+	db: web::Data<Database>,
+) -> Result<HttpResponse, ApiError> {
+
+	match db.get_all_users() {
+		Ok(users) => Ok(HttpResponse::Ok().json(users)),
+		Err(_) => Err(ApiError::InternalServerError),
+	}
+}
+
 #[get("/user/{user_id}")]
 async fn find(
     _: Identity,
@@ -45,14 +57,3 @@ async fn find(
     }
 }
 
-#[get("/user/list")]
-async fn list(
-    _: Identity,
-    db: web::Data<Database>,
-) -> Result<HttpResponse, ApiError> {
-
-    match db.get_all_users() {
-        Ok(users) => Ok(HttpResponse::Ok().json(users)),
-        Err(_) => Err(ApiError::InternalServerError),
-    }
-}
