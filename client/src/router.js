@@ -26,7 +26,6 @@ import store from './store';
 import axios from 'axios';
 
 router.beforeEach(async (to, from, next) => {
-    console.log(to, from);
 
     document.body.style.backgroundColor = to.meta.backgroundColor || 'black';
 	
@@ -36,7 +35,6 @@ router.beforeEach(async (to, from, next) => {
                 withCredentials: true,
             });
             store.commit('auth/setUser', response.data);
-            console.log(store.state.auth.user);
         } catch (error) {
             console.error('Error fetching user data:', error);
             return next('/login');

@@ -1,4 +1,6 @@
 use actix::prelude::*;
+use actix_web_actors::ws::CloseReason;
+use actix_web_actors::ws::CloseCode;
 
 use crate::game::matchmake::MatchmakingServer;
 use crate::game::one_vs_one::OneVsOneServer;
@@ -74,6 +76,7 @@ impl GameSession {
         let id = self.id;
         ctx.run_interval(HEARTBEAT_INTERVAL, move |act, ctx| {
             if Instant::now().duration_since(act.hb) > CLIENT_TIMEOUT {
+                // TODO
                 ctx.notify(Stop { id: id });
             }
             ctx.ping(b"PING");
@@ -151,7 +154,18 @@ impl Actor for GameSession {
 
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         let msg = game::Disconnect { id: self.id };
-
+		println!("in stopping state");
+        // match &self.game_mode {
+        //     GameMode::OneVsOne(game_server) => {
+        //         game_server.do_send(msg);
+        //     }
+        //     GameMode::Matchmaking(matchmaking_server) => {
+        //         matchmaking_server.do_send(msg);
+        //     }
+        //     GameMode::Tournament(tournament_server) => {
+        //         tournament_server.do_send(msg);
+        //     }
+        // }
         Running::Stop
     }
 }
@@ -170,8 +184,9 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for GameSession {
                 ctx.binary(bin);
             }
             Ok(ws::Message::Close(reason)) => {
-                ctx.close(reason);
-                ctx.stop();
+                // ctx.close(reason);
+                println!("Jdajaajajajajaajjaajajaajajajajajaa");
+                // ctx.stop();
             }
             Ok(ws::Message::Continuation(_)) => {
                 ctx.stop();
@@ -203,27 +218,18 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for GameSession {
     }
 }
 
+
 impl Handler<Stop> for GameSession {
     type Result = ();
 
     fn handle(&mut self, msg: Stop, ctx: &mut Self::Context) {
-        println!("GameServer: Websocket CLient hearbeat failed, disconnecting!");
+        println!("GameServer: Websocket Client heartbeat failed, disconnecting!");
 
-        let msg = game::Disconnect { id: msg.id };
-
-        match &self.game_mode {
-            GameMode::OneVsOne(game_server) => {
-                game_server.do_send(msg);
-            }
-            GameMode::Matchmaking(matchmaking_server) => {
-                matchmaking_server.do_send(msg);
-            }
-            GameMode::Tournament(tournament_server) => {
-                tournament_server.do_send(msg);
-            }
-        }
-
-        ctx.stop();
+        ctx.close(Some(CloseReason{code: CloseCode::Normal, description: Some("I like goos".to_string())}));
+        // Delay the actor stop to ensure the close frame is sent
+        // ctx.run_later(Duration::from_millis(10000), |act, ctx| {
+        //     ctx.stop();
+        // });
     }
 }
 
