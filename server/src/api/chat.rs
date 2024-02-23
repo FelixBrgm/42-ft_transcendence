@@ -60,10 +60,6 @@ async fn join_chat(
         return Err(ApiError::BadRequest("You blocked the user".to_string()));
     }
 
-    if db.check_blocked(user2, uid)? {
-        return Err(ApiError::BadRequest("You are blocked by user".to_string()));
-    }
-
     let rid = match db.check_room_by_user(uid, user2)? {
         Some(rid) => rid,
         None => db.add_room(user2, uid)?,
