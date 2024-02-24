@@ -103,14 +103,14 @@
 	methods: {
 		async login() {
 		try {
-			window.location.href = 'http://127.0.0.1:8080/auth/login';
+			window.location.href = '/auth/login';
 		} catch (error) {
 			console.error('Error Initiating login:', error);
 		}
 		},
 		async logout() {
 		try {
-			const response = await axios.get('http://127.0.0.1:8080/auth/logout', {
+			const response = await axios.get('/auth/logout', {
 			withCredentials: true,
 			});
 			this.data = response.data;
@@ -120,7 +120,7 @@
 		},
 		async auth_check() {
 			try {
-				const response = await axios.get('http://127.0.0.1:8080/auth/check', {
+				const response = await axios.get('/auth/check', {
 				withCredentials: true,
 				});
 				this.data = response.data;
@@ -130,7 +130,7 @@
 		},
 		async home() {
 		try {
-			const response = await axios.get('http://127.0.0.1:8080');
+			const response = await axios.get('');
 			this.data = response.data;
 		} catch (error) {
 			console.error('Error fetching home data:', error);
@@ -138,7 +138,7 @@
 		},
 		async users() {
 		try {
-			const response = await axios.get('http://127.0.0.1:8080/users');
+			const response = await axios.get('/users');
 			this.data = response.data;
 		} catch (error) {
 			console.error('Error fetching users:', error);
@@ -146,7 +146,7 @@
 		},
 		async user() {
 		try {
-			const response = await axios.get('http://127.0.0.1:8080/user', {
+			const response = await axios.get('/user', {
 			withCredentials: true,
 			});
 			this.data = response.data;
@@ -156,7 +156,7 @@
 		},
 		async update_user() {
 		try {
-			const response = await axios.post('http://127.0.0.1:8080/user', this.updateUser, {
+			const response = await axios.post('/user', this.updateUser, {
 			withCredentials: true,
 			});
 			this.data = response.data;
@@ -166,7 +166,7 @@
 		},
 		async rooms() {
 		try {
-			const response = await axios.get('http://127.0.0.1:8080/rooms');
+			const response = await axios.get('/rooms');
 			this.data = response.data;
 		} catch (error) {
 			console.error('Error fetching user:', error);
@@ -174,7 +174,7 @@
 		},
 		async user_rooms() {
 		try {
-			const response = await axios.get('http://127.0.0.1:8080/user/room', {
+			const response = await axios.get('/user/room', {
 			withCredentials: true,
 			});
 			this.data = response.data;
@@ -185,7 +185,7 @@
 		async create_room() {
 		try {
 			this.newRoom.is_public = Boolean(this.newRoom.is_public);
-			const response = await axios.post('http://127.0.0.1:8080/room/create', this.newRoom, {
+			const response = await axios.post('/room/create', this.newRoom, {
 			withCredentials: true,
 			});
 			this.data = response.data;
@@ -195,7 +195,7 @@
 		},
 		async create_personal_room() {
 		try {
-			const url = `http://127.0.0.1:8080/room/create/personal/${this.partnerId}`;
+			const url = `/room/create/personal/${this.partnerId}`;
 			const response = await axios.post(url, null, {
 			withCredentials: true,
 			});
@@ -208,7 +208,7 @@
 		try {
 			this.updateRoomData.is_public = Boolean(this.updateRoomData.is_public);
 	
-			const response = await axios.post('http://127.0.0.1:8080/room/update', this.updateRoomData, {
+			const response = await axios.post('/room/update', this.updateRoomData, {
 			withCredentials: true,
 			});
 	
@@ -219,7 +219,7 @@
 		},
 		async list_room() {
 		try {
-			const url = `http://127.0.0.1:8080/room/list/${this.listRoomId}`;
+			const url = `/room/list/${this.listRoomId}`;
 			const response = await axios.get(url, null, {
 			withCredentials: true,
 			});
@@ -230,7 +230,7 @@
 		},
 		async join_room() {
 		try {
-			const url = `http://127.0.0.1:8080/room/join/${this.createRoomId}`;
+			const url = `/room/join/${this.createRoomId}`;
 			const response = await axios.post(url, null, {
 			withCredentials: true,
 			});
@@ -241,7 +241,7 @@
 		},
 		async part_room() {
 		try {
-			const url = `http://127.0.0.1:8080/room/part/${this.partRoomId}`;
+			const url = `/room/part/${this.partRoomId}`;
 			const response = await axios.post(url, null, {
 			withCredentials: true,
 			});
@@ -252,7 +252,7 @@
 		},
 		async messages_room() {
 		try {
-			const url = `http://127.0.0.1:8080/room/messages/${this.messageRoomId}`;
+			const url = `/room/messages/${this.messageRoomId}`;
 			const response = await axios.get(url, null, {
 			withCredentials: true,
 			});
@@ -263,7 +263,7 @@
 		},
 		async clear() {
 		try {
-			const url = `http://127.0.0.1:8080/clear`
+			const url = `/clear`
 			const response = await axios.get(url);
 			this.data = response.data;
 		} catch (error) {

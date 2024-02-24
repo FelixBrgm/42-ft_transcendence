@@ -4,9 +4,8 @@
     <div id="Body" class="body">
       <div class="card-body text-center">
         <div>
-          <div v-show="isUidMatch" class="mhistory">
+          <div class="mhistory">
             <div>Friends:</div>
-            <span>{{ this.seperator }}</span>
             <div v-if="friends !== null && friends.length > 0"> <!-- Use div instead of ul -->
               <div v-for="friend in friendInfos" :key="friend.id" @click="this.$router.push({ link: `/profile`, query: { uid: friend.id } })">
                 <!-- Use div instead of span -->
@@ -49,6 +48,7 @@ export default {
   },
   created() {
     this.fetchFriends();
+    console.log("BASE_URL:", process.env.BASE_URL);
   },
   watch: {
     $route() {

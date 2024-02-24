@@ -9,7 +9,7 @@ import LoginPage from './components/pages/LoginPage';
 import NotFoundPage from './components/pages/NotFoundPage.vue'; // Import your custom 404 page
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHistory(process.env.BASE_URL || '/'),
     routes: [
         { path: '/', component: HomePage, meta: { title: 'Transcendence' } },
         { path: '/login', component: LoginPage, meta: { title: 'Login' } }, 

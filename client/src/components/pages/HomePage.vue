@@ -51,6 +51,9 @@ export default {
     GenHeader,
     GenFooter,
   },
+  created(){
+    console.log("BASE_URL:", process.env.BASE_URL);
+  },
   data() {
     return {
       selectedNumberOfPlayers: 4,

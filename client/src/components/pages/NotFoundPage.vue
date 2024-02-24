@@ -6,6 +6,9 @@
   
   <script>
   export default {
+    created(){
+    console.log("BASE_URL:", process.env.BASE_URL);
+  },
     mounted() {
       this.initialize();
       this.animate();
