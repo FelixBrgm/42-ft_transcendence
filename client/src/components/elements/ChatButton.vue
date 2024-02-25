@@ -10,7 +10,7 @@
 export default {
   methods: {
     toggleChat() {
-      this.$emit('toggle-chat');
+      this.$store.dispatch('chat/toggleChat');
     },
   },
 };

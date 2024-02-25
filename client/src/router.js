@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory} from 'vue-router';
 import HomePage from './components/pages/HomePage.vue';
 import PeoplePeople from './components/pages/PeoplePeople.vue';
 import RulesPage from './components/pages/RulesPage.vue';
@@ -9,7 +9,7 @@ import LoginPage from './components/pages/LoginPage';
 import NotFoundPage from './components/pages/NotFoundPage.vue'; // Import your custom 404 page
 
 const router = createRouter({
-    history: createWebHistory(process.env.BASE_URL || '/'),
+    history: createWebHistory(),
     routes: [
         { path: '/', component: HomePage, meta: { title: 'Transcendence' } },
         { path: '/login', component: LoginPage, meta: { title: 'Login' } }, 
@@ -24,7 +24,7 @@ const router = createRouter({
 
 import store from './store';
 import axios from 'axios';
-
+ 
 router.beforeEach(async (to, from, next) => {
 
     document.body.style.backgroundColor = to.meta.backgroundColor || 'black';

@@ -1,4 +1,3 @@
-
 <template>
 	<header class="app-header">
 		<router-link :to="{ path: '/' }" class="title-link">
@@ -22,8 +21,7 @@
 import axios from 'axios';
 import { Howl } from 'howler';
 import honkSound from '@/assets/honk.mp3';
-import store from '../../store';
-
+import store from '../../store'; 
 
 export default {
   data() {
@@ -39,33 +37,37 @@ export default {
     };
   },
   methods: {
-		generateLink(item) {
-		if (item.text === "Profile" && store.state.auth.user !== null) {
-			return `${item.link}?uid=${store.state.auth.user.id}`;
-		} else {
-			return item.link;
+    generateLink(item) {
+      if (item.text === "Profile" && store.state.auth.user !== null) {
+        return `${item.link}?uid=${store.state.auth.user.id}`;
+      } else {
+        return item.link;
+      }
+    },
+    async logout() {
+      try {
+        await axios.get('http://127.0.0.1:8080/auth/logout', { withCredentials: true });
+        store.state.auth.user = null;
+		if (this.$store.state.chat.chatOpen) {
+		await this.$store.dispatch('chat/toggleChat');
 		}
-		},
-	async logout() {
-		try {
-			await axios.get('http://127.0.0.1:8080/auth/logout', { withCredentials: true });
-			store.state.auth.user = null;
-			this.$router.push('/login');
-		} catch (error) {
-			console.error('Error Logging out:', error);
-		}
-	},
-	playSound() {
-		if (this.sound) {
-			this.sound.play();
-		}
-	},
-	},
-	mounted() {
-		this.sound = new Howl({
-		src: [honkSound],
-		});
-	}
+        this.$router.push('/login');
+      } catch (error) {
+        console.error('Error Logging out:', error);
+      }
+    },
+    loadSoundAndPlay() {
+      if (!this.sound) {
+        this.sound = new Howl({
+          src: [honkSound],
+        });
+      }
+      this.sound.play();
+    },
+    playSound() {
+      this.loadSoundAndPlay();
+    },
+  },
 };
 </script>
 
