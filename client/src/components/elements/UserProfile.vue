@@ -42,9 +42,7 @@ export default {
   object-fit: cover;
   border-radius: 50%;
 }
-</style>
 
-<style scoped>
 .user-profile {
   font-family: neuropol;
   background-color: #838a8d;
