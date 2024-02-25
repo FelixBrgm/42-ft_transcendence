@@ -16,7 +16,7 @@ const store = createStore({
       actions: {
         async updateUser({ commit }) {
           try {
-            const response = await axios.get("http://127.0.0.1:8080/user", { withCredentials: true });
+            const response = await axios.get("/api/user", { withCredentials: true });
             commit('setUser', response.data);
           } catch (error) {
             console.error('Error updating user:', error);

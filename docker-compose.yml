@@ -2,7 +2,7 @@ version: '3'
 services:
   postgres:
     image: postgres
-    container_name: postgres_db
+    container_name: db
     networks:
       - inception_network
     env_file:
@@ -13,7 +13,7 @@ services:
       - 5432
   your_app:
       build: .
-      container_name: dev
+      container_name: app
       env_file:
         - .env
       ports:
@@ -21,6 +21,7 @@ services:
         - "8080:8080"
         - "8081:8081"
         - "2121:2121"
+        - "80:80"
       volumes:
         - ..:/workspaces/42-ft_transcendence
       networks:

@@ -46,7 +46,7 @@ export default {
     },
     async logout() {
       try {
-        await axios.get('http://127.0.0.1:8080/auth/logout', { withCredentials: true });
+        await axios.get('/api/auth/logout', { withCredentials: true });
         store.state.auth.user = null;
 		if (this.$store.state.chat.chatOpen) {
 		await this.$store.dispatch('chat/toggleChat');

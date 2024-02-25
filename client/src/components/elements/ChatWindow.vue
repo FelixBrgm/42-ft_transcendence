@@ -92,7 +92,7 @@
         if (user && user.id && !this.ws) {
           const userId = user.id;
           const token = user.token;
-          const websocketUrl = `ws://localhost:8080/ws?id=${userId}&token=${token}`;
+          const websocketUrl = `ws:///ws?id=${userId}&token=${token}`;
           this.ws = new WebSocket(websocketUrl);
           this.ws.onopen = this.handleOpen;
           this.ws.onclose = this.handleClose;
@@ -102,7 +102,7 @@
         }
       },
       async sendMessage() {
-        if (axios.get(`/block/check/${this.friendid}`,{ withCredentials: true }) == true)
+        if (axios.get(`/api/block/check/${this.friendid}`,{ withCredentials: true }) == true)
         {
           alert("This user is blocked or has blocked you");
         }
@@ -122,7 +122,7 @@
         if (this.roomid == null)
           return; 
         try {
-          const response = await axios.get(`/messages/${this.roomid}`, { withCredentials: true });
+          const response = await axios.get(`/api/messages/${this.roomid}`, { withCredentials: true });
           this.messages = response.data;
         } catch (error) { 
           console.error('Error fetching messages:', error);
@@ -130,13 +130,13 @@
       }, 
       async fetchFriends() {
         try {
-          const response = await axios.get(`/friend/list/${store.state.auth.user.id}`, { withCredentials: true });
+          const response = await axios.get(`/api/friend/list/${store.state.auth.user.id}`, { withCredentials: true });
           this.friends = response.data;  
           this.friendInfos = []; // Clear friendInfos array
           for (const friend of this.friends) {
             const userId = friend.user1 === this.$route.query.uid ? friend.user1 : friend.user2;
             try {
-              const response = await axios.get(`/user/${userId}`, { withCredentials: true });
+              const response = await axios.get(`/api/user/${userId}`, { withCredentials: true });
               this.friendInfos.push(response.data);
             } catch (error) {
               console.error('Error fetching user info:', error); 
@@ -148,7 +148,7 @@
       },
       async joinFriendChat(friend) {
         try {
-          const response = await axios.get(`/chat/${friend.id}`, { withCredentials: true });
+          const response = await axios.get(`/api/chat/${friend.id}`, { withCredentials: true });
           this.friendid = friend.id;
           this.roomid = response.data;  
         } catch (error) {

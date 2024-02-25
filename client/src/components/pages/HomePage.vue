@@ -76,7 +76,7 @@ export default {
         this.togglenum = true; 
         this.userId = store.state.auth.user.id 
         this.tournamentID = this.userId;
-        axios.get(`/game/create_tournament/${this.selectedNumberOfPlayers}`, { withCredentials: true })
+        axios.get(`/api/game/create_tournament/${this.selectedNumberOfPlayers}`, { withCredentials: true })
         .catch(error => {
           alert("An error occurred: " + error.message);
         }); 

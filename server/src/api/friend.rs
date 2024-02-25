@@ -3,7 +3,7 @@ use crate::db::Database;
 use actix_identity::Identity;
 use actix_web::{get, web, HttpResponse};
 
-#[get("/friend/{friend_id}")]
+#[get("/api/friend/{friend_id}")]
 async fn toggle(
     identity: Identity,
     db: web::Data<Database>,
@@ -30,7 +30,7 @@ async fn toggle(
     Ok(HttpResponse::Ok().finish())
 }
 
-#[get("/friend/list/{uid}")]
+#[get("/api/friend/list/{uid}")]
 async fn list(
     _: Identity,
     uid: web::Path<i32>,
@@ -44,7 +44,7 @@ async fn list(
     }
 }
 
-#[get("/friend/check/{friend_id}")]
+#[get("/api/friend/check/{friend_id}")]
 async fn check(
     identity: Identity,
     db: web::Data<Database>,

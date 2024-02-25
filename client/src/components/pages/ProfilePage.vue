@@ -140,7 +140,7 @@ export default {
           // Assuming you have an API endpoint to update the username
           axios
             .post(
-              `http://127.0.0.1:8080/user`,
+              `/user`,
               { alias: newUsername },
               { withCredentials: true }
             )
@@ -163,7 +163,7 @@ export default {
             // Image loaded successfully, update avatar
             try {
               await axios.post(
-                `http://127.0.0.1:8080/user`,
+                `/api/user`,
                 { avatar: newAvatar },
                 { withCredentials: true }
               );
@@ -182,14 +182,14 @@ export default {
       }
     },
     blockUser() {
-      axios.get(`/block/${this.$route.query.uid}`, {
+      axios.get(`/api/block/${this.$route.query.uid}`, {
         withCredentials: true,
       });
       this.isb = !this.isb; 
     },
     addFriend() {
       axios.get(
-        `http://127.0.0.1:8080/friend/${this.$route.query.uid}`,
+        `/api/friend/${this.$route.query.uid}`,
         { withCredentials: true }
       );
       this.friendimg = this.isf
@@ -199,7 +199,7 @@ export default {
     },
     async fetchSingle(tofind){
       try {
-              const response = await axios.get(`/user/${tofind}`, { withCredentials: true });
+              const response = await axios.get(`/api/user/${tofind}`, { withCredentials: true });
               return (response.data.alias);
             } catch (error) {  
               console.error('Error fetching user info:', error); 
@@ -208,7 +208,7 @@ export default {
     async fetchFriends() {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8080/friend/list/${this.$route.query.uid}`,
+          `/api/friend/list/${this.$route.query.uid}`,
           { withCredentials: true }
         );
         this.friends = response.data;
@@ -220,7 +220,7 @@ export default {
               : friend.user2;
           try {
             const response = await axios.get(
-              `http://127.0.0.1:8080/user/${userId}`,
+              `/api/user/${userId}`,
               { withCredentials: true }
             );
             this.friendInfos.push(response.data); // Save user info to array
@@ -235,14 +235,14 @@ export default {
     async fetchMatchs() {
         try {
           const response = await axios.get(
-            `http://127.0.0.1:8080/game/list/${this.$route.query.uid}`, { withCredentials: true }
+            `/api/game/list/${this.$route.query.uid}`, { withCredentials: true }
           );
           this.matchInfos = [];
           
           for (const match of response.data) {
             try { 
-              const response1 = await axios.get(`/user/${match.winner}`, { withCredentials: true });
-              const response2 = await axios.get(`/user/${match.looser}`, { withCredentials: true });
+              const response1 = await axios.get(`/api/user/${match.winner}`, { withCredentials: true });
+              const response2 = await axios.get(`/api/user/${match.looser}`, { withCredentials: true });
               this.matchInfos.push({timestamp: match.timestamp, winner: response1.data, looser: response2.data });
             } catch (error) { 
               console.error("Error fetching match info:", error);
@@ -255,7 +255,7 @@ export default {
     async isblocked() {
         try {
           const response = await axios.get(
-            `http://127.0.0.1:8080/block/check/${this.$route.query.uid}`,
+            `/api/block/check/${this.$route.query.uid}`,
             { withCredentials: true }
           );
           return response.data;
@@ -266,7 +266,7 @@ export default {
     async isfriend() {
         try {
           const response = await axios.get(
-            `http://127.0.0.1:8080/friend/check/${this.$route.query.uid}`,
+            `/api/friend/check/${this.$route.query.uid}`,
             { withCredentials: true }
           );
           return response.data;
@@ -277,7 +277,7 @@ export default {
     async getUser() {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8080/user/${this.$route.query.uid}`,
+          `/api/user/${this.$route.query.uid}`,
           { withCredentials: true }
         );
         this.user = response.data;

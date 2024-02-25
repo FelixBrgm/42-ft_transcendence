@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     git \
     pkg-config \
     netcat \
+    nginx \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 # Remove conflicting package libnode-dev
@@ -36,7 +37,12 @@ COPY /server /app/server
 RUN cd server && cargo build --release
 # Build your Vue frontend
 RUN cd client && npm install
+RUN cd client && npm run build
+
+COPY nginx.conf /etc/nginx/nginx.conf
+
 # Start your Rust backend and Vue frontend
 EXPOSE 8081
+EXPOSE 80
 
-CMD ["sh", "-c", "/app/server/target/release/server & npm run serve --prefix /app/client" ]
+CMD ["sh", "-c", "/app/server/target/release/server" ]

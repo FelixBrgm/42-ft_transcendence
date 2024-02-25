@@ -208,7 +208,7 @@ export default {
         }
         if (this.enemy === null)
         {
-          axios.get(`/user/${this.enemyid}`, { withCredentials: true })
+          axios.get(`/api/user/${this.enemyid}`, { withCredentials: true })
             .then(response => {
               this.enemy = response.data;
               if (this.isYou) {
@@ -251,13 +251,13 @@ export default {
       const token = store.state.auth.user.password;
       let websocketUrl = "";
       if (numPlayers === -1) 
-        websocketUrl = `ws://localhost:8080/game/matchmake/?id=${userId}&token=${token}`;
+        websocketUrl = `ws:///game/matchmake/?id=${userId}&token=${token}`;
       else if (numPlayers === -2) 
-        websocketUrl = `ws://localhost:8080/game/one_vs_one/${ID}?id=${userId}&token=${token}`;
+        websocketUrl = `ws:///game/one_vs_one/${ID}?id=${userId}&token=${token}`;
       else  
       {
         this.showtournament = true; 
-        websocketUrl = `ws://localhost:8080/game/connect_tournament/${numPlayers}?id=${userId}&token=${token}`;
+        websocketUrl = `ws:///game/connect_tournament/${numPlayers}?id=${userId}&token=${token}`;
       }
       this.websocket = new WebSocket(websocketUrl);
       this.textvalue = "Waiting for game"; 

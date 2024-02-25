@@ -25,7 +25,7 @@ export default {
 	methods: {
 		async login() {
 		try {
-			window.location.href = 'http://127.0.0.1:8080/auth/login';
+			window.location.href = '/api/auth/login';
 		} catch (error) {
 			console.error('Error Initiating login:', error);
 		}
