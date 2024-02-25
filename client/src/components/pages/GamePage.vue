@@ -25,12 +25,5 @@
 <style scoped>
 	@import "./../functions/neonglow.css";
 
-	
-.body {
-    font-family: neuropol;
-    border-radius: 20px;
-    margin-left: 20px;
-    margin-right: 20px;
-}
 </style>
 	

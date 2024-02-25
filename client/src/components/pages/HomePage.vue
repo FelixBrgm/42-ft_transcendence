@@ -102,7 +102,7 @@ export default {
 };
 </script>
  
-<style>
+<style scoped> 
 @import "./../functions/neonglow.css";
 
 .body { 
