@@ -11,17 +11,17 @@
           <div class="my-container">
             <div>1 v 1</div>
             <span>Enter other player ID: </span> 
-            <input type="text" v-model="vsID" placeholder="Enter player ID">
+            <input type="text" id="pID" v-model="vsID" placeholder="Enter player ID">
             <span class="mybutton" style="margin-top: 6px;" @click="joinVs">Start</span> 
           </div>
           <div class="my-container">
             <div> Create Tournament </div>
             <span> Number of players: </span>
-            <select v-model="selectedNumberOfPlayers">
+            <select id="selectOptions" v-model="selectedNumberOfPlayers">
               <option v-for="number in numbers" :key="number" :value="number">
                 {{ number }}
               </option>
-            </select>
+            </select >
           <div class="mybutton" style="margin-top: 6px;" @click="playTournament" >
             <span > Create Tournament</span>
           </div>
@@ -30,7 +30,7 @@
           <div class="my-container">
             <div>Join Tournament</div>
             <span>Enter ID: </span> 
-            <input type="text" v-model="tournamentID" :placeholder="this.togglenum ? this.userId : 'Enter tournament ID'">
+            <input type="text" id="tID" v-model="tournamentID" :placeholder="this.togglenum ? this.userId : 'Enter tournament ID'">
             <span class="mybutton" style="margin-top: 6px;" @click="joinTournament">Start</span> 
           </div>
         </div> 
@@ -73,7 +73,7 @@ export default {
         this.togglenum = true; 
         this.userId = store.state.auth.user.id 
         this.tournamentID = this.userId;
-        axios.get(`http://127.0.0.1:8080/game/create_tournament/${this.selectedNumberOfPlayers}`, { withCredentials: true })
+        axios.get(`/game/create_tournament/${this.selectedNumberOfPlayers}`, { withCredentials: true })
         .catch(error => {
           alert("An error occurred: " + error.message);
         }); 

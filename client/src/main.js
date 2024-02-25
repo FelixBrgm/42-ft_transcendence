@@ -1,9 +1,11 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
-import store from './store';
+import store from './store'; 
+import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.css'
 
+axios.defaults.baseURL = 'http://127.0.0.1:8080'; // Set your base URL here
 
 const app = createApp(App);
 app.use(store); // Use the Vuex store

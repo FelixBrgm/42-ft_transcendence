@@ -1,8 +1,8 @@
 import { createStore } from 'vuex';
 import axios from 'axios';
 
-const store = createStore( {
-	modules: {
+const store = createStore({
+  modules: {
     auth: {
       namespaced: true,
       state: {
@@ -24,7 +24,23 @@ const store = createStore( {
         },
       },
     },
+    chat: {
+      namespaced: true,
+      state: {
+          chatOpen: false,
+      },
+      mutations: {
+          TOGGLE_CHAT(state) {
+              state.chatOpen = !state.chatOpen;
+          },
+      },
+      actions: {
+          toggleChat({ commit }) {
+              commit('TOGGLE_CHAT');
+          }, 
+      },
   },
+  }, 
 });
 
 export default store;

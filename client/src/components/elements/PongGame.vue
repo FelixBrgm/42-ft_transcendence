@@ -208,7 +208,7 @@ export default {
         }
         if (this.enemy === null)
         {
-          axios.get(`http://127.0.0.1:8080/user/${this.enemyid}`, { withCredentials: true })
+          axios.get(`/user/${this.enemyid}`, { withCredentials: true })
             .then(response => {
               this.enemy = response.data;
               if (this.isYou) {

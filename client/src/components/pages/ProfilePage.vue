@@ -50,10 +50,9 @@
           <div v-show="isUidMatch" class="mhistory">
             <div>Friends:</div>
             <span>{{ this.seperator }}</span>
-            <div v-if="friends !== null && friends.length > 0"> <!-- Use div instead of ul -->
-              <div v-for="friend in friendInfos" :key="friend.id" @click="this.$router.push({ link: `/profile`, query: { uid: friend.id } })">
-                <!-- Use div instead of span -->
-                {{ friend.alias }}
+            <div v-if="friends !== null && friends.length > 0">
+              <div v-for="friend in friendInfos" :key="friend.id" @click="goToProfile(friend.id)">
+                {{ friend.alias }} 
               </div>
             </div>
             <div v-else>
@@ -106,18 +105,13 @@ export default {
     };
   },
   created() {
-    this.fetchData();
-  },
-  watch: {
-    $route() {
-      this.fetchData();
-    },
   },
   mounted() {
+    this.uid = this.$route.query.uid; 
+    this.fetchData(); 
     this.$store.dispatch("auth/updateUser");
     this.fetchMatchs();
-    this.fetchFriends();
-    this.uid = `${this.$route.query.uid}`;
+    this.fetchFriends(); 
   },
   methods: {
     async fetchData() {
@@ -188,7 +182,7 @@ export default {
       }
     },
     blockUser() {
-      axios.get(`http://127.0.0.1:8080/block/${this.$route.query.uid}`, {
+      axios.get(`/block/${this.$route.query.uid}`, {
         withCredentials: true,
       });
       this.isb = !this.isb; 
@@ -205,7 +199,7 @@ export default {
     },
     async fetchSingle(tofind){
       try {
-              const response = await axios.get(`http://127.0.0.1:8080/user/${tofind}`, { withCredentials: true });
+              const response = await axios.get(`/user/${tofind}`, { withCredentials: true });
               return (response.data.alias);
             } catch (error) {  
               console.error('Error fetching user info:', error); 
@@ -220,7 +214,6 @@ export default {
         this.friends = response.data;
         this.friendInfos = [];
         for (const friend of this.friends) {
-          // Added missing 'const' and 'of' keywords
           const userId =
             friend.user1 === this.$route.query.uid
               ? friend.user1
@@ -245,12 +238,11 @@ export default {
             `http://127.0.0.1:8080/game/list/${this.$route.query.uid}`, { withCredentials: true }
           );
           this.matchInfos = [];
-            console.log(response.data);
+          
           for (const match of response.data) {
-            console.log(match);
-            try {
-              const response1 = await axios.get(`http://127.0.0.1:8080/user/${match.winner}`, { withCredentials: true });
-              const response2 = await axios.get(`http://127.0.0.1:8080/user/${match.looser}`, { withCredentials: true });
+            try { 
+              const response1 = await axios.get(`/user/${match.winner}`, { withCredentials: true });
+              const response2 = await axios.get(`/user/${match.looser}`, { withCredentials: true });
               this.matchInfos.push({timestamp: match.timestamp, winner: response1.data, looser: response2.data });
             } catch (error) { 
               console.error("Error fetching match info:", error);
@@ -291,6 +283,25 @@ export default {
         this.user = response.data;
       } catch (error) {
         console.error("Error fetching user:", error);
+      }
+    },
+  goToProfile(id) {
+    this.$router.push({ path: `/profile`, query: { uid: id } })
+      .then(() => {
+        this.fetchData();
+      })
+      .catch(error => {
+        console.error('Error navigating to profile:', error);
+      });
+  },
+    beforeRouteUpdate(to, from, next) {
+      if (to.query.uid !== this.$route.query.uid) {
+        // If the query parameter has changed, force a page reload
+        window.location.reload();
+      } else {
+        // If the query parameter hasn't changed, continue with normal route update
+        this.fetchData();
+        next();
       }
     },
   },

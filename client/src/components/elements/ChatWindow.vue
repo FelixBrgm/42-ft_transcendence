@@ -1,10 +1,10 @@
   <template>
-    <div v-show="showChat" class="chat-window">
+    <div v-show="chatOpen" class="chat-window"> 
       <div class="chat-container-wrapper">
       <div class="card">
         <div class="card-header">
           <div v-if="foundFriend" style="cursor: pointer;" @click="goToFriend(foundFriend.id)"><img :src="foundFriend.avatar" class="rounded-tinier-circle"> {{ foundFriend.alias }} </div> 
-          <button @click="closeChat" class="close-btn" aria-label="Close">
+          <button @click="this.$store.dispatch('chat/toggleChat')" class="close-btn" aria-label="Close">
             <span aria-hidden="false">&times;</span> 
           </button>
         </div>
@@ -19,7 +19,7 @@
           </div>
           <div class="card-footer">
             <div class="input-group">
-              <input type="text" v-model="newMessage" @keyup.enter="sendMessage" class="form-control" placeholder="Type your message...">
+              <input type="text" id="messageField" class="form-control" placeholder="Type your message..." data-v-307ea3c0="">
               <button @click="sendMessage" class="send-button">Send</button>
             </div>
           </div>
@@ -39,15 +39,13 @@
   import axios from 'axios';
 
   export default {
-    props: {
-      showChat: Boolean,
-    },
+    
       watch: {
-      showChat() {
+      'store.state.chatOpen': function() {
           this.fetchFriends();
-          this.messages = [];
+          this.messages = []; 
           this.friendid = null; 
-      },
+      }, 
       $route() {
         this.setupWebSocketAndFetchFriends(); 
       },
@@ -58,7 +56,10 @@
       },
       myId() {
         return store.state.auth.user ;
-      }
+      },
+          chatOpen() {
+      return this.$store.state.chat.chatOpen;
+    }
     }, 
     data() {
       return {
@@ -104,7 +105,7 @@
         console.log('ERROR:', event.data); // Logging the incoming message
       }, 
       async sendMessage() {
-        if (axios.get(`http://127.0.0.1:8080/block/check/${this.friendid}`,{ withCredentials: true }) == true)
+        if (axios.get(`/block/check/${this.friendid}`,{ withCredentials: true }) == true)
         {
           alert("This user is blocked or has blocked you");
         }
@@ -115,9 +116,6 @@
         }
         this.newMessage = '';
       },
-      closeChat() {
-        this.$emit('close-chat');
-      },
       goToFriend(id) {
         this.$router.push({ path: '/profile', query: { uid: id } });  
       },
@@ -127,7 +125,7 @@
         if (this.roomid == null)
           return; 
         try {
-          const response = await axios.get(`http://127.0.0.1:8080/messages/${this.roomid}`, { withCredentials: true });
+          const response = await axios.get(`/messages/${this.roomid}`, { withCredentials: true });
           this.messages = response.data;
         } catch (error) { 
           console.error('Error fetching messages:', error);
@@ -135,25 +133,25 @@
       }, 
       async fetchFriends() {
         try {
-          const response = await axios.get(`http://127.0.0.1:8080/friend/list/${store.state.auth.user.id}`, { withCredentials: true });
+          const response = await axios.get(`/friend/list/${store.state.auth.user.id}`, { withCredentials: true });
           this.friends = response.data;  
           this.friendInfos = []; // Clear friendInfos array
           for (const friend of this.friends) {
             const userId = friend.user1 === this.$route.query.uid ? friend.user1 : friend.user2;
             try {
-              const response = await axios.get(`http://127.0.0.1:8080/user/${userId}`, { withCredentials: true });
+              const response = await axios.get(`/user/${userId}`, { withCredentials: true });
               this.friendInfos.push(response.data);
             } catch (error) {
               console.error('Error fetching user info:', error); 
             }
-          }
+          } 
         } catch (error) {
           console.error('Error fetching friends:', error); 
         } 
       },
       async joinFriendChat(friend) {
         try {
-          const response = await axios.get(`http://127.0.0.1:8080/chat/${friend.id}`, { withCredentials: true });
+          const response = await axios.get(`/chat/${friend.id}`, { withCredentials: true });
           this.friendid = friend.id;
           this.roomid = response.data;  
         } catch (error) {
@@ -161,9 +159,6 @@
         } 
         this.updateChat(); 
       },
-      handleMessage(event) {
-        console.log('Incoming message:', event.data); // Logging the incoming message
-      }
     }, 
   };
   </script>
