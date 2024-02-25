@@ -91,7 +91,7 @@
         const user = store.state.auth.user;
         if (user && user.id && !this.ws) {
           const userId = user.id;
-          const token = user.password;
+          const token = user.token;
           const websocketUrl = `ws://localhost:8080/ws?id=${userId}&token=${token}`;
           this.ws = new WebSocket(websocketUrl);
           this.ws.onopen = this.handleOpen;
@@ -101,9 +101,6 @@
           await this.fetchFriends();
         }
       },
-      handleError(event) {  
-        console.log('ERROR:', event.data); // Logging the incoming message
-      }, 
       async sendMessage() {
         if (axios.get(`/block/check/${this.friendid}`,{ withCredentials: true }) == true)
         {
