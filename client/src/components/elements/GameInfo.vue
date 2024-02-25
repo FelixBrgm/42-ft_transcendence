@@ -51,7 +51,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped> 
 .game-info{
   border-radius: 50px;
   padding: 40px; 

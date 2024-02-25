@@ -4,10 +4,15 @@
       <div class="card">
         <div class="card-header">
           <div v-if="foundFriend" style="cursor: pointer;" @click="goToFriend(foundFriend.id)"><img :src="foundFriend.avatar" class="rounded-tinier-circle"> {{ foundFriend.alias }} </div> 
-          <button @click="this.$store.dispatch('chat/toggleChat')" class="close-btn" aria-label="Close">
-            <span aria-hidden="false">&times;</span> 
-          </button>
-        </div>
+            <div v-if="foundFriend" >           
+              <img
+            class="icon"
+            alt="vsgame"
+            src="@/assets/vs.png"
+            @click="vsgame" 
+            /> 
+          </div>
+          </div>
         <div class="app-main">
         </div>
         <div class="chat-container">
@@ -19,14 +24,17 @@
           </div>
           <div class="card-footer">
             <div class="input-group">
-              <input type="text" id="messageField" class="form-control" placeholder="Type your message..." data-v-307ea3c0="">
+              <input type="text" id="messageField" class="form-control" placeholder="Type your message..." v-model="newMessage">
               <button @click="sendMessage" class="send-button">Send</button>
             </div>
           </div>
         </div>
       </div>
       <div v-if="chatReload" class="friend-list">
-        <div v-for="(friend, index) in friendInfos" :key="index" @click="joinFriendChat(friend)" class="room-item p-2 mb-2 rounded cursor-pointer">
+          <button @click="this.$store.dispatch('chat/toggleChat')" class="close-btn" aria-label="Close">
+            <span aria-hidden="false">&times;</span> 
+          </button>
+        <div v-for="(friend, index) in friendInfos" :key="index" @click="joinFriendChat(friend)" class="room-item rounded cursor-pointer">
           {{ friend.alias }}
         </div>
       </div>
@@ -87,6 +95,10 @@
       }, 5000); 
     },
     methods: {
+      vsgame()
+      {
+        this.$router.push({ path: "/pong", query: { joinvs: this.friendid } });
+      },
       async setupWebSocketAndFetchFriends() {
         const user = store.state.auth.user;
         if (user && user.id && !this.ws) {
@@ -102,14 +114,17 @@
         }
       },
       async sendMessage() {
+        if (this.friendid)
+        {
         if (axios.get(`/block/check/${this.friendid}`,{ withCredentials: true }) == true)
-        {
-          alert("This user is blocked or has blocked you");
-        }
-        else (this.ws && this.newMessage.trim() !== '' && (this.roomid != undefined)) 
-        {
-          this.ws.send(this.friendid + ":" + this.newMessage);
-          this.updateChat();
+          {
+            alert("This user is blocked or has blocked you");
+          }
+          else (this.ws && this.newMessage.trim() !== '' && (this.roomid != undefined)) 
+          {
+            this.ws.send(this.friendid + ":" + this.newMessage);
+            this.updateChat();
+          }
         }
         this.newMessage = '';
       },
@@ -162,25 +177,30 @@
 
   <style scoped>
   .chat-window {
-    flex: 1; /* Take remaining space */
-    border-radius: 20px;
     background-color: #727475;
     color: white;
     font-family: neuropol;
-    box-shadow: 0 0 10px 5px #00f0ff;
-    animation: neonGlow 6s infinite;
+    z-index: 999;
   }
 
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+.card-header .item-wrapper {
+  display: flex;
+  flex-direction: column;
+}
 
   .close-btn {
+    font-size: 24px; 
+    padding-right: 10px;
     background: none;
     border: none;
-    color: rgb(3, 3, 3);
+    color: rgb(255, 255, 255);
   }
 
   .chat-sidebar {
@@ -235,6 +255,7 @@
   }
 
   .friend-list {
+    text-align: right;
     width: 200px; /* Adjust width as needed */
     background-color: #343a40;
     color: white;
