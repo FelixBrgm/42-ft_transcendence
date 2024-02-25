@@ -8,7 +8,7 @@
 	</div>
 </template>
 
-<style scoped> 
+<style> 
 
 .app-footer { 
 	display: flex;

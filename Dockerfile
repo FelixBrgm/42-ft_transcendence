@@ -45,4 +45,4 @@ COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 8081
 EXPOSE 80
 
-CMD ["sh", "-c", "/app/server/target/release/server" ]
+CMD ["sh", "-c", "service nginx start & /app/server/target/release/server"]

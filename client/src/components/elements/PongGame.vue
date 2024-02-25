@@ -251,13 +251,13 @@ export default {
       const token = store.state.auth.user.token; 
       let websocketUrl = "";
       if (numPlayers === -1) 
-        websocketUrl = `ws:///game/matchmake/?id=${userId}&token=${token}`;
+        websocketUrl = `ws://localhost/api/game/matchmake/?id=${userId}&token=${token}`;
       else if (numPlayers === -2) 
-        websocketUrl = `ws:///game/one_vs_one/${ID}?id=${userId}&token=${token}`;
+        websocketUrl = `ws://localhost/api/game/one_vs_one/${ID}?id=${userId}&token=${token}`;
       else  
       {
         this.showtournament = true; 
-        websocketUrl = `ws:///game/connect_tournament/${numPlayers}?id=${userId}&token=${token}`;
+        websocketUrl = `ws://localhost/api/game/connect_tournament/${numPlayers}?id=${userId}&token=${token}`;
       }
       this.websocket = new WebSocket(websocketUrl);
       this.textvalue = "Waiting for game"; 
@@ -365,7 +365,7 @@ export default {
   color: rgba(255, 255, 255, 0.8); /* Round, translucent */
   text-shadow: 0 0 10px rgba(0, 240, 255, 0.8); /* Glowing shadow */
   border-radius: 20px;
-  text-color: white;
+  color: white;
 }
 .ball {
   position: absolute;
