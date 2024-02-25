@@ -9,8 +9,9 @@ use actix_web::http::header::LOCATION;
 use actix_web::{web, HttpMessage, HttpRequest, HttpResponse};
 use oauth2::basic::BasicClient;
 use oauth2::{CsrfToken, PkceCodeChallenge, PkceCodeVerifier, TokenResponse};
-use reqwest;
 use serde::Deserialize;
+
+use reqwest;
 use serde_json;
 
 // #[get("/auth/fake/{uid}")]
@@ -220,10 +221,10 @@ async fn interact_with_db(
     let (id, login_d, avatar) = user_info;
 
     let mut rng = thread_rng();
-    let mut password_bytes = [0u8; 16];
-    rng.fill_bytes(&mut password_bytes);
+    let mut token_bytes = [0u8; 16];
+    rng.fill_bytes(&mut token_bytes);
 
-    let password = hex::encode(password_bytes);
+    let token = hex::encode(token_bytes);
 
     match database.get_user_by_id(id) {
         Ok(user) => {
@@ -237,7 +238,7 @@ async fn interact_with_db(
                 intra: login_d.to_string(),
                 alias: login_d,
                 avatar,
-                password,
+                token,
             })?;
         }
     }

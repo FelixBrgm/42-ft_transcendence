@@ -12,7 +12,7 @@ pub struct NewUser {
     pub intra: String,
     pub alias: String,
     pub avatar: String,
-    pub password: String,
+    pub token: String,
 }
 
 #[derive(Queryable, PartialEq, AsChangeset, Debug, Clone, Default, Deserialize)]
@@ -32,7 +32,7 @@ pub struct User {
     pub intra: String,
     pub alias: String,
     pub avatar: String,
-    pub password: String,
+    pub token: String,
     pub status: String,
     pub wins: i32,
     pub losses: i32,
