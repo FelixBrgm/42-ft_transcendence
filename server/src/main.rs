@@ -34,7 +34,7 @@ async fn main() {
         alias: "GOOS".to_string(),
         avatar: "https://i.pinimg.com/564x/bc/5d/17/bc5d173a3001839b5f4ec29efad072ae.jpg"
             .to_string(),
-        password: "randompassword".to_string(),
+        token: "randompassword".to_string(),
     });
 
     println!(" < --- * --- >");

@@ -10,7 +10,7 @@ diesel::table! {
         #[max_length = 255]
         avatar -> Varchar,
         #[max_length = 255]
-        password -> Varchar,
+        token -> Varchar,
         #[max_length = 255]
         status -> Varchar,
         wins -> Int4,
