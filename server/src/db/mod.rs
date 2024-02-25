@@ -95,16 +95,16 @@ impl Database {
         }
     }
 
-    pub fn check_user_token(&self, user_id: i32, token: &str) -> Result<bool> {
+    pub fn check_user_token(&self, user_id: i32, received_token: &str) -> Result<bool> {
         use schema::app_user::dsl::*;
 
-        // Retrieve the user's password from the database
-        let user_password = app_user
-            .select(password)
+        // Retrieve the user's token from the database
+        let user_token = app_user
+            .select(token)
             .filter(id.eq(user_id))
             .first::<String>(&mut self.pool.get()?)?;
 
-        let is_token_valid = user_password == token;
+        let is_token_valid = user_token == received_token;
 
         Ok(is_token_valid)
     }
