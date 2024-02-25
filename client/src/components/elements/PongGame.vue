@@ -248,7 +248,7 @@ export default {
       // Connect to WebSocket when the button is clicked
       this.startButtonEnabled = false;
       const userId = store.state.auth.user.id;
-      const token = store.state.auth.user.password;
+      const token = store.state.auth.user.token; 
       let websocketUrl = "";
       if (numPlayers === -1) 
         websocketUrl = `ws:///game/matchmake/?id=${userId}&token=${token}`;
@@ -326,11 +326,11 @@ export default {
   width: 1600px; 
   height: 900px;
   margin: 0 auto;
-  border: 1px solid #000000;
   overflow: hidden;
   border-radius: 20px; 
   box-shadow: 0 0 10px 5px #00f0ff; 
   animation: neonGlow 6s infinite;
+  position: relative;
 }
 
 

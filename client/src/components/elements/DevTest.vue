@@ -274,8 +274,3 @@
 	};
 	</script>
 	
-	<style scoped>
-	.body {
-		text-align: center;
-	}
-	</style>

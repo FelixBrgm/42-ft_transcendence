@@ -76,25 +76,13 @@ export default {
     },
 };
 </script>
-<style>
+<style scoped> 
 @import "./../functions/neonglow.css";
-.body {
-  font-family: neuropol;
-  padding: 1rem;
-  border-radius: 20px;
-  margin-left: 20px;
-  margin-right: 20px;
-  flex: 1;
-  background-color: #5C5E5F;
-  box-shadow: 0 0 10px 0px #00F0FF;
-  animation: neonGlow 6s infinite;
-  color: white;
-  max-width: 1600px; /* Set the maximum width */
-  margin: 0 auto; /* Center the footer */
-}
+
 .btn {
   background: rgb(59, 57, 57);
 }
+
 .card {
   background: rgb(163, 165, 169);
   width: 18rem;
