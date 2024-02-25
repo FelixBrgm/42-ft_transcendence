@@ -8,6 +8,9 @@
           <div class="my-container" @click="playGame">
             <span>Single player</span>
           </div>
+          <div class="my-container" @click="playLocal">
+            <span>Local game</span>
+          </div>
           <div class="my-container">
             <div>1 v 1</div>
             <span>Enter other player ID: </span> 
@@ -51,9 +54,6 @@ export default {
     GenHeader,
     GenFooter,
   },
-  created(){
-    console.log("BASE_URL:", process.env.BASE_URL);
-  },
   data() {
     return {
       selectedNumberOfPlayers: 4,
@@ -67,6 +67,9 @@ export default {
   methods: {
     playGame() {
       this.$router.push({ path: "/pong", query: { startGame: true } }); 
+    },
+    playLocal() {
+      this.$router.push({ path: "/local"}); 
     },
     playTournament() {
       if (this.selectedNumberOfPlayers) {

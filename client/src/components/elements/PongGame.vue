@@ -262,9 +262,6 @@ export default {
       this.websocket = new WebSocket(websocketUrl);
       this.textvalue = "Waiting for game"; 
       // Handle WebSocket events
-      this.websocket.addEventListener('open', (event) => { 
-        console.log('WebSocket connection opened:', event); 
-      });
       this.websocket.addEventListener('message', (event) => {
         this.msgrcvd = true;
         this.handleWebSocketMessage(event.data);
@@ -276,7 +273,6 @@ export default {
       });
 
       this.websocket.addEventListener('close', (event) => {
-        console.log('WebSocket connection closed:', event); 
         if (event.code === 1006 && this.msgrcvd != false) {
           console.error('WebSocket closed due to an error');
         } else {
