@@ -75,7 +75,7 @@ async fn create_tournament(
 use std::sync::atomic::{AtomicUsize, Ordering};
 static NEXT_CLIENT_ID: AtomicUsize = AtomicUsize::new(1);
 
-#[get("/game/connect_tournament/{tournament_id}")]
+#[get("/api/game/connect_tournament/{tournament_id}")]
 async fn connect_tournament(
     req: HttpRequest,
     stream: web::Payload,
@@ -102,7 +102,7 @@ async fn connect_tournament(
     }
 }
 
-#[get("/game/one_vs_one/{opponent_uid}")]
+#[get("/api/game/one_vs_one/{opponent_uid}")]
 async fn one_vs_one(
     req: HttpRequest,
     stream: web::Payload,
@@ -134,7 +134,7 @@ async fn one_vs_one(
     }
 }
 
-#[get("/game/list/{uid}")]
+#[get("/api/game/list/{uid}")]
 async fn list(
     identity: Identity,
     req: HttpRequest,

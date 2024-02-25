@@ -38,8 +38,8 @@ export default {
   methods: {
     async fetchFriends() { // Corrected method name to fetchFriends
       try {
-        const LPResponse = await axios.get(`/user/${this.leftPlayer}`, { withCredentials: true }); 
-        const RPResponse = await axios.get(`/user/${this.rightPlayer}`, { withCredentials: true });
+        const LPResponse = await axios.get(`/api/user/${this.leftPlayer}`, { withCredentials: true }); 
+        const RPResponse = await axios.get(`/api/user/${this.rightPlayer}`, { withCredentials: true });
         this.LP =  LPResponse.data;
         
         this.RP =  RPResponse.data; 

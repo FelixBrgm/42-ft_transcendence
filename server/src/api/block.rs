@@ -5,7 +5,7 @@ use actix::Addr;
 use actix_identity::Identity;
 use actix_web::{get, web, HttpResponse};
 
-#[get("/block/{blocked_id}")]
+#[get("/api/block/{blocked_id}")]
 async fn toggle(
     identity: Identity,
     chat_server: web::Data<Addr<ChatServer>>,
@@ -37,7 +37,7 @@ async fn toggle(
     Ok(HttpResponse::Ok().finish())
 }
 
-#[get("/block/check/{blocked_id}")]
+#[get("/api/block/check/{blocked_id}")]
 async fn check(
     identity: Identity,
     db: web::Data<Database>,

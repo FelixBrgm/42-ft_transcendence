@@ -15,7 +15,7 @@ struct Info {
     token: String,
 }
 
-#[get("/ws")]
+#[get("/api/ws")]
 async fn server(
     req: HttpRequest,
     stream: web::Payload,
@@ -40,7 +40,7 @@ async fn server(
     }
 }
 
-#[get("/chat/{recipient_id}")]
+#[get("/api/chat/{recipient_id}")]
 async fn join_chat(
     identity: Identity,
     chat_server: web::Data<Addr<ChatServer>>,
@@ -74,7 +74,7 @@ async fn join_chat(
     Ok(HttpResponse::Ok().json(rid))
 }
 
-#[get("/rooms")]
+#[get("/api/rooms")]
 async fn get_rooms(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     let uid = identity.id()?.parse::<i32>()?;
 
@@ -90,7 +90,7 @@ async fn get_rooms(identity: Identity, db: web::Data<Database>) -> Result<HttpRe
     }
 }
 
-#[get("/messages/{room_id}")]
+#[get("/api/messages/{room_id}")]
 async fn get_messages_by_room_id(
     identity: Identity,
     db: web::Data<Database>,

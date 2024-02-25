@@ -5,7 +5,7 @@ use actix_identity::Identity;
 use actix_web::{get, post, web, HttpResponse};
 use anyhow::Result;
 
-#[get("/user")]
+#[get("/api/user")]
 async fn get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     let id = identity.id()?;
 
@@ -15,7 +15,7 @@ async fn get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse
     }
 }
 
-#[post("/user")]
+#[post("/api/user")]
 async fn post(
     identity: Identity,
     update_user: web::Json<UpdateUser>,
@@ -31,7 +31,7 @@ async fn post(
     }
 }
 
-#[get("/users")]
+#[get("/api/users")]
 async fn list(
 	_: Identity,
 	db: web::Data<Database>,
@@ -43,7 +43,7 @@ async fn list(
 	}
 }
 
-#[get("/user/{user_id}")]
+#[get("/api/user/{user_id}")]
 async fn find(
     _: Identity,
     user_id: web::Path<i32>,

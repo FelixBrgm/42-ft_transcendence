@@ -55,13 +55,13 @@ export default {
   methods: {
     async fetchFriends() {
       try {
-        const response = await axios.get(`/users`,{ withCredentials: true });
+        const response = await axios.get(`/api/users`,{ withCredentials: true });
         this.friends = response.data;
         this.friendInfos = [];
         for (const friend of this.friends) {
           try {
             const response = await axios.get(
-              `/user/${friend.id}`,
+              `/api/user/${friend.id}`,
               { withCredentials: true }
             );
             this.friendInfos.push(response.data); // Save user info to array

@@ -14,7 +14,7 @@ use serde::Deserialize;
 use reqwest;
 use serde_json;
 
-// #[get("/auth/fake/{uid}")]
+// #[get("/api/auth/fake/{uid}")]
 // async fn fake(
 //     id: Option<Identity>,
 //     uid: web::Path<i32>,
@@ -38,7 +38,7 @@ use serde_json;
 //     Ok(HttpResponse::Ok().finish())
 // }
 
-#[get("/auth/login")]
+#[get("/api/auth/login")]
 async fn login(
     id: Option<Identity>,
     client: web::Data<BasicClient>,
@@ -87,7 +87,7 @@ pub struct AuthRequest {
     state: Option<String>,
 }
 
-#[get("/auth/callback")]
+#[get("/api/auth/callback")]
 async fn callback(
     id: Option<Identity>,
     req: HttpRequest,
@@ -249,7 +249,7 @@ async fn interact_with_db(
 //							  LOGOUT
 // ************************************************************ \\
 
-#[get("/auth/logout")]
+#[get("/api/auth/logout")]
 async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpResponse, ApiError> {
     database.update_user_status(id.id()?.parse()?, "offline")?;
     id.logout();
@@ -260,7 +260,7 @@ async fn logout(id: Identity, database: web::Data<Database>) -> Result<HttpRespo
 //							 CHECK
 // ************************************************************ \\
 
-#[get("/auth/check")]
+#[get("/api/auth/check")]
 async fn check(id: Option<Identity>) -> Result<HttpResponse, ApiError> {
     match id {
         Some(_) => Ok(HttpResponse::Ok().json("User is logged in!")),
