@@ -15,7 +15,7 @@ import { ref } from 'vue';
 
 const imageMoved = ref(false);
 </script>
-
+ 
 <script>
  
 export default {
@@ -84,7 +84,7 @@ export default {
   left: 49%;
   transform: translate(-50%, -50%);
   transition: top 0.5s ease; /* Add a smooth transition effect */
-  z-index: -1; /* Set a lower z-index to position it behind other elements */
+
 }
 
 

@@ -31,7 +31,7 @@ export default {
       ballPosition: { x: 800, y: 450 },
       ballDirectionX: 1,
       ballDirectionY: 1,
-      ballSpeed: 3,
+      ballSpeed: 5,
       paddleSpeed: 10, // Adjust paddle speed as needed
       startButtonEnabled: true,
       textValue: "Start Game",
@@ -121,7 +121,7 @@ if (!this.paddleCollisionCooldown) {
   } else if (this.ballPosition.x >= 1600) {
     this.leftScore++; 
     this.resetBall();
-    this.ballSpeed = 3;
+    this.ballSpeed = 5;
     this.activatePaddleCollisionCooldown();
   }
 },
@@ -133,7 +133,7 @@ if (!this.paddleCollisionCooldown) {
     },
     gameLoop() {
       if (this.leftScore < 3 && this.rightScore < 3) {
-        this.movePaddles();
+        this.movePaddles(); 
         this.moveBall();
         requestAnimationFrame(this.gameLoop);
       }
@@ -175,6 +175,8 @@ if (!this.paddleCollisionCooldown) {
   border-radius: 20px; 
   box-shadow: 0 0 10px 5px #00f0ff; 
   animation: neonGlow 6s infinite;
+  z-index: 1;
+  position: relative;
 }
 
 
@@ -209,7 +211,7 @@ if (!this.paddleCollisionCooldown) {
   color: rgba(255, 255, 255, 0.8); /* Round, translucent */
   text-shadow: 0 0 10px rgba(0, 240, 255, 0.8); /* Glowing shadow */
   border-radius: 20px;
-  text-color: white;
+  color: white;
 }
 .ball {
   position: absolute;

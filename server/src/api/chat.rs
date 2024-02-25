@@ -107,7 +107,6 @@ async fn get_messages_by_room_id(
 
     match db.get_messages_by_room_id(room_id) {
         Ok(v) => {
-            println!("function returned: {:?}", v);
             Ok(HttpResponse::Ok().json(&v))
         }
         Err(_) => Err(ApiError::InternalServerError),

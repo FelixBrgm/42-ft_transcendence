@@ -4,6 +4,34 @@ use crate::db::{models::UpdateUser, Database};
 use actix_identity::Identity;
 use actix_web::{get, post, web, HttpResponse};
 use anyhow::Result;
+use serde::Serialize;
+use crate::db::models::User;
+
+
+#[derive(Debug, Serialize)]
+pub struct ProtectedUser {
+    pub id: i32,
+    pub intra: String,
+    pub alias: String,
+    pub avatar: String,
+    pub status: String,
+    pub wins: i32,
+    pub losses: i32,
+}
+
+impl ProtectedUser {
+    pub fn new(user :&User) -> Self {
+        ProtectedUser {
+            id: user.id,
+            intra: user.intra.to_string(),
+            alias: user.alias.to_string(),
+            avatar: user.avatar.to_string(),
+            status: user.status.to_string(),
+            wins: user.wins,
+            losses: user.losses,
+        }
+    }
+}
 
 #[get("/api/user")]
 async fn get(identity: Identity, db: web::Data<Database>) -> Result<HttpResponse, ApiError> {
@@ -38,7 +66,14 @@ async fn list(
 ) -> Result<HttpResponse, ApiError> {
 
 	match db.get_all_users() {
-		Ok(users) => Ok(HttpResponse::Ok().json(users)),
+		Ok(users) => {
+            let protected_users: Vec<ProtectedUser> = users
+            .iter()
+            .map(|user| ProtectedUser::new(user)) 
+            .collect(); 
+
+            Ok(HttpResponse::Ok().json(protected_users))
+        },
 		Err(_) => Err(ApiError::InternalServerError),
 	}
 }
@@ -52,7 +87,10 @@ async fn find(
     let user = user_id.into_inner();
 
     match db.get_user_by_id(user) {
-        Ok(user) => Ok(HttpResponse::Ok().json(user)),
+        Ok(user) => { 
+            let protected_user = user.map(|u| ProtectedUser::new(&u));
+            Ok(HttpResponse::Ok().json(protected_user))
+        },
         Err(_) => Err(ApiError::InternalServerError),
     }
 }
