@@ -1,10 +1,10 @@
 <template>
   <div class="welcome-container">
+      <div class="moving-image" :class="{ 'moved-out': imageMoved }"></div>
     <div class="welcome-box" @mouseover="moveImage(true)" @mouseleave="moveImage(false)">
       Hello
       <div></div> 
       <button @click="login" class="button">Login</button>
-      <div class="moving-image" :class="{ 'moved-out': imageMoved }"></div>
     </div>
   </div>
 </template>
