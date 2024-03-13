@@ -38,7 +38,6 @@ router.beforeEach(async (to, from, next) => {
             });
             store.commit('auth/setUser', response.data);
         } catch (error) {
-            console.error('Error fetching user data:', error);
             return next('/login');
         }
     }

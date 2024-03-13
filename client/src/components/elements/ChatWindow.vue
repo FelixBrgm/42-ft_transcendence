@@ -104,7 +104,7 @@
         if (user && user.id && !this.ws) {
           const userId = user.id;
           const token = user.token;
-          const websocketUrl = `wss://${process.env.IP}/api/ws?id=${userId}&token=${token}`;
+          const websocketUrl = `wss://${process.env.VUE_APP_IP}/api/ws?id=${userId}&token=${token}`;
           this.ws = new WebSocket(websocketUrl);
           this.ws.onopen = this.handleOpen;
           this.ws.onclose = this.handleClose;

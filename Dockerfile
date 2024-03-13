@@ -32,6 +32,7 @@ EXPOSE 8080
 WORKDIR /app
 # Copy your Rust backend and Vue frontend code into the container
 COPY /client /app/client
+COPY .env /app/client
 COPY /server /app/server
 # Build your Rust backend
 RUN cd server && cargo build --release
