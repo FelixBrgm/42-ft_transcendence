@@ -9,6 +9,8 @@ use actix_cors::Cors;
 use actix_identity::IdentityMiddleware;
 use actix_session::{storage::CookieSessionStore, SessionMiddleware};
 use actix_web::{cookie, http::header, middleware::Logger, web, App, HttpResponse, HttpServer};
+use std::io::BufReader;
+use std::fs::File; 
 
 use crate::api::{auth, block, friend, user};
 
@@ -28,16 +30,25 @@ async fn main() {
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
     let secret_key = cookie::Key::from(env_key.as_bytes());
 
-    _ = db.add_user(&db::models::NewUser {
-        id: 424242,
-        intra: "GOOS".to_string(),
-        alias: "GOOS".to_string(),
-        avatar: "https://i.pinimg.com/564x/bc/5d/17/bc5d173a3001839b5f4ec29efad072ae.jpg"
-            .to_string(),
-        token: "randompassword".to_string(),
-    });
+    let mut certs_file = BufReader::new(File::open("../etc/nginx/ssl/ssl_final_cert.crt").expect("Couldn't find ssl.crt"));
+    let mut key_file = BufReader::new(File::open("/etc/nginx/ssl/ssl_priv_key.key").expect("Couldn't fild ssl.key"));
 
-    println!(" < --- * --- >");
+    // load TLS certs and key
+    // to create a self-signed temporary cert for testing:
+    // `openssl req -x509 -newkey rsa:4096 -nodes -keyout key.pem -out cert.pem -days 365 -subj '/CN=localhost'`
+    let tls_certs = rustls_pemfile::certs(&mut certs_file)
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+    let tls_key = rustls_pemfile::pkcs8_private_keys(&mut key_file)
+        .next()
+        .unwrap()
+        .unwrap();
+
+    // set up TLS config options
+    let tls_config = rustls::ServerConfig::builder()
+        .with_no_client_auth()
+        .with_single_cert(tls_certs, rustls::pki_types::PrivateKeyDer::Pkcs8(tls_key))
+        .unwrap();
 
     // Start the Actix Web server
     let _ = HttpServer::new(move || {
@@ -100,7 +111,7 @@ async fn main() {
             .service(api::game::list)
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
-    .bind("0.0.0.0:8080")
+    .bind_rustls_0_22("0.0.0.0:8080", tls_config)
     .expect("Failed to bind to port 8080")
     .run()
     .await;

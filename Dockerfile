@@ -48,6 +48,11 @@ RUN openssl req -x509 -sha256 -newkey rsa:4096 -days 365 -nodes \
        -keyout /etc/nginx/ssl/ssl_priv_key.key \
        -subj "/CN=nginx"
 
+# RUN openssl req -x509 -sha256 -newkey rsa:4096 -days 365 -nodes \
+#        -out /etc/nginx/ssl/cert.pem \
+#        -keyout /etc/nginx/ssl/key.pem \
+#        -subj "/CN=nginx"
+
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Start your Rust backend and Vue frontend
