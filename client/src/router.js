@@ -30,8 +30,6 @@ import axios from 'axios';
 router.beforeEach(async (to, from, next) => {
 
     document.body.style.backgroundColor = to.meta.backgroundColor || 'black';
-	
-    console.log(process.env.BASE_URL);
 
     if (!store.state.auth.user && to.path != "/login") {
         try {

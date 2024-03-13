@@ -39,6 +39,14 @@ RUN cd server && cargo build --release
 RUN cd client && npm install
 RUN cd client && npm run build
 
+RUN mkdir -p /etc/nginx/ssl
+RUN mkdir -p /run/nginx
+
+RUN openssl req -x509 -sha256 -newkey rsa:4096 -days 365 -nodes \
+       -out /etc/nginx/ssl/ssl_final_cert.crt \
+       -keyout /etc/nginx/ssl/ssl_priv_key.key \
+       -subj "/CN=nginx"
+
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Start your Rust backend and Vue frontend

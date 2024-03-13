@@ -250,14 +250,28 @@ export default {
       const userId = store.state.auth.user.id;
       const token = store.state.auth.user.token; 
       let websocketUrl = "";
-      if (numPlayers === -1) 
-        websocketUrl = `ws://localhost/api/game/matchmake/?id=${userId}&token=${token}`;
+      if (numPlayers === -1)
+      {
+        console.log("ENV:");
+        console.log(window.VUE_APP_IP);
+        console.log(window.env);
+        console.log("ENV:");
+        console.log(process.env);
+        console.log("ENV:");
+        console.log(process.development.env);
+        console.log("ENV:");
+        console.log(process.production.env);
+        console.log("IP:");
+        console.log(process.env.VUE_APP_IP);
+        console.log(process.production.env.VUE_APP_IP);
+        websocketUrl = `wss://${process.env.IP}/api/matchmake/?id=${userId}&token=${token}`;
+      }
       else if (numPlayers === -2) 
-        websocketUrl = `ws://localhost/api/game/one_vs_one/${ID}?id=${userId}&token=${token}`;
+        websocketUrl = `wss://${process.env.IP}/api/game/one_vs_one/${ID}?id=${userId}&token=${token}`;
       else  
       {
         this.showtournament = true; 
-        websocketUrl = `ws://localhost/api/game/connect_tournament/${numPlayers}?id=${userId}&token=${token}`;
+        websocketUrl = `wss://${process.env.IP}/api/game/connect_tournament/${numPlayers}?id=${userId}&token=${token}`;
       }
       this.websocket = new WebSocket(websocketUrl);
       this.textvalue = "Waiting for game"; 
