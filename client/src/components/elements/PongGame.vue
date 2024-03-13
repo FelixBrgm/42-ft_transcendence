@@ -252,7 +252,7 @@ export default {
       let websocketUrl = "";
       if (numPlayers === -1)
       {
-        websocketUrl = `wss://${process.env.VUE_APP_IP}/api/matchmake/?id=${userId}&token=${token}`;
+        websocketUrl = `wss://${process.env.VUE_APP_IP}/api/game/matchmake/?id=${userId}&token=${token}`;
       }
       else if (numPlayers === -2) 
         websocketUrl = `wss://${process.env.VUE_APP_IP}/api/game/one_vs_one/${ID}?id=${userId}&token=${token}`;
