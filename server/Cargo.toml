@@ -10,7 +10,9 @@ incremental = true
 
 # Chat 
 actix = "0.13"
-actix-web = "4.0"
+actix-web = { version = "4", features = ["rustls-0_22"] }
+rustls = "0.22"
+rustls-pemfile = "2"
 actix-web-actors = "4.0"
 tungstenite = "0.19.0"
 tokio = { version = "1", features = ["full"] }
