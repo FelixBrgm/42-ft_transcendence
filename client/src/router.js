@@ -30,8 +30,6 @@ import axios from 'axios';
 router.beforeEach(async (to, from, next) => {
 
     document.body.style.backgroundColor = to.meta.backgroundColor || 'black';
-	
-    console.log(process.env.BASE_URL);
 
     if (!store.state.auth.user && to.path != "/login") {
         try {
@@ -40,7 +38,6 @@ router.beforeEach(async (to, from, next) => {
             });
             store.commit('auth/setUser', response.data);
         } catch (error) {
-            console.error('Error fetching user data:', error);
             return next('/login');
         }
     }

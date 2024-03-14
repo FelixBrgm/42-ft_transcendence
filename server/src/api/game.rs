@@ -18,7 +18,7 @@ struct Info {
     token: String,
 }
 
-#[get("/game/matchmake/")]
+#[get("api/game/matchmake/")]
 async fn matchmaking(
     req: HttpRequest,
     stream: web::Payload,
@@ -43,7 +43,7 @@ async fn matchmaking(
     }
 }
 
-#[get("/game/create_tournament/{size}")]
+#[get("api/game/create_tournament/{size}")]
 async fn create_tournament(
     identity: Identity,
     server: web::Data<Addr<TournamentServer>>,
