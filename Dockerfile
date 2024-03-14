@@ -32,12 +32,26 @@ EXPOSE 8080
 WORKDIR /app
 # Copy your Rust backend and Vue frontend code into the container
 COPY /client /app/client
+COPY .env /app/client
 COPY /server /app/server
 # Build your Rust backend
 RUN cd server && cargo build --release
 # Build your Vue frontend
 RUN cd client && npm install
 RUN cd client && npm run build
+
+RUN mkdir -p /etc/nginx/ssl
+RUN mkdir -p /run/nginx
+
+RUN openssl req -x509 -sha256 -newkey rsa:4096 -days 365 -nodes \
+       -out /etc/nginx/ssl/ssl_final_cert.crt \
+       -keyout /etc/nginx/ssl/ssl_priv_key.key \
+       -subj "/CN=nginx"
+
+# RUN openssl req -x509 -sha256 -newkey rsa:4096 -days 365 -nodes \
+#        -out /etc/nginx/ssl/cert.pem \
+#        -keyout /etc/nginx/ssl/key.pem \
+#        -subj "/CN=nginx"
 
 COPY nginx.conf /etc/nginx/nginx.conf
 

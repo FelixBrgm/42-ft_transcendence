@@ -1,7 +1,7 @@
 <template>
-  <div class="welcome-container">
-      <div class="moving-image" :class="{ 'moved-out': imageMoved }"></div>
-    <div class="welcome-box" @mouseover="moveImage(true)" @mouseleave="moveImage(false)">
+  <div class="welcome-container" @mouseover="moveImage(true)" @mouseleave="moveImage(false)">
+    <div class="moving-image" :class="{ 'moved-out': imageMoved }"></div>
+    <div class="welcome-box">
       Hello
       <div></div> 
       <button @click="login" class="button">Login</button>
@@ -56,6 +56,7 @@ export default {
   box-shadow: 0 0 10px 5px #00f0ff;
   animation: neonGlow 6s infinite;
   margin: 30px auto; /* Centering the header */
+  z-index: 2;
 }
 
 .content {
@@ -84,7 +85,7 @@ export default {
   left: 49%;
   transform: translate(-50%, -50%);
   transition: top 0.5s ease; /* Add a smooth transition effect */
-
+  z-index: 1;
 }
 
 
