@@ -186,7 +186,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for GameSession {
             Ok(ws::Message::Close(reason)) => {
                 // ctx.close(reason);
                 println!("Jdajaajajajajaajjaajajaajajajajajaa");
-                // ctx.stop();
+                ctx.stop();
             }
             Ok(ws::Message::Continuation(_)) => {
                 ctx.stop();
