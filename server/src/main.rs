@@ -30,8 +30,8 @@ async fn main() {
     let env_key = std::env::var("SESSION_KEY").expect("SESSION_KEY must be set");
     let secret_key = cookie::Key::from(env_key.as_bytes());
 
-    let mut certs_file = BufReader::new(File::open("../etc/nginx/ssl/ssl_final_cert.crt").expect("Couldn't find ssl.crt"));
-    let mut key_file = BufReader::new(File::open("/etc/nginx/ssl/ssl_priv_key.key").expect("Couldn't fild ssl.key"));
+    let mut certs_file = BufReader::new(File::open("/ssl_final_cert.crt").expect("Couldn't find ssl.crt"));
+    let mut key_file = BufReader::new(File::open("/ssl_priv_key.key").expect("Couldn't fild ssl.key"));
 
     // load TLS certs and key
     // to create a self-signed temporary cert for testing:
