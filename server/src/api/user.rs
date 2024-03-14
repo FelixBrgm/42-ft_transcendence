@@ -95,3 +95,19 @@ async fn find(
     }
 }
 
+
+#[get("/api/user/check/{user_id}")]
+async fn check(
+    _: Identity,
+    user_id: web::Path<i32>,
+    db: web::Data<Database>,
+) -> Result<HttpResponse, ApiError> {
+    let user = user_id.into_inner();
+
+    match db.get_user_by_id(user) {
+        Ok(_) => { 
+            Ok(HttpResponse::Ok().json(true))
+        },
+        Err(_) => Ok(HttpResponse::Ok().json(false)),
+    }
+}

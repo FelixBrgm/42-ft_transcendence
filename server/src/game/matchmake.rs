@@ -71,7 +71,7 @@ impl Handler<Disconnect> for MatchmakingServer {
     type Result = ();
 
     fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {
-        println!("{} disconnected", msg.id);
+        println!("{} disconnected Matchmake", msg.id);
 
         if let Some((_, pong)) = self
             .pong_instances
@@ -108,6 +108,9 @@ impl Handler<GameResult> for MatchmakingServer {
     type Result = ();
 
     fn handle(&mut self, msg: GameResult, _: &mut Context<Self>) {
+        println!("gets into GameResult");
+        self.pong_instances
+        .retain(|id, _| msg.looser != id.0 && msg.winner !=id.1 && msg.looser != id.1 && msg.winner != id.0);
         let _ = self.db.insert_game(msg.winner as i32, msg.looser as i32);
     }
 }
