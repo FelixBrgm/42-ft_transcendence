@@ -111,10 +111,12 @@ export default {
       if (parts[0] == 'FORMAT:' && parts[1] == 'YOU') {
         this.isYou = true;
         this.enemyid = parts[2];
+        this.updatePaddleColors();
       }
       else if (parts[0] == 'FORMAT:' && parts[2] == 'YOU') {
         this.isYou = false;
         this.enemyid = parts[1];
+        this.updatePaddleColors();
       }  
       if (parts[0] == 'MATCH')
       {
@@ -135,7 +137,6 @@ export default {
         this.rightScore = rest[1];
       }
       if (parts[0] == 'Starting') {
-        this.updatePaddleColors();
         (async () => {
           this.textvalue = "Starting game in 3 Seconds";
           await this.delay(1000);
