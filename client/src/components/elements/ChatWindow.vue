@@ -166,13 +166,16 @@ export default {
       });
     },
     async joinFriendChat(friend) {
-      try {
-        const response = await axios.get(`/api/chat/${friend.id}`, { withCredentials: true });
-        this.friendid = friend.id;
-        this.roomid = response.data;  
-      } catch (error) {
-        alert(error.response.data);
-      } 
+      if(axios.get(`/api/block/check/${this.friendid}`,{ withCredentials: true }) == true)
+      {
+        try {
+          const response = await axios.get(`/api/chat/${friend.id}`, { withCredentials: true });
+          this.friendid = friend.id;
+          this.roomid = response.data;  
+        } catch (error) {
+          alert(error.response.data);
+        } 
+      }
     },
   }, 
 };
