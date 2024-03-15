@@ -61,7 +61,7 @@ export default {
       vsID: null, 
       togglenum: false,
       userId: null, 
-      numbers: Array.from({ length: 7 }, (_, index) => Math.pow(2, index + 2)),
+      numbers: Array.from({ length: 6 }, (_, index) => Math.pow(2, index + 2)),
     };
   },
   methods: {
@@ -84,18 +84,31 @@ export default {
       else 
         alert("Please select the number of players for the tournament.");
     },
-    joinTournament() {
-      if (this.tournamentID && /^\d{6}$/.test(this.tournamentID)) {
+    async joinTournament() {
+      if (this.tournamentID && (await this.checkExUid(this.tournamentID)) === true) {
         this.$router.push({ path: "/pong", query: { joinTournament: this.tournamentID } });
       } else {
         alert("Please enter a valid Tournament ID");
       }
     },
-    joinVs() {
-      if (this.vsID && /^\d{6}$/.test(this.vsID)) { 
+    async joinVs() {
+      if (this.vsID && (await this.checkExUid(this.vsID)) === true) { 
         this.$router.push({ path: "/pong", query: { joinvs: this.vsID } });
       } else {
         alert("Please enter a valid player ID");
+      }
+    },
+    async checkExUid(num){
+      try {
+        if (typeof num === 'number') {
+          const response = await axios.get(`/api/user/check/${num}`, { withCredentials: true });
+          console.log(response.data);
+          return response.data === true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        return false;
       }
     },
   },

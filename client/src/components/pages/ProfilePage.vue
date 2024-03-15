@@ -105,6 +105,16 @@ export default {
     };
   },
   created() {
+    axios.get(`/api/user/check/${this.$route.query.uid}`, { withCredentials: true })
+      .then(response => {
+        if (response.data == false) {
+          alert("This user does not exist");
+          this.$router.push('/404');
+        }
+      })
+      .catch(error => {
+        console.error("Error checking user existence:", error);
+      });
   },
   mounted() {
     this.uid = this.$route.query.uid; 
@@ -137,16 +147,14 @@ export default {
       if (this.ism) {
         const newUsername = prompt("Enter new username:");
         if (newUsername !== null) {
+          this.user.alias = newUsername.trim().substring(0, 20);
           // Assuming you have an API endpoint to update the username
           axios
             .post(
               `/user`,
-              { alias: newUsername },
+              { alias: this.user.alias},
               { withCredentials: true }
             )
-            .then(() => {
-              this.user.alias = newUsername;
-            })
             .catch((error) => {
               console.error("Error updating username:", error);
             });
