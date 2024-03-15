@@ -48,10 +48,10 @@
 
 <script> 
 
+import router from '../../router.js';
 import store from '../../store';
 import axios from 'axios';
 import GameInfo from "@/components/elements/GameInfo.vue";
-import { emitter } from '../../router.js';
 
 export default {
   components: {
