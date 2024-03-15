@@ -4,6 +4,7 @@ FROM ubuntu:22.04
 # Install necessary dependencies
 RUN apt-get update && apt-get install -y \
     curl \
+    nginx \
     nodejs npm \
     build-essential \
     libpq-dev \
@@ -34,6 +35,15 @@ RUN cargo install diesel_cli --no-default-features --features "postgres"
 # Set the PS1 environment variable in the container's bashrc
 RUN echo 'export PS1="\W> "' >> ~/.bashrc
 
+RUN mkdir -p /etc/nginx/ssl
+RUN mkdir -p /run/nginx
+
+RUN openssl req -x509 -sha256 -newkey rsa:4096 -days 365 -nodes \
+       -out /etc/nginx/ssl/ssl_final_cert.crt \
+       -keyout /etc/nginx/ssl/ssl_priv_key.key \
+       -subj "/CN=nginx"
+
+COPY nginx.conf /etc/nginx/nginx.conf
 # Expose ports
 EXPOSE 4242
 EXPOSE 8080

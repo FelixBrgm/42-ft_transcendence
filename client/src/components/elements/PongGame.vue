@@ -51,7 +51,7 @@
 import store from '../../store';
 import axios from 'axios';
 import GameInfo from "@/components/elements/GameInfo.vue";
-
+import { emitter } from '../../router.js';
 
 export default {
   components: {
@@ -60,6 +60,7 @@ export default {
   data() {
     return {  
       games: [],
+      manclose: false,
       matchreset: false,
       msgrcvd: false,
       textvalue: "Start Game",
@@ -91,7 +92,6 @@ export default {
     };
   },
   methods: {
-    
     handleKeyPress(event) {
       if (this.websocket && this.websocket.readyState === WebSocket.OPEN)
       {
@@ -277,7 +277,7 @@ export default {
       this.websocket.addEventListener('close', (event) => {
         if (event.code === 1006 && this.msgrcvd != false) {
           console.error('WebSocket closed due to an error');
-        } else {
+        } else if (router.currentRoute._value.path === '/pong'){
           // WebSocket closed normally
           if (this.$route.query.joinTournament != 0) {
             this.$router.push('/'); 
@@ -295,11 +295,12 @@ export default {
   },
     closeWebSocket() {
       if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+        this.manclose = true;
         this.websocket.close();
+        this.websocket = null;
       }
     },
   beforeRouteLeave(to, from, next) {
-    // Close WebSocket connection when leaving the route
     this.closeWebSocket();
     next();
   },
