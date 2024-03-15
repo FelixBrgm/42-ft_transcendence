@@ -142,7 +142,7 @@ export default {
         if(this.friends.length === 0 || JSON.stringify(this.friends) !== JSON.stringify(response.data))
         {
           this.friends = response.data;  
-          this.friendInfos = []; // Clear friendInfos array
+          this.friendInfos = [];
           for (const friend of this.friends) {
             const userId = friend.user1 !== store.state.auth.user.id ? friend.user1 : friend.user2;
             try {
@@ -166,7 +166,7 @@ export default {
       });
     },
     async joinFriendChat(friend) {
-      if(axios.get(`/api/block/check/${this.friendid}`,{ withCredentials: true }) == true)
+      if(axios.get(`/api/block/check/${friend.id}`,{ withCredentials: true }) == true)
       {
         try {
           const response = await axios.get(`/api/chat/${friend.id}`, { withCredentials: true });
@@ -174,7 +174,7 @@ export default {
           this.roomid = response.data;  
         } catch (error) {
           alert(error.response.data);
-        } 
+        }
       }
     },
   }, 
