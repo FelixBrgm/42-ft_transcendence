@@ -16,15 +16,14 @@
       <div class="app-main">
       </div>
       <div class="chat-container">
-        <div class="chat-box">
+        <div class="chat-box" ref="chatBox">
           <div v-for="(message, index) in messages" :key="index" class="message" :class="{ 'sent': message.sender === 'User', 'received': message.sender === 'Bot' }">
-            <strong>
-              {{ message.sender_id == myId.id ? myId.alias : foundFriend.alias }}: </strong> {{ message.message }}
+            <strong>{{ message.sender_id == myId.id ? myId.alias : foundFriend.alias }}: </strong>{{ message.message }}
           </div>
         </div>
         <div class="card-footer">
           <div class="input-group">
-            <input type="text" id="messageField" class="form-control" placeholder="Type your message..." v-model="newMessage">
+            <input type="text" @keydown.enter="sendMessage" id="messageField" class="form-control" placeholder="Type your message..." v-model="newMessage">
             <button @click="sendMessage" class="send-button">Send</button>
           </div>
         </div>
@@ -157,6 +156,14 @@ export default {
       } catch (error) {
         console.error('Error fetching friends:', error); 
       } 
+    },
+    scrollToBottom() {
+      this.$nextTick(() => {
+        const chatBox = this.$refs.chatBox;
+        if (chatBox) {
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+      });
     },
     async joinFriendChat(friend) {
       try {
