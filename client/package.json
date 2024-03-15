@@ -15,6 +15,7 @@
     "core-js": "^3.8.3",
     "howler": "^2.2.4",
     "html-webpack-plugin": "^5.6.0",
+    "nginx": "^1.0.8",
     "vue": "^3.2.26",
     "vue-router": "^4.2.5",
     "vuex": "^4.1.0"

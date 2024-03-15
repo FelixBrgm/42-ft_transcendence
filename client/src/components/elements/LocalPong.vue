@@ -20,7 +20,11 @@
   </div>
 </template>
 
+
+
 <script>
+import router from '../../router.js';
+
 export default {
   data() {
     return {
@@ -56,6 +60,7 @@ export default {
     },
   },
   methods: {
+
     handleKeyDown(event) {
       this.keysPressed.add(event.key);
     },
@@ -91,41 +96,40 @@ export default {
         this.rightPosition += Math.sign(targetPosition - this.rightPosition) * this.paddleSpeed;
       }
     },
-moveBall() {
+      moveBall() {
 
-  this.ballPosition.x += this.ballSpeed * this.ballDirectionX;
-  this.ballPosition.y += this.ballSpeed * this.ballDirectionY;
+        this.ballPosition.x += this.ballSpeed * this.ballDirectionX;
+        this.ballPosition.y += this.ballSpeed * this.ballDirectionY;
 
-  if (this.ballPosition.y <= 0 || this.ballPosition.y >= 880) {
-    this.ballDirectionY *= -1;
-  }
-if (!this.paddleCollisionCooldown) {
-  if (this.ballPosition.x <= 40 && 
-      this.ballPosition.y >= this.leftPosition - 60&& 
-      this.ballPosition.y <= this.leftPosition + 60) {
-    this.ballDirectionX *= -1;
-    this.ballSpeed += 0.1;
-  }
+        if (this.ballPosition.y <= 0 || this.ballPosition.y >= 880) {
+          this.ballDirectionY *= -1;
+        }
+      if (!this.paddleCollisionCooldown) {
+        if (this.ballPosition.x <= 40 && 
+            this.ballPosition.y >= this.leftPosition - 60&& 
+            this.ballPosition.y <= this.leftPosition + 60) {
+          this.ballDirectionX *= -1;
+          this.ballSpeed += 0.1;
+        }
 
-  if (this.ballPosition.x >= 1550 && 
-      this.ballPosition.y >= this.rightPosition - 60 && 
-      this.ballPosition.y <= this.rightPosition + 60) {
-    this.ballDirectionX *= -1;
-    this.ballSpeed += 0.1;
-    this.activatePaddleCollisionCooldown();
-  }
-}
-  if (this.ballPosition.x <= 0) {
-    this.rightScore++;
-    this.resetBall();
-  } else if (this.ballPosition.x >= 1600) {
-    this.leftScore++; 
-    this.resetBall();
-    this.ballSpeed = 5;
-    this.activatePaddleCollisionCooldown();
-  }
-},
-
+        if (this.ballPosition.x >= 1550 && 
+            this.ballPosition.y >= this.rightPosition - 60 && 
+            this.ballPosition.y <= this.rightPosition + 60) {
+          this.ballDirectionX *= -1;
+          this.ballSpeed += 0.1;
+          this.activatePaddleCollisionCooldown();
+        }
+      }
+        if (this.ballPosition.x <= 0) {
+          this.rightScore++;
+          this.resetBall();
+        } else if (this.ballPosition.x >= 1600) {
+          this.leftScore++; 
+          this.resetBall();
+          this.ballSpeed = 5;
+          this.activatePaddleCollisionCooldown();
+        }
+      },
     resetBall() {
       this.ballPosition = { x: 800, y: 450 };
       this.ballDirectionX = Math.random() < 0.5 ? 1 : -1;
@@ -139,18 +143,18 @@ if (!this.paddleCollisionCooldown) {
       }
       else
       {
-      if (this.leftScore >= 3) {
-        alert("Red side has won");
-        this.$router.push('/');
-        return;
-      }
-
-      // Check if right side wins
-      if (this.rightScore >= 3) {
-        alert("Yellow side has won");
-        this.$router.push('/');
-        return;
-      }
+        console.log(router.currentRoute._value.path );
+          if (this.leftScore >= 3 && router.currentRoute._value.path === '/local') {
+            alert("Red side has won");
+            this.$router.push('/');
+            return;
+          }
+          // Check if right side wins
+          if (this.rightScore >= 3 && router.currentRoute._value.path === '/local') {
+            alert("Yellow side has won");
+            this.$router.push('/');
+            return;
+          }
       }
     },
       activatePaddleCollisionCooldown() {
