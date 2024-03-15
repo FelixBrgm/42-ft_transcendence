@@ -149,12 +149,7 @@ export default {
         if (newUsername !== null) {
           this.user.alias = newUsername.trim().substring(0, 20);
           // Assuming you have an API endpoint to update the username
-          axios
-            .post(
-              `/user`,
-              { alias: this.user.alias},
-              { withCredentials: true }
-            )
+          axios.post(`/api/user`,{ alias: this.user.alias},{ withCredentials: true })
             .catch((error) => {
               console.error("Error updating username:", error);
             });

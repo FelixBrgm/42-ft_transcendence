@@ -17,7 +17,7 @@
     </div>  
   </div>
   
-  <div class="game-container" @keydown="handleKeyPress" @keyup="handleKeyRelease" ref="gameContainer" tabindex="0">
+  <div class="game-container" ref="gameContainer" tabindex="0">
     <!-- Score Counter -->
     <div class="score-counter">{{ leftScore }} - {{ rightScore }}</div>
     
@@ -308,6 +308,9 @@ export default {
   updated() {
   },
   mounted() {
+      document.addEventListener('keydown', this.handleKeyPress);
+  document.addEventListener('keyup', this.handleKeyRelease);
+
     if (this.$route.query.startGame === 'true') {
       this.startGame(-1);
     }

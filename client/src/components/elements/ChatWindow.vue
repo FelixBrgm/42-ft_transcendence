@@ -81,12 +81,15 @@ export default {
         clearInterval(this.retryInterval);
         this.setupWebSocketAndFetchFriends();
       }
-    }, 5000); 
+    }, 200); 
     clearInterval(this.getFriendsInterval);
     this.getFriendsInterval = setInterval(() => {
-      this.fetchFriends();
-      this.updateChat();
-    }, 3000); 
+      if (store.state.auth.user && store.state.auth.user.id)
+      {
+        this.fetchFriends();
+        this.updateChat();
+      }
+    }, 100); 
   },
   methods: {
     vsgame()
@@ -110,11 +113,12 @@ export default {
     async sendMessage() {
       if (this.friendid)
       {
-      if (axios.get(`/api/block/check/${this.friendid}`,{ withCredentials: true }) == true)
+        const response2 = await axios.get(`/api/block/check/${this.friendid}`,{ withCredentials: true });
+        if(response2.data === true)
         {
           alert("This user is blocked or has blocked you");
         }
-        else (this.ws && this.newMessage.trim() !== '' && (this.roomid != undefined)) 
+        else if (this.ws && this.newMessage.trim() !== '' && (this.roomid != undefined)) 
         {
           this.ws.send(this.friendid + ":" + this.newMessage);
         }
@@ -131,31 +135,32 @@ export default {
         const response = await axios.get(`/api/messages/${this.roomid}`, { withCredentials: true });
         if (JSON.stringify(this.messages) !== JSON.stringify(response.data)) {
             this.messages = response.data;
+            this.scrollToBottom();
           }
         } catch (error) { 
         console.error('Error fetching messages:', error);
         } 
     }, 
     async fetchFriends() {
-      try {
-        const response = await axios.get(`/api/friend/list/${store.state.auth.user.id}`, { withCredentials: true });
-        if(this.friends.length === 0 || JSON.stringify(this.friends) !== JSON.stringify(response.data))
-        {
-          this.friends = response.data;  
-          this.friendInfos = [];
-          for (const friend of this.friends) {
-            const userId = friend.user1 !== store.state.auth.user.id ? friend.user1 : friend.user2;
-            try {
-              const response1 = await axios.get(`/api/user/${userId}`, { withCredentials: true });
-              this.friendInfos.push(response1.data);
-            } catch (error) {
-              console.error('Error fetching user info:', error); 
-            }
-          } 
-        }
-      } catch (error) {
-        console.error('Error fetching friends:', error); 
-      } 
+        try {
+          const response = await axios.get(`/api/friend/list/${store.state.auth.user.id}`, { withCredentials: true });
+          if(this.friends.length === 0 || JSON.stringify(this.friends) !== JSON.stringify(response.data))
+          {
+            this.friends = response.data;  
+            this.friendInfos = [];
+            for (const friend of this.friends) {
+              const userId = friend.user1 !== store.state.auth.user.id ? friend.user1 : friend.user2;
+              try {
+                const response1 = await axios.get(`/api/user/${userId}`, { withCredentials: true });
+                this.friendInfos.push(response1.data);
+              } catch (error) {
+                console.error('Error fetching user info:', error); 
+              }
+            } 
+          }
+        } catch (error) {
+          console.error('Error fetching friends:', error); 
+        } 
     },
     scrollToBottom() {
       this.$nextTick(() => {
@@ -166,7 +171,8 @@ export default {
       });
     },
     async joinFriendChat(friend) {
-      if(axios.get(`/api/block/check/${friend.id}`,{ withCredentials: true }) == true)
+      const response2 = await axios.get(`/api/block/check/${friend.id}`,{ withCredentials: true });
+      if(response2.data === false)
       {
         try {
           const response = await axios.get(`/api/chat/${friend.id}`, { withCredentials: true });
@@ -176,6 +182,9 @@ export default {
           alert(error.response.data);
         }
       }
+      else{
+          alert("This user is blocked or has blocked you");
+        }
     },
   }, 
 };
