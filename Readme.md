@@ -58,38 +58,8 @@ Replace the empty values with your specific configuration.
 
 ## Usage
 - Access the website through your browser at `https://$YOUR_IP_ADDRESS`.
-- Register for tournaments and play live Pong games against other players.
+- Register with your intra account play tournaments and Pong games against other players.
 - Enjoy the classic Pong experience with modern multiplayer features!
-
-## Usage
-To run `ft_transcendence`, follow these steps:
-
-- Ensure Docker is installed and running on your system.
-- Add a `.env` file to the root directory of the project.
-
-The `.env` file should include the following values:
-
-```plaintext
-POSTGRES_HOST=
-POSTGRES_PORT=
-POSTGRES_USER=
-POSTGRES_PASSWORD=
-POSTGRES_DB=
-DATABASE_URL=
-CLIENT_ID=
-CLIENT_SECRET=
-SESSION_KEY=
-REDIRECT_URI=https://$IP_ADDR/api/auth/callback
-INEND_URL=https://$IP_ADDR
-VUE_APP_IP=$IP_ADDR
-```
-
-Replace the empty values with your specific configuration.
-
-- run`docker compose up`
-
-You should be able to access the website in your browser under your https://YOUR_IP_ADDRESS
-
 
 ## Additional Notes
 
