@@ -1,50 +1,97 @@
-# Running ft_transendence
----
-# Setting up a Development Environment for ft_transendence
 
-This README will guide you through setting up a development environment for ft_transendence, a project utilizing Vue.js and Rust. By following these instructions, you'll be able to clone the repository, set up Docker, and configure Visual Studio Code (VSCode) to work with the development container.
+# 42-ft_transcendence
 
-## Prerequisites
+This is the final project of the [42Schools](https://www.42heilbronn.de/en/) curriculum.
 
-Before starting, make sure you have the following installed:
+Welcome to the Multiplayer Pong Contest Website project by [pgorner](github.com/Pgorner), [afenzl](github.com/annafenzl) and me!
+This project aims to create a web platform where users can participate in live multiplayer Pong games and tournaments. The project is a complex undertaking with various mandatory requirements and optional modules to enhance functionality. 
 
-- [Git](https://git-scm.com/downloads)
-- [Docker](https://www.docker.com/products/docker-desktop)
-- [Visual Studio Code](https://code.visualstudio.com/)
+## Table of Contents
+1. [Introduction](#introduction)
+2. [Features](#features)
+3. [Technologies Used](#technologies-used)
+4. [Installation](#installation)
+5. [Usage](#usage)
 
 
-## Step 1: Clone the Repository
+## Introduction
+The Multiplayer Pong Contest Website allows users to play Pong against each other in real-time and participate in tournaments. The project follows strict guidelines for development, including specific requirements for backend, frontend, gameplay, security, and deployment.
 
-First, clone the repository to your local machine:
+## Features
+- Local and remote Pong games with real-time interaction.
+- User registration using oauth.
+- Tournament system for organizing matches between multiple players.
+- Matchmaking system to pair players for games.
+- Security measures against common web vulnerabilities like SQL injections and XSS.
+- Docker-based deployment for easy setup and scalability.
 
-```sh
-git clone git@github.com:FelixBrgm/42-ft_transendence.git
+## Technologies Used
+- Backend: Rust, with actix_web and diesel.
+- Frontend: Vue.
+- Database: Postgres.
+- Docker: Used for containerization and deployment.
 
+## Installation
+**1.** Clone the repository to your local machine.\
+**2.** Navigate to the project directory.\
+**3.** Ensure Docker is installed and running on your system.\
+**4.**  Add a `.env` file to the root directory of the project:
+
+```plaintext
+POSTGRES_HOST=
+POSTGRES_PORT=
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_DB=
+DATABASE_URL=
+CLIENT_ID=
+CLIENT_SECRET=
+SESSION_KEY=
+REDIRECT_URI=https://$IP_ADDR/api/auth/callback
+INEND_URL=https://$IP_ADDR
+VUE_APP_IP=$IP_ADDR
 ```
 
-## Step 2: Start the Docker
-Start docker!
+Replace the empty values with your specific configuration.
 
+**5.** Run `docker-compose up` to launch the application.
 
-## Step 3: Configure Visual Studio Code
+## Usage
+- Access the website through your browser at `https://$YOUR_IP_ADDRESS`.
+- Register for tournaments and play live Pong games against other players.
+- Enjoy the classic Pong experience with modern multiplayer features!
 
-1. Open the project folder in VSCode.
-2. Attach to the running 'dev' Container
+## Usage
+To run `ft_transcendence`, follow these steps:
 
-## Working with Git
+- Ensure Docker is installed and running on your system.
+- Add a `.env` file to the root directory of the project.
 
-To push and pull changes from the repository, use the terminal outside of the development container. This ensures that your Git credentials are correctly set up and your commits are attributed to your account.
+The `.env` file should include the following values:
 
-```sh
-# Pull the latest changes
-git pull
-
-# Push your changes
-git add .
-git commit -m "Your commit message"
-git pus
+```plaintext
+POSTGRES_HOST=
+POSTGRES_PORT=
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_DB=
+DATABASE_URL=
+CLIENT_ID=
+CLIENT_SECRET=
+SESSION_KEY=
+REDIRECT_URI=https://$IP_ADDR/api/auth/callback
+INEND_URL=https://$IP_ADDR
+VUE_APP_IP=$IP_ADDR
 ```
 
-### Additional Notes
-- Set your cores higher in the docker desktop app
-- 50% more compile time relative to host when 10 cores available to docker
+Replace the empty values with your specific configuration.
+
+- run`docker compose up`
+
+You should be able to access the website in your browser under your https://YOUR_IP_ADDRESS
+
+
+## Additional Notes
+
+- Increase the number of cores in the Docker desktop app settings for better performance.
+- Expect approximately 50% more compile time compared to host when allocating 10 cores to Docker.
