@@ -81,12 +81,24 @@ export default {
         clearInterval(this.retryInterval);
         this.setupWebSocketAndFetchFriends();
       }
-    }, 5000); 
+    }, 3000); 
     clearInterval(this.getFriendsInterval);
     this.getFriendsInterval = setInterval(() => {
       this.fetchFriends();
       this.updateChat();
-    }, 3000); 
+    }, 100); 
+    clearInterval(this.blockedInterval);
+    this.blockedInterval = setInterval(async () => {
+      if (this.friendid)
+      {
+        const response = await axios.get(`/api/block/check/${this.friendid}`, { withCredentials: true });
+        if (response.data == true) {
+          this.friendid = null;
+          this.messages = [];
+          this.roomid = null;
+        }
+      }
+    }, 300);
   },
   methods: {
     vsgame()
@@ -110,7 +122,8 @@ export default {
     async sendMessage() {
       if (this.friendid)
       {
-      if (axios.get(`/api/block/check/${this.friendid}`,{ withCredentials: true }) == true)
+      const block = await axios.get(`/api/block/check/${this.friendid}`,{ withCredentials: true });
+        if(block.data == true)
         {
           alert("This user is blocked or has blocked you");
         }
@@ -166,7 +179,8 @@ export default {
       });
     },
     async joinFriendChat(friend) {
-      if(axios.get(`/api/block/check/${friend.id}`,{ withCredentials: true }) == true)
+      const block = await axios.get(`/api/block/check/${friend.id}`,{ withCredentials: true });
+      if(block.data == false)
       {
         try {
           const response = await axios.get(`/api/chat/${friend.id}`, { withCredentials: true });
@@ -176,6 +190,8 @@ export default {
           alert(error.response.data);
         }
       }
+      else
+        alert("This user is blocked or has blocked you");
     },
   }, 
 };

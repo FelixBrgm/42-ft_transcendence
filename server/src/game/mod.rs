@@ -4,7 +4,7 @@ pub mod one_vs_one;
 mod pong;
 pub mod tournament;
 
-use tournament::Tournament;
+
 use actix::prelude::*;
 
 pub type Socket = Recipient<Message>;
