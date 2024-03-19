@@ -28,7 +28,7 @@ import router from '../../router.js';
 export default {
   created(){
     this.retryInterval = setInterval(() => {
-      if (router.currentRoute._value.path !== '/local') {
+      if (router.currentRoute._value.path !== '/ai') {
         setTimeout(() => {
           if (this.$el && this.$el.parentNode) {
             this.$el.parentNode.removeChild(this.$el);
@@ -51,6 +51,7 @@ export default {
       startButtonEnabled: true,
       textValue: "Start Game",
       keysPressed: new Set(),
+      aiCalculating: false,
     };
   },
   mounted() {
@@ -102,11 +103,30 @@ export default {
       }
 
       // Move right paddle
-      if (this.rightPosition !== this.rightPaddleTarget) {
-        const targetPosition = Math.max(60, Math.min(840, this.rightPaddleTarget)); // Clamp target position
-        this.rightPosition += Math.sign(targetPosition - this.rightPosition) * this.paddleSpeed;
-      }
+      // AI Movement
+        if (!this.aiCalculating) {
+        const aiTarget = this.calculateAITarget();
+        if (this.rightPosition !== aiTarget) {
+            const targetPosition = Math.max(60, Math.min(840, aiTarget)); // Clamp target position
+            this.rightPosition += Math.sign(targetPosition - this.rightPosition) * this.paddleSpeed;
+        }
+        }
     },
+        calculateAITarget() {
+        let predictedY = this.ballPosition.y;
+        let predictedX = this.ballPosition.x;
+        let tempDirectionX = this.ballDirectionX;
+        let tempDirectionY = this.ballDirectionY;
+
+        while (predictedX < 1500) {
+            predictedY += this.ballSpeed * tempDirectionY;
+            if (predictedY < 0 || predictedY > 900) {
+            tempDirectionY *= -1;
+            }
+            predictedX += this.ballSpeed * tempDirectionX;
+        }
+        return Math.max(60, Math.min(840, predictedY));
+        },
       moveBall() {
 
         this.ballPosition.x += this.ballSpeed * this.ballDirectionX;
@@ -119,16 +139,19 @@ export default {
         if (this.ballPosition.x <= 40 && 
             this.ballPosition.y >= this.leftPosition - 60&& 
             this.ballPosition.y <= this.leftPosition + 60) {
-          this.ballDirectionX *= -1;
-          this.ballSpeed += 0.1;
+        this.ballDirectionX *= -1;
+        this.ballSpeed += 0.1;
+        this.activatePaddleCollisionCooldown();
+        this.aiCalculating = false; // AI hits the ball, start calculating again
         }
 
         if (this.ballPosition.x >= 1550 && 
             this.ballPosition.y >= this.rightPosition - 60 && 
             this.ballPosition.y <= this.rightPosition + 60) {
-          this.ballDirectionX *= -1;
+                this.ballDirectionX *= -1;
           this.ballSpeed += 0.1;
           this.activatePaddleCollisionCooldown();
+            this.aiCalculating = true; // AI hits the ball, start calculating again
         }
       }
         if (this.ballPosition.x <= 0) {
@@ -150,7 +173,7 @@ export default {
       if (this.leftScore < 3 && this.rightScore < 3) {
         this.movePaddles(); 
         this.moveBall();
-        if(router.currentRoute._value.path !== '/local')
+        if(router.currentRoute._value.path !== '/ai')
           return;
         requestAnimationFrame(this.gameLoop);
       }
@@ -169,12 +192,12 @@ export default {
           }
       }
     },
-      activatePaddleCollisionCooldown() {
-    this.paddleCollisionCooldown = true;
-    setTimeout(() => {
-      this.paddleCollisionCooldown = false;
-    }, 500);
-  },
+    activatePaddleCollisionCooldown() {
+        this.paddleCollisionCooldown = true;
+        setTimeout(() => {
+        this.paddleCollisionCooldown = false;
+        }, 500);
+    },
   },
 }; 
 </script>

@@ -57,8 +57,26 @@ export default {
   components: {
     GameInfo,
   },
+    created() {
+        this.retryInterval = setInterval(() => {
+          if (router.currentRoute._value.path !== '/pong') {
+            clearInterval(this.retryInterval);
+            if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+              this.manclose = true;
+              this.websocket.close();
+              this.websocket = null;
+            }
+            setTimeout(() => {
+              if (this.$el && this.$el.parentNode) {
+                this.$el.parentNode.removeChild(this.$el);
+              }
+            }, 0);
+          }
+        }, 100);
+    },
   data() {
     return {  
+      websocketClosed: false,
       games: [],
       manclose: false,
       matchreset: false,
@@ -122,7 +140,10 @@ export default {
       {
         if(this.matchreset == true)
           this.games = [];
-        this.games.push({ leftPlayer: parts[1], rightPlayer: parts[2] });
+        if (parts[1] != this.userId && parts[2] != this.userId)
+        {
+          this.games.push({ leftPlayer: parts[1], rightPlayer: parts[2] });
+        }
       }
       if (parts[0] == 'SCR')
       {
@@ -147,7 +168,7 @@ export default {
           this.textvalue = "Starting game in 1 Second";
         })();
       }
-      if(parts[0] == 'END')
+      if(parts[0] == 'END' && this.tournament == false)
       {
         this.matchreset = true;
           if (this.won == false){
@@ -177,7 +198,7 @@ export default {
         this.rightScore = 0;
       }
       },
-      updatePaddleColors() {
+      async updatePaddleColors() {
         const playerPaddle = this.$refs.gameContainer.querySelector('.rightPaddle');
         const enemyPaddle = this.$refs.gameContainer.querySelector('.leftPaddle');
         this.leftPlayerimg = null;
@@ -188,61 +209,37 @@ export default {
         this.rightPlayername = null;
         this.rightPlayerwin = null;
         this.rightPlayerloss = null;
+        console.log("enemy", this.enemy);
+        await axios.get(`/api/user/${this.enemyid}`, { withCredentials: true })
+              .then(response => {
+                console.log("enemyid", this.enemyid);
+                this.enemy = response.data;})
         if (this.isYou) {
           playerPaddle.style.backgroundColor = 'red';
           enemyPaddle.style.backgroundColor = 'yellow';
           enemyPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
           playerPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red'; 
           this.leftPlayerimg = store.state.auth.user.avatar;
-          this.leftPlayername = store.state.auth.user.alias;
+          this.leftPlayername = store.state.auth.user.alias; 
           this.leftPlayerwin = store.state.auth.user.wins ;
           this.leftPlayerloss = store.state.auth.user.losses ;
+          this.rightPlayerimg = this.enemy.avatar; 
+          this.rightPlayername = this.enemy.alias;
+          this.rightPlayerwin = this.enemy.wins;
+          this.rightPlayerloss = this.enemy.losses;
         } else {
           playerPaddle.style.backgroundColor = 'yellow';
           enemyPaddle.style.backgroundColor = 'red';
           playerPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
           enemyPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red';
+          this.leftPlayerimg = this.enemy.avatar; 
+          this.leftPlayername = this.enemy.alias;
+          this.leftPlayerwin = this.enemy.wins;
+          this.leftPlayerloss = this.enemy.losses;
           this.rightPlayerimg = store.state.auth.user.avatar;
           this.rightPlayername = store.state.auth.user.alias;
-          this.rightPlayerwins = store.state.auth.user.wins ;
+          this.rightPlayerwin = store.state.auth.user.wins ;
           this.rightPlayerloss = store.state.auth.user.losses ;
-        }
-        if (this.enemy === null)
-        {
-          axios.get(`/api/user/${this.enemyid}`, { withCredentials: true })
-            .then(response => {
-              this.enemy = response.data;
-              if (this.isYou) {
-                playerPaddle.style.backgroundColor = 'red';
-                enemyPaddle.style.backgroundColor = 'yellow';
-                enemyPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
-                playerPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red'; 
-                this.leftPlayerimg = store.state.auth.user.avatar;
-                this.leftPlayername = store.state.auth.user.alias; 
-                this.leftPlayerwin = store.state.auth.user.wins ;
-                this.leftPlayerloss = store.state.auth.user.losses ;
-                this.rightPlayerimg = this.enemy.avatar; 
-                this.rightPlayername = this.enemy.alias;
-                this.rightPlayerwin = this.enemy.wins;
-                this.rightPlayerloss = this.enemy.losses;
-              } else {
-                playerPaddle.style.backgroundColor = 'yellow';
-                enemyPaddle.style.backgroundColor = 'red';
-                playerPaddle.style.boxShadow = '0 0 10px yellow, 0 0 20px yellow, 0 0 30px yellow';
-                enemyPaddle.style.boxShadow = '0 0 10px red, 0 0 20px red, 0 0 30px red';
-                this.leftPlayerimg = this.enemy.avatar; 
-                this.leftPlayername = this.enemy.alias;
-                this.leftPlayerwin = this.enemy.wins;
-                this.leftPlayerloss = this.enemy.losses;
-                this.rightPlayerimg = store.state.auth.user.avatar;
-                this.rightPlayername = store.state.auth.user.alias;
-                this.rightPlayerwins = store.state.auth.user.wins ;
-                this.rightPlayerloss = store.state.auth.user.losses ;
-              }
-            })
-            .catch(error => {
-              console.error('Error fetching enemy data:', error);
-            });
         }
       },
       startGame(numPlayers, ID) {
@@ -276,7 +273,7 @@ export default {
       });
 
       this.websocket.addEventListener('close', (event) => {
-        if (event.code === 1006 && this.msgrcvd != false) {
+        if (event.code === 1006 && this.msgrcvd != false && router.currentRoute._value.path === '/pong') {
           console.error('WebSocket closed due to an error');
         } else if (router.currentRoute._value.path === '/pong'){
           // WebSocket closed normally
@@ -294,30 +291,18 @@ export default {
     return new Promise(resolve => setTimeout(resolve, ms));
     }
   },
-    closeWebSocket() {
-      if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-        this.manclose = true;
-        this.websocket.close();
-        this.websocket = null;
-      }
-    },
-  beforeRouteLeave(to, from, next) {
-    this.closeWebSocket();
-    next();
-  },
-  updated() {
-  },
   mounted() {
     if (this.$route.query.startGame === 'true') {
       this.startGame(-1);
     }
-    if (this.$route.query.joinTournament !== undefined) {
+    else if (this.$route.query.joinTournament !== undefined) {
       this.istournament = true;
       this.startGame(this.$route.query.joinTournament);
     }
-    if (this.$route.query.joinvs !== undefined) {
+    else if (this.$route.query.joinvs !== undefined) {
       this.startGame(-2, this.$route.query.joinvs); 
     }
+    else{this.$router.push({ path: "/404"});}
     this.$refs.gameContainer.focus();
   },
 };

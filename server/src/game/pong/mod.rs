@@ -150,7 +150,7 @@ impl Handler<Tick> for Pong {
 impl Handler<CountDown> for Pong {
     type Result = ();
 
-    fn handle(&mut self, msg: CountDown, ctx: &mut Self::Context) {
+    fn handle(&mut self, _msg: CountDown, ctx: &mut Self::Context) {
         self.paused = true;
 
         let delay = 3;
@@ -245,7 +245,7 @@ impl Handler<GameOver> for Pong {
 impl Handler<PlayerInput> for Pong {
     type Result = ();
 
-    fn handle(&mut self, input: PlayerInput, ctx: &mut Self::Context) {
+    fn handle(&mut self, input: PlayerInput, _ctx: &mut Self::Context) {
         if self.players[0].id == input.id {
             self.players[0].last_input = input.cmd;
         } else {

@@ -68,7 +68,7 @@ async fn create_tournament(
         size: size,
     }) {
         Ok(_) => Ok(HttpResponse::Ok().finish()),
-        Err(_) => Err(ApiError::BadRequest(format!("Error: You're hosting a ongiong Tournament"))),
+        Err(_) => Err(ApiError::BadRequest(format!("Error: You're hosting a ongoing Tournament"))),
     }
 }
 
@@ -77,18 +77,19 @@ static NEXT_CLIENT_ID: AtomicUsize = AtomicUsize::new(1);
 
 #[get("/api/game/connect_tournament/{tournament_id}")]
 async fn connect_tournament(
+    identity: Identity,
     req: HttpRequest,
     stream: web::Payload,
     server: web::Data<Addr<TournamentServer>>,
     room_id: web::Path<UserId>,
-    // info: web::Query<Info>,
+    info: web::Query<Info>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
-    // if !db.check_user_token(info.id as i32, &info.token)? {
-    //     return Err(ApiError::Unauthorized);
-    // }
+    if !db.check_user_token(info.id as i32, &info.token)? {
+        return Err(ApiError::Unauthorized);
+    }
 
-    let uid = NEXT_CLIENT_ID.fetch_add(1, Ordering::Relaxed);
+    let uid = identity.id()?.parse::<usize>()?;
     match ws::start(
         GameSession::new_tournament(uid, server.get_ref().clone(), room_id.into_inner()),
         &req,
@@ -136,8 +137,7 @@ async fn one_vs_one(
 
 #[get("/api/game/list/{uid}")]
 async fn list(
-    identity: Identity,
-    req: HttpRequest,
+    _: Identity,
     uid: web::Path<i32>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {

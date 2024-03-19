@@ -37,7 +37,7 @@ impl Player {
             }
             'u' => {
                 self.position += length_traveled;
-                if self.position > config.height - config.paddle_length {
+                if self.position > config.height - config.paddle_length{
                     self.position = config.height - config.paddle_length;
                 }
             }
@@ -46,7 +46,7 @@ impl Player {
     }
 
     pub fn reset(&mut self, config: &GameConfig) {
-        self.position = config.height / 2 + config.paddle_length / 2;
+        self.position = config.height / 2 - config.paddle_length / 2;
         self.last_input = 'n';
     }
 }

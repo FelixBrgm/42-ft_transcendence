@@ -155,17 +155,17 @@ impl Actor for GameSession {
     fn stopping(&mut self, _: &mut Self::Context) -> Running {
         let msg = game::Disconnect { id: self.id };
 		println!("in stopping state");
-        // match &self.game_mode {
-        //     GameMode::OneVsOne(game_server) => {
-        //         game_server.do_send(msg);
-        //     }
-        //     GameMode::Matchmaking(matchmaking_server) => {
-        //         matchmaking_server.do_send(msg);
-        //     }
-        //     GameMode::Tournament(tournament_server) => {
-        //         tournament_server.do_send(msg);
-        //     }
-        // }
+        match &self.game_mode {
+            GameMode::OneVsOne(game_server) => {
+                game_server.do_send(msg);
+            }
+            GameMode::Matchmaking(matchmaking_server) => {
+                matchmaking_server.do_send(msg);
+            }
+            GameMode::Tournament(tournament_server) => {
+                tournament_server.do_send(msg);
+            }
+        }
         Running::Stop
     }
 }
@@ -183,9 +183,8 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for GameSession {
             Ok(ws::Message::Binary(bin)) => {
                 ctx.binary(bin);
             }
-            Ok(ws::Message::Close(reason)) => {
-                // ctx.close(reason);
-                println!("Jdajaajajajajaajjaajajaajajajajajaa");
+            Ok(ws::Message::Close(_)) => {
+                println!("Stopping Game");
                 ctx.stop();
             }
             Ok(ws::Message::Continuation(_)) => {
@@ -222,14 +221,10 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for GameSession {
 impl Handler<Stop> for GameSession {
     type Result = ();
 
-    fn handle(&mut self, msg: Stop, ctx: &mut Self::Context) {
+    fn handle(&mut self, _: Stop, ctx: &mut Self::Context) {
         println!("GameServer: Websocket Client heartbeat failed, disconnecting!");
 
         ctx.close(Some(CloseReason{code: CloseCode::Normal, description: Some("I like goos".to_string())}));
-        // Delay the actor stop to ensure the close frame is sent
-        // ctx.run_later(Duration::from_millis(10000), |act, ctx| {
-        //     ctx.stop();
-        // });
     }
 }
 

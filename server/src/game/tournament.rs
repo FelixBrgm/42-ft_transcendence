@@ -110,7 +110,7 @@ impl Tournament {
             }
         }
 
-        while self.players.len() > 0 {
+        while self.players.len() > 1 {
             let p1 = self.players.remove(0);
             let p2 = self.players.remove(0);
             let player_ids = (p1.id, p2.id);
@@ -241,7 +241,7 @@ impl Handler<Create> for TournamentServer {
 impl Handler<Disconnect> for TournamentServer {
     type Result = ();
 
-    fn handle(&mut self, msg: Disconnect, _: &mut Context<Self>) {}
+    fn handle(&mut self, _msg: Disconnect, _: &mut Context<Self>) {}
 }
 
 impl Handler<ClientMessage> for TournamentServer {

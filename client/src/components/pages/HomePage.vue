@@ -11,6 +11,9 @@
           <div class="my-container" @click="playLocal">
             <span>Local game</span>
           </div>
+          <div class="my-container" @click="playAi">
+            <span>AI game</span>
+          </div>
           <div class="my-container">
             <div>1 v 1</div>
             <span>Enter other player ID: </span> 
@@ -71,6 +74,9 @@ export default {
     playLocal() {
       this.$router.push({ path: "/local"}); 
     },
+    playAi() {
+      this.$router.push({ path: "/ai"}); 
+    },
     playTournament() {
       if (this.selectedNumberOfPlayers) {
         this.togglenum = true; 
@@ -100,9 +106,8 @@ export default {
     },
     async checkExUid(num){
       try {
-        if (typeof num === 'number') {
+        if (!isNaN(parseFloat(num)) && isFinite(num)) {
           const response = await axios.get(`/api/user/check/${num}`, { withCredentials: true });
-          console.log(response.data);
           return response.data === true;
         }
         return false;
