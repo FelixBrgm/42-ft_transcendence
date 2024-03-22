@@ -196,7 +196,7 @@ impl Handler<GameOver> for Pong {
     type Result = ();
 
     // TODO maybe call GameOver with and Enum that determines why or who won
-    fn handle(&mut self, _: GameOver, ctx: &mut Self::Context) {
+    fn handle(&mut self, _: GameOver, _ctx: &mut Self::Context) {
         println!("GameOver");
         self.finished = true;
         self.send_to_players(Message("END".to_owned()));

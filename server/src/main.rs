@@ -90,6 +90,7 @@ async fn main() {
             .service(user::get)
             .service(user::post)
             .service(user::find)
+            .service(user::alias)
             .service(user::check)
             .service(user::list)
             // friend

@@ -72,9 +72,6 @@ async fn create_tournament(
     }
 }
 
-use std::sync::atomic::{AtomicUsize, Ordering};
-static NEXT_CLIENT_ID: AtomicUsize = AtomicUsize::new(1);
-
 #[get("/api/game/connect_tournament/{tournament_id}")]
 async fn connect_tournament(
     identity: Identity,

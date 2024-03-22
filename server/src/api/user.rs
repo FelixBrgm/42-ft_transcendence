@@ -111,3 +111,18 @@ async fn check(
         Err(_) => Ok(HttpResponse::Ok().json(false)),
     }
 }
+
+#[get("/api/user/{alias}")]
+async fn alias(
+    _: Identity,
+    alias: web::Path<String>,
+    db: web::Data<Database>,
+) -> Result<HttpResponse, ApiError> {
+
+	match db.check_alias(&alias) {
+        Ok(exists) => { 
+            Ok(HttpResponse::Ok().json(exists))
+        },
+        Err(_) => Err(ApiError::InternalServerError),
+    }
+}
