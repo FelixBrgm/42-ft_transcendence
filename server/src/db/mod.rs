@@ -47,6 +47,18 @@ impl Database {
         Ok(user_count > 0)
     }
 
+	// Check if alias exists
+	pub fn check_alias(&self, check_alias: &str) -> Result<bool> {
+		use schema::app_user::dsl::*;
+
+		let alias_count = app_user
+			.filter(alias.eq(check_alias))
+			.count()
+			.execute(&mut self.pool.get()?)?;
+
+		Ok(alias_count > 0)
+	}
+
     // Insert the new user into the users table
     pub fn add_user(&self, user: &NewUser) -> Result<()> {
         use schema::app_user::dsl::*;
