@@ -112,14 +112,15 @@ async fn check(
     }
 }
 
-#[get("/api/user/{alias}")]
+#[get("/api/user/alias/{alias}")]
 async fn alias(
-    _: Identity,
+    identity: Identity,
     alias: web::Path<String>,
     db: web::Data<Database>,
 ) -> Result<HttpResponse, ApiError> {
+	let uid = identity.id()?.parse::<i32>()?;
 
-	match db.check_alias(&alias) {
+	match db.check_alias(&alias, uid) {
         Ok(exists) => { 
             Ok(HttpResponse::Ok().json(exists))
         },
