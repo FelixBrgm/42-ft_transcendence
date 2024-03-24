@@ -8,6 +8,8 @@ use diesel::prelude::*;
 use diesel::r2d2::{ConnectionManager, Pool};
 use models::*;
 
+use diesel::debug_query;
+
 type DbConnection = diesel::r2d2::PooledConnection<ConnectionManager<PgConnection>>;
 
 #[derive(Clone)]
@@ -47,16 +49,16 @@ impl Database {
         Ok(user_count > 0)
     }
 
-	// Check if alias exists
-	pub fn check_alias(&self, check_alias: &str) -> Result<bool> {
+	// Check if alias exists and is not the user itself
+	pub fn check_alias(&self, check_alias: &str, check_id: i32) -> Result<bool> {
 		use schema::app_user::dsl::*;
 
-		let alias_count = app_user
-			.filter(alias.eq(check_alias))
-			.count()
-			.execute(&mut self.pool.get()?)?;
+		let check_alias = app_user
+		.filter(alias.eq(check_alias))
+		.first::<User>(&mut self.pool.get()?)
+		.optional()?;
 
-		Ok(alias_count > 0)
+		Ok(check_alias.is_some() && check_alias.unwrap().id != check_id)
 	}
 
     // Insert the new user into the users table
