@@ -66,10 +66,7 @@ export default {
   computed: {
     leftPaddleTarget() {
       return this.leftPosition + (this.isKeyPressed('w') ? -this.paddleSpeed : 0) + (this.isKeyPressed('s') ? this.paddleSpeed : 0);
-    },
-    rightPaddleTarget() {
-      return this.rightPosition + (this.isKeyPressed('ArrowUp') ? -this.paddleSpeed : 0) + (this.isKeyPressed('ArrowDown') ? this.paddleSpeed : 0);
-    },
+    }
   },
   methods: {
 

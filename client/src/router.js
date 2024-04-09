@@ -7,6 +7,7 @@ import PongGame from './components/pages/GamePage.vue';
 import LocalGame from './components/pages/LocalGame.vue'; 
 import AiGame from './components/pages/AiGame.vue'; 
 import LoginPage from './components/pages/LoginPage';
+import NamePage from './components/pages/NamePage';
 import NotFoundPage from './components/pages/NotFoundPage.vue'; // Import your custom 404 page
 
 const router = createRouter({
@@ -14,6 +15,7 @@ const router = createRouter({
     routes: [
         { path: '/', component: HomePage, meta: { title: 'Transcendence' } },
         { path: '/login', component: LoginPage, meta: { title: 'Login' } }, 
+        { path: '/name', component: NamePage, meta: { title: 'Login' } }, 
         { path: '/people', component: PeoplePeople, meta: { title: 'PeoplePeople' } },
         { path: '/rules', component: RulesPage, meta: { title: 'Rules' } },
         { path: '/profile', component: ProfilePage, meta: { title: 'Profile', requiresAuth: true } }, // Example of a route that requires authentication
@@ -46,6 +48,14 @@ router.beforeEach(async (to, from, next) => {
     } 
     if (to.meta.requiresAuth && !store.state.auth.user) {
         return next('/login');
+    }
+    try {
+        const response = await axios.get('/api/user/alias/', {  withCredentials: true,});
+        if (response.data == false)
+            return next('/name');
+    } catch (error) {
+        console.log("error cathung uname");
+        console.log(error);
     }
     next();
 });
