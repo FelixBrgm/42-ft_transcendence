@@ -143,23 +143,31 @@ export default {
         this.friendimg = require("@/assets/delete-user.png");
       }
     },
-    changeUsername() {
-      if (this.ism) {
-        const newUsername = prompt("Enter new username:");
-        if (newUsername !== null) {
-          this.user.alias = newUsername.trim().substring(0, 20);
-          // Assuming you have an API endpoint to update the username
-          axios
-            .post(
-              `/user`,
-              { alias: this.user.alias},
-              { withCredentials: true }
-            )
-            .catch((error) => {
-              console.error("Error updating username:", error);
-            });
+async changeUsername() {
+        if (this.ism) {
+            const newUsername = prompt("Enter new username:");
+            if (newUsername !== null) {
+                let trimmedUsername = newUsername.trim().substring(0, 20);
+                try {
+                    const response = await axios.get(
+                        `/api/user/alias/${trimmedUsername}`,
+                        { withCredentials: true }
+                    );
+                    if (response.data === true) {
+                        alert("The Alias is already used!");
+                        return;
+                    }
+                    await axios.post(
+                        `/api/user`,
+                        { alias: trimmedUsername },
+                        { withCredentials: true }
+                    );
+                    this.user.alias = trimmedUsername;
+                } catch (error) {
+                    console.error("Error updating username:", error);
+                }
+            }
         }
-      }
     },
     changePic() {
       if (this.ism) {
