@@ -167,7 +167,7 @@ export default {
           } 
         }
       } catch (error) {
-        console.error('Error fetching friends:', error); 
+        // console.error('Error fetching friends:', error); 
       } 
     },
     scrollToBottom() {
