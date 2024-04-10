@@ -202,9 +202,9 @@ export default {
           this.textvalue = "Starting game in 1 Second";
         })();
       }
-      console.log("HELLO THIS IS ME");
-      console.log(parts);
-      console.log(this.tournament);
+      // console.log("HELLO THIS IS ME");
+      // console.log(parts);
+      // console.log(this.tournament);
       if (parts[0] == "END" && this.tournament == undefined) {
         this.matchreset = true;
         if (this.won == false) {
@@ -246,11 +246,11 @@ export default {
       this.rightPlayername = null;
       this.rightPlayerwin = null;
       this.rightPlayerloss = null;
-      console.log("enemy", this.enemy);
+      // console.log("enemy", this.enemy);
       await axios
         .get(`/api/user/${this.enemyid}`, { withCredentials: true })
         .then((response) => {
-          console.log("enemyid", this.enemyid);
+          // console.log("enemyid", this.enemyid);
           this.enemy = response.data;
         });
       if (this.isYou) {
@@ -309,7 +309,7 @@ export default {
 
       // handle if websocket connection failed
       this.websocket.addEventListener("error", (event) => {
-        console.error("WebSocket error:", event);
+        // console.error("WebSocket error:", event);
       });
 
       this.websocket.addEventListener("close", (event) => {
@@ -318,7 +318,7 @@ export default {
           this.msgrcvd != false &&
           router.currentRoute._value.path === "/pong"
         ) {
-          console.error("WebSocket closed due to an error");
+          // console.error("WebSocket closed due to an error");
         } else if (router.currentRoute._value.path === "/pong") {
           // WebSocket closed normally
           if (this.$route.query.joinTournament != 0) {

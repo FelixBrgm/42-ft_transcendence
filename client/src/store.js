@@ -19,7 +19,7 @@ const store = createStore({
             const response = await axios.get("/api/user", { withCredentials: true });
             commit('setUser', response.data);
           } catch (error) {
-            console.error('Error updating user:', error);
+            // console.error('Error updating user:', error);
           }
         },
       },

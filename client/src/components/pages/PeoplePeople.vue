@@ -66,11 +66,11 @@ export default {
             );
             this.friendInfos.push(response.data); // Save user info to array
           } catch (error) {
-            console.error("Error fetching user info:", error);
+            // console.error("Error fetching user info:", error);
           }
         }
       } catch (error) {
-        console.error("Error fetching friends:", error);
+        // console.error("Error fetching friends:", error);
       }
     },
     },

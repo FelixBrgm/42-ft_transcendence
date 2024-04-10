@@ -120,7 +120,7 @@ export default {
         }
       })
       .catch((error) => {
-        console.error("Error checking user existence:", error);
+        // console.error("Error checking user existence:", error);
       });
   },
   mounted() {
@@ -169,7 +169,7 @@ export default {
             );
             this.user.alias = trimmedUsername;
           } catch (error) {
-            console.error("Error updating username:", error);
+            // console.error("Error updating username:", error);
           }
         }
       }
@@ -190,13 +190,13 @@ export default {
               );
               this.user.avatar = newAvatar;
             } catch (error) {
-              console.error("Error updating avatar:", error);
+              // console.error("Error updating avatar:", error);
             }
           };
           img.onerror = () => {
             // Image failed to load, display error message
             alert("Invalid image link! Fix that");
-            // console.error("Invalid image link");
+            // // console.error("Invalid image link");
           };
           img.src = newAvatar;
         }
@@ -224,7 +224,7 @@ export default {
         });
         return response.data.alias;
       } catch (error) {
-        console.error("Error fetching user info:", error);
+        // console.error("Error fetching user info:", error);
       }
     },
     async fetchFriends() {
@@ -245,11 +245,11 @@ export default {
             });
             this.friendInfos.push(response.data); // Save user info to array
           } catch (error) {
-            console.error("Error fetching user info:", error);
+            // console.error("Error fetching user info:", error);
           }
         }
       } catch (error) {
-        console.error("Error fetching friends:", error);
+        // console.error("Error fetching friends:", error);
       }
     },
     async fetchMatchs() {
@@ -274,11 +274,11 @@ export default {
               looser: response2.data,
             });
           } catch (error) {
-            console.error("Error fetching match info:", error);
+            // console.error("Error fetching match info:", error);
           }
         }
       } catch (error) {
-        console.error("Error fetching matches:", error);
+        // console.error("Error fetching matches:", error);
       }
     },
     async isblocked() {
@@ -289,7 +289,7 @@ export default {
         );
         return response.data;
       } catch (error) {
-        console.error("Error fetching blocked:", error);
+        // console.error("Error fetching blocked:", error);
       }
     },
     async isfriend() {
@@ -300,7 +300,7 @@ export default {
         );
         return response.data;
       } catch (error) {
-        console.error("Error fetching friend:", error);
+        // console.error("Error fetching friend:", error);
       }
     },
     async getUser() {
@@ -310,7 +310,7 @@ export default {
         });
         this.user = response.data;
       } catch (error) {
-        console.error("Error fetching user:", error);
+        // console.error("Error fetching user:", error);
       }
     },
     goToProfile(id) {
@@ -320,7 +320,7 @@ export default {
           this.fetchData();
         })
         .catch((error) => {
-          console.error("Error navigating to profile:", error);
+          // console.error("Error navigating to profile:", error);
         });
     },
     beforeRouteUpdate(to, from, next) {

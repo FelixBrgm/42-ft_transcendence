@@ -146,7 +146,7 @@ export default {
             this.messages = response.data;
           }
         } catch (error) { 
-        console.error('Error fetching messages:', error);
+        // console.error('Error fetching messages:', error);
         } 
     }, 
     async fetchFriends() {
@@ -162,12 +162,12 @@ export default {
               const response1 = await axios.get(`/api/user/${userId}`, { withCredentials: true });
               this.friendInfos.push(response1.data);
             } catch (error) {
-              console.error('Error fetching user info:', error); 
+              // console.error('Error fetching user info:', error); 
             }
           } 
         }
       } catch (error) {
-        // console.error('Error fetching friends:', error); 
+        // // console.error('Error fetching friends:', error); 
       } 
     },
     scrollToBottom() {

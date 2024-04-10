@@ -27,7 +27,7 @@ export default {
 		try {
 			window.location.href = '/api/auth/login';
 		} catch (error) {
-			console.error('Error Initiating login:', error);
+			// console.error('Error Initiating login:', error);
 		}
 		},
 		moveImage(out) {

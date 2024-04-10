@@ -53,7 +53,7 @@ export default {
 		}
         this.$router.push('/login');
       } catch (error) {
-        console.error('Error Logging out:', error);
+        // console.error('Error Logging out:', error);
       }
     },
     loadSoundAndPlay() {

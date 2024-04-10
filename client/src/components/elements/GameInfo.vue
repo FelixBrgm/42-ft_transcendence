@@ -44,7 +44,7 @@ export default {
         
         this.RP =  RPResponse.data; 
       } catch (error) {
-        console.error("Error fetching friend:", error);   
+        // console.error("Error fetching friend:", error);   
       }
     }
   }

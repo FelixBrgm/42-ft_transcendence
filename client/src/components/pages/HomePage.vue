@@ -112,7 +112,7 @@ export default {
         }
         return false;
       } catch (error) {
-        console.error("Error fetching data:", error);
+        // console.error("Error fetching data:", error);
         return false;
       }
     },
