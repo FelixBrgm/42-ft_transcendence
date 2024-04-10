@@ -236,10 +236,9 @@ export default {
         this.friends = response.data;
         this.friendInfos = [];
         for (const friend of this.friends) {
-          const userId =
-            friend.user1 === this.$route.query.uid
-              ? friend.user1
-              : friend.user2;
+          let uid = parseInt(this.$route.query.uid);
+          let f1 = parseInt(friend.user1);
+          const userId = f1 == uid ? friend.user2 : friend.user1;
           try {
             const response = await axios.get(`/api/user/${userId}`, {
               withCredentials: true,
