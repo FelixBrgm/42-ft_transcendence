@@ -127,7 +127,7 @@ export default {
         {
           alert("This user is blocked or has blocked you");
         }
-        else (this.ws && this.newMessage.trim() !== '' && (this.roomid != undefined)) 
+        else if(this.ws && this.newMessage.trim() !== '' && (this.roomid != undefined)) 
         {
           this.ws.send(this.friendid + ":" + this.newMessage);
         }
