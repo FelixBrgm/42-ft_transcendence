@@ -151,8 +151,8 @@ export default {
     async changeUsername() {
       if (this.ism) {
         const newUsername = prompt("Enter new username:");
-        if (newUsername !== null) {
-          let trimmedUsername = newUsername.trim().substring(0, 20);
+        let trimmedUsername = newUsername.trim().substring(0, 20);
+        if (trimmedUsername.length > 0) {
           try {
             const response = await axios.get(
               `/api/user/alias/${trimmedUsername}`,
