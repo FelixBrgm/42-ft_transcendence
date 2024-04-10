@@ -86,7 +86,7 @@ export default {
     this.getFriendsInterval = setInterval(() => {
       this.fetchFriends();
       this.updateChat();
-    }, 100); 
+    }, 500); 
     clearInterval(this.blockedInterval);
     this.blockedInterval = setInterval(async () => {
       if (this.friendid)
