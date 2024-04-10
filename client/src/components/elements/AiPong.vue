@@ -51,12 +51,14 @@ export default {
       ballPosition: { x: 800, y: 450 },
       ballDirectionX: 1,
       ballDirectionY: 1,
-      ballSpeed: 5,
-      paddleSpeed: 10, // Adjust paddle speed as needed
+      ballSpeed: 7,
+      paddleSpeed: 12, // Adjust paddle speed as needed
       startButtonEnabled: true,
       textValue: "Start Game",
       keysPressed: new Set(),
       aiCalculating: false,
+      lastAiCalculation: new Date().getTime(),
+      lastAiResult: 0,
     };
   },
   mounted() {
@@ -100,7 +102,7 @@ export default {
         }, 1000);
       }, 1000);
     },
-    movePaddles() {
+    async movePaddles() {
       // Move left paddle
       if (this.leftPosition !== this.leftPaddleTarget) {
         const targetPosition = Math.max(
@@ -113,29 +115,32 @@ export default {
 
       // Move right paddle
       // AI Movement
-      if (!this.aiCalculating) {
-        const aiTarget = this.calculateAITarget();
-        if (this.rightPosition !== aiTarget) {
-          const targetPosition = Math.max(60, Math.min(840, aiTarget)); // Clamp target position
-          this.rightPosition +=
-            Math.sign(targetPosition - this.rightPosition) * this.paddleSpeed;
-        }
+      const aiTarget = this.calculateAITarget();
+      if (Math.abs(this.rightPosition - aiTarget) > 15) {
+        const targetPosition = Math.max(60, Math.min(840, aiTarget)); // Clamp target position
+        this.rightPosition +=
+          Math.sign(targetPosition - this.rightPosition) * this.paddleSpeed;
       }
     },
     calculateAITarget() {
+      if (this.lastAiCalculation + 1000 > new Date().getTime()) {
+        return this.lastAiResult;
+      }
       let predictedY = this.ballPosition.y;
       let predictedX = this.ballPosition.x;
       let tempDirectionX = this.ballDirectionX;
       let tempDirectionY = this.ballDirectionY;
 
-      while (predictedX < 1500) {
+      while (predictedX < 1500 && this.ballDirectionX > 0) {
         predictedY += this.ballSpeed * tempDirectionY;
         if (predictedY < 0 || predictedY > 900) {
           tempDirectionY *= -1;
         }
         predictedX += this.ballSpeed * tempDirectionX;
       }
-      return Math.max(60, Math.min(840, predictedY));
+      this.lastAiResult = Math.max(60, Math.min(840, predictedY));
+      this.lastAiCalculation = new Date().getTime();
+      return this.lastAiResult;
     },
     moveBall() {
       this.ballPosition.x += this.ballSpeed * this.ballDirectionX;
@@ -151,7 +156,7 @@ export default {
           this.ballPosition.y <= this.leftPosition + 60
         ) {
           this.ballDirectionX *= -1;
-          this.ballSpeed += 0.1;
+          this.ballSpeed *= 1.2;
           this.activatePaddleCollisionCooldown();
           this.aiCalculating = false; // AI hits the ball, start calculating again
         }
@@ -173,7 +178,7 @@ export default {
       } else if (this.ballPosition.x >= 1600) {
         this.leftScore++;
         this.resetBall();
-        this.ballSpeed = 5;
+        this.ballSpeed = 7;
         this.activatePaddleCollisionCooldown();
       }
     },
@@ -182,9 +187,9 @@ export default {
       this.ballDirectionX = Math.random() < 0.5 ? 1 : -1;
       this.ballDirectionY = Math.random() < 0.5 ? 1 : -1;
     },
-    gameLoop() {
+    async gameLoop() {
       if (this.leftScore < 3 && this.rightScore < 3) {
-        this.movePaddles();
+        await this.movePaddles();
         this.moveBall();
         if (router.currentRoute._value.path !== "/ai") return;
         requestAnimationFrame(this.gameLoop);
