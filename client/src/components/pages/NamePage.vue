@@ -24,7 +24,7 @@ const changeUsername = (newUsername) => {
         { alias: alias},
         { withCredentials: true }
       )
-      .catch((error) => {
+      .catch(() => {
         // console.error("Error updating username:", error);
       });
   }

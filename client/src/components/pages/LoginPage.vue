@@ -13,6 +13,7 @@
 <script setup> 
 import { ref } from 'vue';
 
+
 const imageMoved = ref(false);
 </script>
  

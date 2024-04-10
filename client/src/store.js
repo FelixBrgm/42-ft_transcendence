@@ -7,11 +7,15 @@ const store = createStore({
       namespaced: true,
       state: {
         user: null,
+        login: null,
       },
       mutations: {
         setUser(state, user) {
           state.user = user;
         },
+        setLogin(state, value) {
+          state.login = value;
+        }
       },
       actions: {
         async updateUser({ commit }) {
@@ -22,25 +26,30 @@ const store = createStore({
             // console.error('Error updating user:', error);
           }
         },
+        // Add an action to update login
+        updateLogin({ commit }, value) {
+          console.log("store commited");
+          commit('setLogin', value);
+        }
       },
     },
     chat: {
       namespaced: true,
       state: {
-          chatOpen: false,
+        chatOpen: false,
       },
       mutations: {
-          TOGGLE_CHAT(state) {
-              state.chatOpen = !state.chatOpen;
-          },
+        TOGGLE_CHAT(state) {
+          state.chatOpen = !state.chatOpen;
+        },
       },
       actions: {
-          toggleChat({ commit }) {
-              commit('TOGGLE_CHAT');
-          }, 
+        toggleChat({ commit }) {
+          commit('TOGGLE_CHAT');
+        },
       },
+    },
   },
-  }, 
 });
 
 export default store;

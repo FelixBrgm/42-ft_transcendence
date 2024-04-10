@@ -18,7 +18,7 @@ const router = createRouter({
         { path: '/name', component: NamePage, meta: { title: 'Login' } },
         { path: '/people', component: PeoplePeople, meta: { title: 'PeoplePeople' } },
         { path: '/rules', component: RulesPage, meta: { title: 'Rules' } },
-        { path: '/profile', component: ProfilePage, meta: { title: 'Profile', requiresAuth: true } }, // Example of a route that requires authentication
+        { path: '/profile', component: ProfilePage, meta: { title: 'Profile'} }, // Example of a route that requires authentication
         { path: '/pong', component: PongGame, meta: { title: 'Pong' } },
         { path: '/local', component: LocalGame, meta: { title: 'Pong' } },
         { path: '/ai', component: AiGame, meta: { title: 'Pong' } },

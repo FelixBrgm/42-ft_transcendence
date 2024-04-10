@@ -119,7 +119,7 @@ export default {
           this.$router.push("/404");
         }
       })
-      .catch((error) => {
+      .catch(() => {
         // console.error("Error checking user existence:", error);
       });
   },
@@ -319,7 +319,7 @@ export default {
         .then(() => {
           this.fetchData();
         })
-        .catch((error) => {
+        .catch(() => {
           // console.error("Error navigating to profile:", error);
         });
     },

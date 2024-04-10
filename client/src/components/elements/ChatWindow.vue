@@ -144,6 +144,7 @@ export default {
         const response = await axios.get(`/api/messages/${this.roomid}`, { withCredentials: true });
         if (JSON.stringify(this.messages) !== JSON.stringify(response.data)) {
             this.messages = response.data;
+            this.scrollToBottom();
           }
         } catch (error) { 
         // console.error('Error fetching messages:', error);

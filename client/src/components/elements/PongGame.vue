@@ -19,7 +19,7 @@
         >
           Round: {{ this.round }}
         </div>
-        <div class="profile right-profile">
+       <div class="profile right-profile">
           <img :src="rightPlayerimg" class="rounded-circle profile-pic" />
           <h2 style="padding: 10px">{{ this.rightPlayername }}</h2>
           <p>
@@ -308,7 +308,7 @@ export default {
       });
 
       // handle if websocket connection failed
-      this.websocket.addEventListener("error", (event) => {
+      this.websocket.addEventListener("error", () => {
         // console.error("WebSocket error:", event);
       });
 
