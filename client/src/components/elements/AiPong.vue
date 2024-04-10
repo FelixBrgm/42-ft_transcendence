@@ -138,8 +138,10 @@ export default {
         }
         predictedX += this.ballSpeed * tempDirectionX;
       }
+      this.lastAiResult += Math.random() * 100 - 50;
       this.lastAiResult = Math.max(60, Math.min(840, predictedY));
       this.lastAiCalculation = new Date().getTime();
+      
       return this.lastAiResult;
     },
     moveBall() {

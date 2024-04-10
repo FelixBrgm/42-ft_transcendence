@@ -58,7 +58,7 @@ impl Handler<Connect> for MatchmakingServer {
             let player_ids = (p1.id, p2.id);
 
             println!("starting new game between {:?}", player_ids);
-            let pong = Pong::new([p1, p2], GameMode::Matchmaking(ctx.address())).start();
+            let pong = Pong::new([p1, p2], GameMode::Matchmaking(ctx.address()), self.db.clone()).start();
 
             if !self.is_player_stored(player_ids.0) && !self.is_player_stored(player_ids.1) {
                 self.pong_instances.insert(player_ids, pong);
@@ -111,6 +111,6 @@ impl Handler<GameResult> for MatchmakingServer {
         println!("gets into GameResult");
         self.pong_instances
         .retain(|id, _| msg.looser != id.0 && msg.winner !=id.1 && msg.looser != id.1 && msg.winner != id.0);
-        let _ = self.db.insert_game(msg.winner as i32, msg.looser as i32);
+        // let _ = self.db.insert_game(msg.winner as i32, msg.looser as i32);
     }
 }

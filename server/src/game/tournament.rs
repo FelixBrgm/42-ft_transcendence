@@ -42,8 +42,9 @@ impl Round {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Tournament {
+    db: Database,
     uid: UserId,
     size: u8,
     players: Vec<Player>,
@@ -51,8 +52,9 @@ pub struct Tournament {
 }
 
 impl Tournament {
-    pub fn new(uid: UserId, size: u8) -> Self {
+    pub fn new(uid: UserId, size: u8, db: Database) -> Self {
         Tournament {
+            db,
             uid,
             size,
             players: vec![],
@@ -127,7 +129,7 @@ impl Tournament {
             ));
 
             println!("starting new game between {:?}", player_ids);
-            let pong = Pong::new([p1, p2], GameMode::Tournament(ctx.address())).start();
+            let pong = Pong::new([p1, p2], GameMode::Tournament(ctx.address()), self.db.clone()).start();
 
             let m = Match::new(player_ids.0, player_ids.1, pong);
             round.matches.push(m);
@@ -158,9 +160,6 @@ impl Handler<RoundResult> for TournamentServer {
     type Result = ();
 
     fn handle(&mut self, msg: RoundResult, ctx: &mut Context<Self>) {
-        println!("{:?}", msg);
-        println!("{:?}", self.tournaments);
-
         let tournament = self
             .tournaments
             .iter_mut()
@@ -190,9 +189,11 @@ impl Handler<RoundResult> for TournamentServer {
             .find(|m| m.player1 == msg.winner.id || m.player2 == msg.winner.id)
             .unwrap();
 
-        m.winner = Some(msg.winner.id);
+        // if msg.winner.id as i32 != msg.looser as i32 {
+        //     // let _ = self.db.insert_game(msg.winner.id as i32, msg.looser as i32);
+        // }
 
-        let _ = self.db.insert_game(msg.winner.id as i32, msg.looser as i32);
+        m.winner = Some(msg.winner.id);
 
         dbg!(&msg.winner);
         // add winner to players
@@ -230,7 +231,7 @@ impl Handler<Create> for TournamentServer {
     type Result = ();
 
     fn handle(&mut self, msg: Create, _: &mut Context<Self>) {
-        let tournament = Tournament::new(msg.id, msg.size);
+        let tournament = Tournament::new(msg.id, msg.size, self.db.clone());
         if let None = self.tournaments.insert(msg.id, tournament) {
             println!(
                 "Tournament created with id {} and a size of {}.",

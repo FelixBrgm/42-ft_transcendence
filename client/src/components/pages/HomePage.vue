@@ -6,7 +6,7 @@
         <div class="text-center">
           Here are some options:
           <div class="my-container" @click="playGame">
-            <span>Single player</span>
+            <span>Matchmaking</span>
           </div>
           <div class="my-container" @click="playLocal">
             <span>Local game</span>

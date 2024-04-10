@@ -40,7 +40,7 @@ impl OneVsOneServer {
                 let opponent = self.queue.remove(q);
                 println!("starting new 1v1 game");
                 let pong =
-                    Pong::new([player, opponent.0], GameMode::OneVsOne(ctx.address())).start();
+                    Pong::new([player, opponent.0], GameMode::OneVsOne(ctx.address()), self.db.clone()).start();
                 self.pong_instances.insert((player_id, opponent_uid), pong);
             }
             None => {
@@ -141,6 +141,6 @@ impl Handler<GameResult> for OneVsOneServer {
     type Result = ();
 
     fn handle(&mut self, msg: GameResult, _: &mut Context<Self>) {
-        let _ = self.db.insert_game(msg.winner as i32, msg.looser as i32);
+        // let _ = self.db.insert_game(msg.winner as i32, msg.looser as i32);
     }
 }

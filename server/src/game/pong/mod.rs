@@ -4,7 +4,7 @@ mod player;
 
 use actix::prelude::*;
 use std::time::Duration;
-
+use crate::db::Database;
 pub use self::ball::Ball;
 pub use self::config::GameConfig;
 pub use self::player::Player;
@@ -57,8 +57,9 @@ pub struct RoundResult {
 }
 
 
-#[derive(Debug, Clone)]
+#[derive( Clone)]
 pub struct Pong {
+    db: Database,
     players: [Player; 2],
     score: [u8; 2],
     ball: Ball,
@@ -69,8 +70,9 @@ pub struct Pong {
 }
 
 impl Pong {
-    pub fn new(players: [Player; 2], mode: GameMode) -> Pong {
+    pub fn new(players: [Player; 2], mode: GameMode, db: Database) -> Pong {
         Pong {
+            db,
             players,
             score: [0; 2],
             ball: Ball::new(),
@@ -200,12 +202,13 @@ impl Handler<GameOver> for Pong {
         println!("GameOver");
         self.finished = true;
         self.send_to_players(Message("END".to_owned()));
-
+        
         let (winner, looser) = if self.score[0] > self.score[1] {
             (self.players[0].id, self.players[1].id)
         } else {
             (self.players[1].id, self.players[0].id)
         };
+        let _ = self.db.insert_game(winner as i32, looser as i32);
         let res = GameResult { winner, looser };
 
         match &self.mode {
