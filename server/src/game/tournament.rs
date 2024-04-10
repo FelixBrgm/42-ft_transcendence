@@ -2,7 +2,7 @@ use super::{Create, TournamentConnect};
 use crate::game::actor::Stop;
 
 use crate::game::actor::GameMode;
-use crate::game::pong::{RoundResult, Player, PlayerInput, Pong};
+use crate::game::pong::{Player, PlayerInput, Pong, RoundResult};
 use crate::game::Message;
 use crate::game::{ClientMessage, Disconnect, UserId};
 
@@ -67,8 +67,8 @@ impl Tournament {
             if let None = self.players.iter().find(|p| p.id == player.id) {
                 self.players.push(player);
             }
-        } 
-		// else {
+        }
+        // else {
         //     let current_round = self.rounds.last().unwrap();
         //     if current_round.matches.iter().any(|m| m.winner == None) {
         //         player.addr.do_send(Stop { id: player.id });
@@ -132,7 +132,6 @@ impl Tournament {
             let m = Match::new(player_ids.0, player_ids.1, pong);
             round.matches.push(m);
         }
-        
 
         self.rounds.push(round);
     }
@@ -160,18 +159,23 @@ impl Handler<RoundResult> for TournamentServer {
 
     fn handle(&mut self, msg: RoundResult, ctx: &mut Context<Self>) {
         println!("{:?}", msg);
+        println!("{:?}", self.tournaments);
 
         let tournament = self
             .tournaments
             .iter_mut()
             .find(|t| {
-                t.1.rounds
-                    .iter()
-                    .last()
-                    .unwrap()
-                    .matches
-                    .iter()
-                    .any(|m| m.player1 == msg.winner.id || m.player2 == msg.winner.id)
+                if t.1.rounds.len() == 0 {
+                    false
+                } else {
+                    t.1.rounds
+                        .iter()
+                        .last()
+                        .unwrap()
+                        .matches
+                        .iter()
+                        .any(|m| m.player1 == msg.winner.id || m.player2 == msg.winner.id)
+                }
             })
             .unwrap();
 
@@ -190,20 +194,19 @@ impl Handler<RoundResult> for TournamentServer {
 
         let _ = self.db.insert_game(msg.winner.id as i32, msg.looser as i32);
 
-		dbg!(&msg.winner);
-		// add winner to players
-		tournament.players.push(msg.winner);
+        dbg!(&msg.winner);
+        // add winner to players
+        tournament.players.push(msg.winner);
 
-		let required_amount = tournament.size as usize / (tournament.rounds.len() + 1);
-		println!("required amount {}", required_amount);
-		if required_amount == 1 && tournament.players.len() == 1 {
-			let player = &tournament.players[0];
-			player.addr.do_send(Stop{ id: player.id});
-			// self.tournaments.remove(&tournament.uid);
-		}
-		else if tournament.players.len() == required_amount {
-			tournament.start_round(ctx);
-		}
+        let required_amount = tournament.size as usize / (tournament.rounds.len() + 1);
+        println!("required amount {}", required_amount);
+        if required_amount == 1 && tournament.players.len() == 1 {
+            let player = &tournament.players[0];
+            player.addr.do_send(Stop { id: player.id });
+        // self.tournaments.remove(&tournament.uid);
+        } else if tournament.players.len() == required_amount {
+            tournament.start_round(ctx);
+        }
     }
 }
 
@@ -227,14 +230,13 @@ impl Handler<Create> for TournamentServer {
     type Result = ();
 
     fn handle(&mut self, msg: Create, _: &mut Context<Self>) {
-
-		let tournament = Tournament::new(msg.id, msg.size);
+        let tournament = Tournament::new(msg.id, msg.size);
         if let None = self.tournaments.insert(msg.id, tournament) {
-			println!(
-				"Tournament created with id {} and a size of {}.",
-				msg.id, msg.size
-			);
-		}
+            println!(
+                "Tournament created with id {} and a size of {}.",
+                msg.id, msg.size
+            );
+        }
     }
 }
 
