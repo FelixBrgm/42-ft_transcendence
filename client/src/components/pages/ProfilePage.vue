@@ -39,37 +39,41 @@
               : user.alias || "User"
           }}
         </h1>
-		<h3 class="neon-text" id="userStatusAndId">
-		{{
-			user == null || user == undefined
-			? "Status: Loading... | ID: Loading..."
-			: "Status: " + (user.status || "Unknown") + " | ID: " + (user.id || "Unknown")
-		}}
-		</h3>
+        <h3 class="neon-text" id="userStatusAndId">
+          {{
+            user == null || user == undefined
+              ? "Status: Loading... | ID: Loading..."
+              : "Status: " +
+                (user.status || "Unknown") +
+                " | ID: " +
+                (user.id || "Unknown")
+          }}
+        </h3>
         <div>
           <div v-show="isUidMatch" class="mhistory">
             <div>Friends:</div>
             <span>{{ this.seperator }}</span>
             <div v-if="friends !== null && friends.length > 0">
-              <div v-for="friend in friendInfos" :key="friend.id" @click="goToProfile(friend.id)">
-                {{ friend.alias }} 
+              <div
+                v-for="friend in friendInfos"
+                :key="friend.id"
+                @click="goToProfile(friend.id)"
+              >
+                {{ friend.alias }}
               </div>
             </div>
-            <div v-else>
-              No friends. 
-            </div>
+            <div v-else>No friends.</div>
           </div>
           <div class="mhistory">
             <div>Matchmaking history</div>
             <span>{{ this.seperator }}</span>
-              <div v-if="matchInfos !== null "> 
-                <div v-for="match in matchInfos" :key="match.id" > 
-                  On: {{ formattedTimestamp(match.timestamp) }}
-                  Winner: {{ match.winner.alias }}
-                  Looser: {{ match.looser.alias }}     
-                </div>
-              </div> 
-              <div v-else>no game . _.</div>
+            <div v-if="matchInfos !== null">
+              <div v-for="match in matchInfos" :key="match.id">
+                On: {{ formattedTimestamp(match.timestamp) }} Winner:
+                {{ match.winner.alias }} Looser: {{ match.looser.alias }}
+              </div>
+            </div>
+            <div v-else>no game . _.</div>
           </div>
         </div>
       </div>
@@ -105,23 +109,26 @@ export default {
     };
   },
   created() {
-    axios.get(`/api/user/check/${this.$route.query.uid}`, { withCredentials: true })
-      .then(response => {
+    axios
+      .get(`/api/user/check/${this.$route.query.uid}`, {
+        withCredentials: true,
+      })
+      .then((response) => {
         if (response.data == false) {
           alert("This user does not exist");
-          this.$router.push('/404');
+          this.$router.push("/404");
         }
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error checking user existence:", error);
       });
   },
   mounted() {
-    this.uid = this.$route.query.uid; 
-    this.fetchData(); 
+    this.uid = this.$route.query.uid;
+    this.fetchData();
     this.$store.dispatch("auth/updateUser");
     this.fetchMatchs();
-    this.fetchFriends(); 
+    this.fetchFriends();
   },
   methods: {
     async fetchData() {
@@ -130,10 +137,8 @@ export default {
       this.isf = await this.isfriend();
       this.isb = await this.isblocked();
       this.ism = this.isUidMatch;
-      if (this.isf === undefined)
-        this.isf = false;
-      if (this.isb === undefined)
-        this.isb = false;
+      if (this.isf === undefined) this.isf = false;
+      if (this.isb === undefined) this.isb = false;
       this.friendimg = this.isf
         ? require("@/assets/add-user.png")
         : require("@/assets/delete-user.png");
@@ -143,31 +148,31 @@ export default {
         this.friendimg = require("@/assets/delete-user.png");
       }
     },
-async changeUsername() {
-        if (this.ism) {
-            const newUsername = prompt("Enter new username:");
-            if (newUsername !== null) {
-                let trimmedUsername = newUsername.trim().substring(0, 20);
-                try {
-                    const response = await axios.get(
-                        `/api/user/alias/${trimmedUsername}`,
-                        { withCredentials: true }
-                    );
-                    if (response.data === true) {
-                        alert("The Alias is already used!");
-                        return;
-                    }
-                    await axios.post(
-                        `/api/user`,
-                        { alias: trimmedUsername },
-                        { withCredentials: true }
-                    );
-                    this.user.alias = trimmedUsername;
-                } catch (error) {
-                    console.error("Error updating username:", error);
-                }
+    async changeUsername() {
+      if (this.ism) {
+        const newUsername = prompt("Enter new username:");
+        if (newUsername !== null) {
+          let trimmedUsername = newUsername.trim().substring(0, 20);
+          try {
+            const response = await axios.get(
+              `/api/user/alias/${trimmedUsername}`,
+              { withCredentials: true }
+            );
+            if (response.data === true) {
+              alert("The Alias is already used!");
+              return;
             }
+            await axios.post(
+              `/api/user`,
+              { alias: trimmedUsername },
+              { withCredentials: true }
+            );
+            this.user.alias = trimmedUsername;
+          } catch (error) {
+            console.error("Error updating username:", error);
+          }
         }
+      }
     },
     changePic() {
       if (this.ism) {
@@ -191,7 +196,7 @@ async changeUsername() {
           img.onerror = () => {
             // Image failed to load, display error message
             alert("Invalid image link! Fix that");
-            console.error("Invalid image link");
+            // console.error("Invalid image link");
           };
           img.src = newAvatar;
         }
@@ -201,25 +206,26 @@ async changeUsername() {
       axios.get(`/api/block/${this.$route.query.uid}`, {
         withCredentials: true,
       });
-      this.isb = !this.isb; 
+      this.isb = !this.isb;
     },
     addFriend() {
-      axios.get(
-        `/api/friend/${this.$route.query.uid}`,
-        { withCredentials: true }
-      );
+      axios.get(`/api/friend/${this.$route.query.uid}`, {
+        withCredentials: true,
+      });
       this.friendimg = this.isf
         ? require("@/assets/add-user.png")
         : require("@/assets/delete-user.png");
       this.isf = !this.isf;
     },
-    async fetchSingle(tofind){
+    async fetchSingle(tofind) {
       try {
-              const response = await axios.get(`/api/user/${tofind}`, { withCredentials: true });
-              return (response.data.alias);
-            } catch (error) {  
-              console.error('Error fetching user info:', error); 
-            }
+        const response = await axios.get(`/api/user/${tofind}`, {
+          withCredentials: true,
+        });
+        return response.data.alias;
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+      }
     },
     async fetchFriends() {
       try {
@@ -235,10 +241,9 @@ async changeUsername() {
               ? friend.user1
               : friend.user2;
           try {
-            const response = await axios.get(
-              `/api/user/${userId}`,
-              { withCredentials: true }
-            );
+            const response = await axios.get(`/api/user/${userId}`, {
+              withCredentials: true,
+            });
             this.friendInfos.push(response.data); // Save user info to array
           } catch (error) {
             console.error("Error fetching user info:", error);
@@ -249,67 +254,76 @@ async changeUsername() {
       }
     },
     async fetchMatchs() {
-        try {
-          const response = await axios.get(
-            `/api/game/list/${this.$route.query.uid}`, { withCredentials: true }
-          );
-          this.matchInfos = [];
-          
-          for (const match of response.data) {
-            try { 
-              const response1 = await axios.get(`/api/user/${match.winner}`, { withCredentials: true });
-              const response2 = await axios.get(`/api/user/${match.looser}`, { withCredentials: true });
-              this.matchInfos.push({timestamp: match.timestamp, winner: response1.data, looser: response2.data });
-            } catch (error) { 
-              console.error("Error fetching match info:", error);
-            }
+      try {
+        const response = await axios.get(
+          `/api/game/list/${this.$route.query.uid}`,
+          { withCredentials: true }
+        );
+        this.matchInfos = [];
+
+        for (const match of response.data) {
+          try {
+            const response1 = await axios.get(`/api/user/${match.winner}`, {
+              withCredentials: true,
+            });
+            const response2 = await axios.get(`/api/user/${match.looser}`, {
+              withCredentials: true,
+            });
+            this.matchInfos.push({
+              timestamp: match.timestamp,
+              winner: response1.data,
+              looser: response2.data,
+            });
+          } catch (error) {
+            console.error("Error fetching match info:", error);
           }
-        } catch (error) {
-          console.error("Error fetching matches:", error);
         }
-      }, 
+      } catch (error) {
+        console.error("Error fetching matches:", error);
+      }
+    },
     async isblocked() {
-        try {
-          const response = await axios.get(
-            `/api/block/check/${this.$route.query.uid}`,
-            { withCredentials: true }
-          );
-          return response.data;
-        } catch (error) {
-          console.error("Error fetching blocked:", error);
-        }
+      try {
+        const response = await axios.get(
+          `/api/block/check/${this.$route.query.uid}`,
+          { withCredentials: true }
+        );
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching blocked:", error);
+      }
     },
     async isfriend() {
-        try {
-          const response = await axios.get(
-            `/api/friend/check/${this.$route.query.uid}`,
-            { withCredentials: true }
-          );
-          return response.data;
-        } catch (error) {
-          console.error("Error fetching friend:", error);
-        }
+      try {
+        const response = await axios.get(
+          `/api/friend/check/${this.$route.query.uid}`,
+          { withCredentials: true }
+        );
+        return response.data;
+      } catch (error) {
+        console.error("Error fetching friend:", error);
+      }
     },
     async getUser() {
       try {
-        const response = await axios.get(
-          `/api/user/${this.$route.query.uid}`,
-          { withCredentials: true }
-        );
+        const response = await axios.get(`/api/user/${this.$route.query.uid}`, {
+          withCredentials: true,
+        });
         this.user = response.data;
       } catch (error) {
         console.error("Error fetching user:", error);
       }
     },
-  goToProfile(id) {
-    this.$router.push({ path: `/profile`, query: { uid: id } })
-      .then(() => {
-        this.fetchData();
-      })
-      .catch(error => {
-        console.error('Error navigating to profile:', error);
-      });
-  },
+    goToProfile(id) {
+      this.$router
+        .push({ path: `/profile`, query: { uid: id } })
+        .then(() => {
+          this.fetchData();
+        })
+        .catch((error) => {
+          console.error("Error navigating to profile:", error);
+        });
+    },
     beforeRouteUpdate(to, from, next) {
       if (to.query.uid !== this.$route.query.uid) {
         // If the query parameter has changed, force a page reload
