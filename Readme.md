@@ -1,4 +1,3 @@
-
 # 42-ft_transcendence
 
 This is the final project of the [42Schools](https://www.42heilbronn.de/en/) curriculum.
